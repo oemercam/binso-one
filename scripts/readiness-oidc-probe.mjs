@@ -4,7 +4,7 @@ import {pathToFileURL} from 'node:url';
 import {resources,readResource,inspectReadiness} from './azure-readiness-check.mjs';
 export const identity={client:'d9ad1b32-dd83-4421-801d-9bae92f8d3ee',tenant:'8b0bab04-0ac3-48e2-85bd-6b857601aa5b',subscription:'57c41f8a-69de-4655-bea5-fad30de6921a'};
 export function validateContext(env){
- if(env.GITHUB_REPOSITORY!=='oemercam/binso_admin_azure'||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_EVENT_NAME!=='workflow_dispatch'||!/^[a-f0-9]{40}$/.test(env.GITHUB_SHA??''))throw new Error('Only exact-SHA manual dispatch on this repository main may use readiness');
+ if(env.GITHUB_REPOSITORY_ID!=='1379293391'||env.GITHUB_REPOSITORY_OWNER_ID!=='202777456'||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_EVENT_NAME!=='workflow_dispatch'||!/^[a-f0-9]{40}$/.test(env.GITHUB_SHA??''))throw new Error('Only exact-SHA manual dispatch on this repository main may use readiness');
  for(const [key,value] of Object.entries(identity))if(env['READINESS_'+key.toUpperCase()+'_ID']!==value)throw new Error('Missing or unexpected dedicated readiness '+key+' ID');
  return env.GITHUB_SHA;
 }
