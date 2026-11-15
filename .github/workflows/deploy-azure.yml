@@ -42,14 +42,14 @@ env:
   BINSO_DEPLOY_SHA: ${{ inputs.commit_sha }}
   BINSO_RELEASE_PROFILE: ${{ inputs.release_profile || 'production' }}
   BINSO_APPROVE_SCANNER: ${{ inputs.activate_scanner }}
-  AZURE_WEBAPP_NAME: binso-admin-prod
-  AZURE_RESOURCE_GROUP: rg-binso-admin-prod
-  PRODUCTION_URL: https://binso-admin-prod-asctesfvhnd5b6ay.switzerlandnorth-01.azurewebsites.net
+  AZURE_WEBAPP_NAME: app-binso-one-prod
+  AZURE_RESOURCE_GROUP: rg-binso-one-prod
+  PRODUCTION_URL: https://one.binso.ch
 
 jobs:
   deploy:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.approve_production == true && github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, x64, binso-private-prod]
     timeout-minutes: 45
     environment: production
     permissions:
@@ -140,11 +140,6 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Allow only this runner to reach PostgreSQL
-        uses: ./.github/actions/postgres-runner-access
-        with:
-          operation: open
 
       - name: Validate and migrate Azure PostgreSQL
         shell: bash
@@ -407,13 +402,31 @@ jobs:
           az webapp config show --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --query appCommandLine -o tsv
 
       - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: deploy/binso-one.zip
-          # Each release is isolated from files left by earlier deployments.
-          target-path: /home/site/wwwroot
-          startup-command: node /home/site/wwwroot/scripts/start-scanner-production.mjs
+        id: release
+        shell: bash
+        env:
+          AZURE_CORE_OUTPUT: none
+        run: |
+          set -euo pipefail
+          account=binsowebstagingpkg57c4
+          container=binso-one-prod-releases
+          origin="https://$account.blob.core.windows.net/$container/"
+          previous="$(az webapp config appsettings list -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" \
+            --query "[?name=='WEBSITE_RUN_FROM_PACKAGE'].value | [0]" -o tsv)"
+          previous_blob="${previous#"$origin"}"
+          [[ "$previous" == "$origin"* && "$previous_blob" =~ ^binso-one-[a-f0-9]{40}(-[a-f0-9]{64})?\.zip$ ]]
+          echo "previous=$previous" >> "$GITHUB_OUTPUT"
+          digest="$(sha256sum deploy/binso-one.zip | cut -d ' ' -f 1)"
+          blob="binso-one-$BINSO_DEPLOY_SHA-$digest.zip"
+          exists="$(az storage blob exists --account-name "$account" -c "$container" -n "$blob" --auth-mode login --query exists -o tsv)"
+          if [[ "$exists" != 'true' ]]; then
+            az storage blob upload --account-name "$account" -c "$container" -n "$blob" \
+              -f deploy/binso-one.zip --auth-mode login --overwrite false --validate-content --metadata "sha256=$digest"
+          fi
+          test "$(az storage blob show --account-name "$account" -c "$container" -n "$blob" \
+            --auth-mode login --query metadata.sha256 -o tsv)" = "$digest"
+          az webapp config appsettings set -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" \
+            --settings "WEBSITE_RUN_FROM_PACKAGE=$origin$blob"
 
       - name: Promote verified runtime settings after deploying the new auth helpers
         shell: bash
@@ -515,14 +528,18 @@ jobs:
           timeout 60s az webapp log tail --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --provider application || true
           echo "::endgroup::"
 
+      - name: Restore previous package on deployment failure
+        if: ${{ failure() && steps.release.outputs.previous != '' }}
+        shell: bash
+        env:
+          PREVIOUS_PACKAGE: ${{ steps.release.outputs.previous }}
+          AZURE_CORE_OUTPUT: none
+        run: |
+          az webapp config appsettings set -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP_NAME" \
+            --settings "WEBSITE_RUN_FROM_PACKAGE=$PREVIOUS_PACKAGE"
+
       - name: Remove temporary runtime credentials
         if: always()
         shell: bash
         run: |
           if [ -n "${BINSO_DEV_SETTINGS_FILE:-}" ]; then rm -f "$BINSO_DEV_SETTINGS_FILE"; fi
-
-      - name: Remove temporary PostgreSQL runner access
-        if: always()
-        uses: ./.github/actions/postgres-runner-access
-        with:
-          operation: close
