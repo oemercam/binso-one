@@ -1,9 +1,11 @@
 import {LocalizedText} from "@/lib/client/locale";
-import type {Metadata} from "next";
+import { publicPageMetadata } from "@/lib/public-metadata";
 import {LegalPage} from "@/components/legal-page";
 import {legalConfig} from "@/config/legal";
 
-export const metadata:Metadata={title:"Impressum – Binso One",description:"Anbieter- und Kontaktinformationen der Binso GmbH.",alternates:{canonical:"/impressum"}};
+export function generateMetadata() {
+  return publicPageMetadata("/impressum", { title: "Impressum", description: "Anbieter- und Kontaktinformationen der Binso GmbH." });
+}
 
 export default function Page(){
  const c=legalConfig.company;

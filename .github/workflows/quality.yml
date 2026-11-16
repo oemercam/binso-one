@@ -125,6 +125,14 @@ jobs:
           BINSO_PRODUCTION_EVIDENCE_ROOT: ${{ inputs.production_evidence_run_id != '' && '.production-evidence' || '.' }}
         run: pnpm ops:readiness --production
       - run: pnpm test
+      - name: PWA worker regressions
+        run: node scripts/pwa-worker-regression.mjs
+      - name: Password policy
+        run: node scripts/password-policy-test.mjs
+      - name: Public SEO metadata
+        run: node scripts/public-seo-test.mjs
+      - name: Error boundary recovery
+        run: node scripts/error-boundary-test.mjs
       - name: Legacy checksum attestation adversaries
         run: node scripts/legacy-checksum-attestation-test.mjs
       - name: Zurich browser calendar boundaries
@@ -389,6 +397,20 @@ jobs:
           BINSO_PLAYWRIGHT_MODULE: ${{ runner.temp }}/binso-browser/node_modules/playwright/index.mjs
           BINSO_LAB_OUTPUT: ${{ runner.temp }}/binso-ux-${{ matrix.engine }}/lab
         run: pnpm ux:lab
+      - name: PWA worker activation and offline recovery
+        if: matrix.lane == 'functional'
+        env:
+          BINSO_PLAYWRIGHT_MODULE: ${{ runner.temp }}/binso-browser/node_modules/playwright/index.mjs
+          PWA_BROWSER: ${{ matrix.engine }}
+        run: node scripts/pwa-worker-browser.mjs
+      - name: PWA worker compatibility in Firefox
+        if: matrix.lane == 'functional' && matrix.engine == 'chromium'
+        env:
+          BINSO_PLAYWRIGHT_MODULE: ${{ runner.temp }}/binso-browser/node_modules/playwright/index.mjs
+          PWA_BROWSER: firefox
+        run: |
+          node "$RUNNER_TEMP/binso-browser/node_modules/playwright/cli.js" install --with-deps firefox
+          node scripts/pwa-worker-browser.mjs
       - name: FULL PWA restart and offline regression
         if: matrix.lane == 'functional' && matrix.engine == 'chromium' && needs.plan.outputs.level == 'full'
         env:

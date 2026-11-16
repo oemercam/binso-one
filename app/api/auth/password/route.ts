@@ -1,3 +1,4 @@
+import {hasValidNewPassword, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
 import { NextRequest } from "next/server";
 import { ApiError, apiError, assertSameOrigin, json, readJson } from "@/lib/server/http";
 import { consumeAuthToken } from "@/lib/server/auth-tokens";
@@ -14,7 +15,7 @@ export async function PATCH(request:NextRequest){
   assertSameOrigin(request);const body=await readJson<{token?:unknown;password?:unknown;currentPassword?:unknown;recoveryCode?:unknown}>(request,8192);
   const token=typeof body.token==="string"?body.token:"";const password=typeof body.password==="string"?body.password:"";
   if(password.length>256)return json({error:"password_too_long",message:"Das Passwort ist zu lang."},400);
-  if(password.length<12)return json({error:"password_too_short",message:"Das Passwort muss mindestens 12 Zeichen haben."},400);
+  if(!hasValidNewPassword(password))return json({error:"password_invalid",message:PASSWORD_REQUIREMENTS},400);
   if(!token){
     const session=await requireSession();
     if(session.isDemo)return json({error:'demo_action_unavailable',message:'Demo-Zugang benötigt kein Passwort.'},403);

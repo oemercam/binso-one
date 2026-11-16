@@ -27,8 +27,13 @@ export default function robots(): MetadataRoute.Robots {
         "/willkommen",
         "/demo",
         "/offline",
+        "/api/",
+        "/portal",
+        "/passwort-zuruecksetzen",
+        "/email-bestaetigen",
+        "/einladung",
       ],
     },
-    sitemap: `${siteConfig.marketingUrl}/sitemap.xml`,
+    sitemap: `${siteConfig.publicOrigin}/sitemap.xml`,
   };
 }

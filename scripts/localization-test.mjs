@@ -234,7 +234,7 @@ for(const language of config.locales){
  const legal=compile('components/legal-page.tsx',{'@/lib/client/locale':client,'next/link':({children,...props})=>element('a',props,children),'@/components/marketing':{MarketingHeader:()=>element('header',{'data-public-marketing':true}),MarketingFooter:()=>element('footer',{'data-public-marketing':true})}});
  const legalConfig=compile('config/legal.ts');
  for(const file of ['impressum','datenschutz','agb','auftragsbearbeitung','unterauftragsbearbeiter']){
-  const page=compile('app/'+file+'/page.tsx',{'@/lib/client/locale':client,'@/components/legal-page':legal,'@/config/legal':legalConfig,'next/link':({children,...props})=>element('a',props,children)}).default;
+  const page=compile('app/'+file+'/page.tsx',{'@/lib/client/locale':client,'@/components/legal-page':legal,'@/lib/public-metadata':{publicPageMetadata:async()=>({})},'@/config/legal':legalConfig,'next/link':({children,...props})=>element('a',props,children)}).default;
   let baseline;
   for(const language of config.locales){
    const markup=renderToStaticMarkup(element(client.LocaleProvider,{initialLocale:language},element(page)));

@@ -1,7 +1,13 @@
+import { publicPageMetadata } from "@/lib/public-metadata";
+import { siteConfig } from "@/lib/config";
 import {plans as subscriptionPlans} from "@/lib/plans";
 import {LocalizedText} from "@/lib/client/locale";
 import {MarketingHeader,MarketingFooter,ProductPreview,ReferenceFeatures,ProductCapabilities} from "@/components/marketing";
 import {Button} from "@/components/ui";
+
+export function generateMetadata() {
+  return publicPageMetadata("/", { title: "Binso One", description: siteConfig.description });
+}
 
 export default function Home(){
   const structuredData={
@@ -9,6 +15,7 @@ export default function Home(){
     "@graph":[{
     "@type":"SoftwareApplication",
     name:"Binso One",
+    url:siteConfig.publicOrigin,
     applicationCategory:"BusinessApplication",
     operatingSystem:"Web, iOS PWA, Android PWA",
     offers:{
@@ -18,13 +25,13 @@ export default function Home(){
       highPrice:String(Math.max(...subscriptionPlans.map(plan=>plan.monthly))),
       offerCount:"3"
     },
-    publisher:{"@id":"https://www.binso.ch/#organization"}
+    publisher:{"@id":"https://binso.ch/#organization"}
     },{
       "@type":"Organization",
-      "@id":"https://www.binso.ch/#organization",
+      "@id":"https://binso.ch/#organization",
       name:"Binso GmbH",
-      url:"https://www.binso.ch",
-      logo:"https://www.binso.ch/brand/logo-black.svg",
+      url:"https://binso.ch",
+      logo:"https://binso.ch/mark-black.png",
       address:{
         "@type":"PostalAddress",
         streetAddress:"Weissbadstrasse 8b",
@@ -34,10 +41,10 @@ export default function Home(){
       }
     },{
       "@type":"WebSite",
-      "@id":"https://www.binso.ch/#website",
-      url:"https://www.binso.ch",
+      "@id":siteConfig.publicOrigin + "/#website",
+      url:siteConfig.publicOrigin,
       name:"Binso One",
-      publisher:{"@id":"https://www.binso.ch/#organization"},
+      publisher:{"@id":"https://binso.ch/#organization"},
       inLanguage:["de-CH","fr-CH","it-CH","en-CH"]
     }]
   };

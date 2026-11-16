@@ -769,7 +769,8 @@ try{
  assert.equal((await reimburse.POST({body:{reference:'another-transfer',paidOn:'2026-10-07',amount:'42.00',currency:'CHF'}},{params:Promise.resolve({id:expenseId})})).status,409);
  // The real team GET must read the entitlement/subscription tables and return names.
  globalThis.__processSession=session;
- const invitePasswords=dataModule((await fs.readFile('lib/server/password.ts','utf8')).replace('import "server-only";',''));
+ const passwordPolicy=dataModule(await fs.readFile('lib/password-policy.ts','utf8'));
+ const invitePasswords=dataModule((await fs.readFile('lib/server/password.ts','utf8')).replace('import "server-only";','').replace('"@/lib/password-policy"',JSON.stringify(passwordPolicy)));
  const inviteMail=dataModule('export function mailLayout(title,body,cta){return body+cta.url} export async function sendMail(mail){globalThis.__invitationMails.push(mail);if(globalThis.__invitationMailMode==="uncertain")throw new Error("ambiguous transport");return {delivered:globalThis.__invitationMailMode!=="unavailable"}}');
  let invitationServiceSource=(await fs.readFile('lib/server/invitations.ts','utf8')).replace('import "server-only";','');
  for(const [specifier,url] of Object.entries({'./http':processHttp,'./db':processDb,'./password':invitePasswords,'./email':inviteMail,'./env':dataModule('export const env={appUrl:"https://fixture.invalid"}'),'./rbac':processRbac,'./audit':audit,'./business-idempotency':idempotencyModule})){invitationServiceSource=invitationServiceSource.replaceAll(JSON.stringify(specifier),JSON.stringify(url));}
@@ -942,8 +943,8 @@ try{
  // Seat-limit countercases are exercised above. These identity/password cases
  // need room for the newly explicit, independent synthetic reviewers.
  await db.query("update organization_subscriptions set plan='professional' where organization_id=$1",[demo]);
- const passwords=dataModule((await fs.readFile('lib/server/password.ts','utf8')).replace('import "server-only";',''));const {hashPassword}=await import(passwords);
- const invitationSource=(await fs.readFile('app/api/auth/invitation/route.ts','utf8')).replace('"@/lib/money"',JSON.stringify(moneyModule)).replace('"@/lib/server/http"',JSON.stringify(processHttp)).replace('"@/lib/server/db"',JSON.stringify(processDb)).replace('"@/lib/server/password"',JSON.stringify(passwords)).replace('"@/lib/server/rate-limit"',JSON.stringify(dataModule('export async function enforceRateLimit(){}')));
+ const passwords=dataModule((await fs.readFile('lib/server/password.ts','utf8')).replace('import "server-only";','').replace('"@/lib/password-policy"',JSON.stringify(passwordPolicy)));const {hashPassword}=await import(passwords);
+ const invitationSource=(await fs.readFile('app/api/auth/invitation/route.ts','utf8')).replace('"@/lib/money"',JSON.stringify(moneyModule)).replace('"@/lib/server/http"',JSON.stringify(processHttp)).replace('"@/lib/server/db"',JSON.stringify(processDb)).replace('"@/lib/server/password"',JSON.stringify(passwords)).replace('"@/lib/password-policy"',JSON.stringify(passwordPolicy)).replace('"@/lib/server/rate-limit"',JSON.stringify(dataModule('export async function enforceRateLimit(){}')));
  const invitationHandler=await import(dataModule(invitationSource));
  const {createHash}=await import('node:crypto');
  const seedInvitation=async(userId,email,status,password,token)=>{

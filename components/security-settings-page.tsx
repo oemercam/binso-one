@@ -1,5 +1,6 @@
 "use client";
 
+import {hasValidNewPassword, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
 import {LocalizedText,useLocale} from "@/lib/client/locale";
 import {useCallback,useEffect,useRef,useState} from "react";
 import {useRouter,useSearchParams} from "next/navigation";
@@ -83,7 +84,7 @@ export function SecuritySettingsPage(){
 
   const changePassword=async()=>{setToastTone("danger");
     if(mutation.current)return;
-    if(newPassword.length<12){setToast("Das Passwort muss mindestens 12 Zeichen haben.");return;}
+    if(!hasValidNewPassword(newPassword)){setToast(PASSWORD_REQUIREMENTS);return;}
     if(newPassword!==confirmPassword){setToast("Die Passwörter stimmen nicht überein.");return;}
     mutation.current=true;setBusy(true);
     try{

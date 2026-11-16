@@ -1,10 +1,12 @@
 import {LocalizedText} from "@/lib/client/locale";
-import type {Metadata} from "next";
+import { publicPageMetadata } from "@/lib/public-metadata";
 import Link from "next/link";
 import {LegalPage} from "@/components/legal-page";
 import {legalConfig} from "@/config/legal";
 
-export const metadata:Metadata={title:"AGB – Binso One",description:"Allgemeine Geschäftsbedingungen für Binso One.",alternates:{canonical:"/agb"}};
+export function generateMetadata() {
+  return publicPageMetadata("/agb", { title: "AGB", description: "Allgemeine Geschäftsbedingungen für Binso One." });
+}
 
 export default function Page(){
  return <LegalPage eyebrow="VERTRAG" title="Allgemeine Geschäftsbedingungen" intro="Diese AGB regeln die Nutzung von Binso One durch Unternehmen und selbständig Erwerbstätige in der Schweiz.">
