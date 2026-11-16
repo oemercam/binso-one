@@ -27,8 +27,10 @@ Stand: 5. Oktober 2026
 - Verbrauchte oder abgelaufene E-Mail-Codes: automatische Löschung nach 7 Tagen.
 - Abgelaufene Kunden- und Operator-Sessions: automatische Löschung nach 30 Tagen.
 - Abgelaufene, noch nicht abgeschlossene MFA-Enrollment-Secrets: werden entfernt, sobald die hinterlegte Ablaufzeit überschritten ist.
-- Die Bereinigung läuft täglich über den GitHub-Workflow `Retention Maintenance` und zusätzlich bei produktiven Deployments.
-- Standardwerte: `AUTH_ARTIFACT_RETENTION_DAYS=7` und `EXPIRED_SESSION_RETENTION_DAYS=30`. Änderungen sind bewusst zu dokumentieren und dürfen die definierten Maximalwerte nicht überschreiten.
+- Die Azure Logic App `logic-binso-one-retention-prod` ruft die Bereinigung täglich um 03:17 Uhr Schweizer Zeit auf. Ihre Managed Identity besitzt die Entra-Anwendungsrolle `Retention.Run`. Die App greift über ihr privates Netzwerk mit der vorhandenen Laufzeitrolle auf PostgreSQL zu.
+- Pro Lauf verarbeitet die App bis zu 1'000 Einträge je Kategorie und schreibt Zeitpunkt und Mengen atomar als `auth.retention.completed` ins Plattform-Audit. Bei einem Fehler zählt der Lauf erst nach erfolgreicher Wiederholung als abgeschlossen.
+- `logic-binso-one-retention-watch-prod` prüft alle sechs Stunden, ob ein erfolgreicher Lauf jünger als 36 Stunden ist. Beide Workflows melden Fehlläufe über Azure Monitor an `systems@binso.ch`. GitHub Operations Watch prüft den öffentlichen Status stündlich.
+- Bei einem Alarm zuerst den Azure-Laufverlauf sowie den HTTP-Status und die App-Logs prüfen. Nach der Korrektur den Zeitplan der Logic App manuell auslösen und auf `Succeeded` sowie HTTP 200 bei `/api/health/retention` prüfen. Produktive Deployments führen höchstens eine Vorschau aus.
 
 ## Vor Go-live weiterhin operativ zu bestätigen
 - konkrete Azure PostgreSQL Backup-Retention und Restore Point Objective,

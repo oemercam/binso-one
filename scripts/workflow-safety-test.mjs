@@ -43,13 +43,11 @@ for(const event_name of ['push','schedule','workflow_dispatch'])for(const send_s
 }
 assert(graphStep.run.indexOf('if [ "$SEND_SELF_TEST" != true ]')<graphStep.run.indexOf('/sendMail'));
 assert(graphStep.run.includes('exit 0'),'Read-only validation exits before sendMail');
-const retention=workflows['retention-maintenance.yml'];
-const cleanup=retention.jobs.cleanup.steps.find(s=>s.env?.RETENTION_DRY_RUN);
-for(const event_name of ['push','schedule','workflow_dispatch'])for(const apply_cleanup of [false,true]){
- assert.equal(evaluate(cleanup.env.RETENTION_DRY_RUN,{event_name},{apply_cleanup}),!(event_name==='schedule'||event_name==='workflow_dispatch'&&apply_cleanup));
-}
+assert.equal(workflows['retention-maintenance.yml'],undefined,'Azure owns scheduled authentication retention');
+const watch=workflows['operations-watch.yml'];
+assert.equal(watch.permissions['id-token'],undefined,'Operations Watch only uses public status endpoints');
+assert(watch.jobs['readiness-and-maintenance'].steps.some(step=>step.run?.includes('/api/health/retention')));
 assert.equal(graph.on.workflow_dispatch.inputs.send_self_test.default,false);
-assert.equal(retention.on.workflow_dispatch.inputs.apply_cleanup.default,false);
 const deploy=workflows['deploy-azure.yml'].jobs.deploy;
 const attestation=workflows['legacy-checksum-attestation.yml'];
 assert.deepEqual(Object.keys(attestation.on),['workflow_dispatch'],'Legacy metadata correction is manual only');

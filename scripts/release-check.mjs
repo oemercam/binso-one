@@ -54,11 +54,13 @@ for(const name of ['GRAPH_TENANT_ID','GRAPH_CLIENT_ID','GRAPH_CLIENT_SECRET','GR
 }
 
 const deployWorkflow=await readPageFile('.github/workflows/deploy-azure.yml','utf8');
-assert.ok(deployWorkflow.includes('pnpm retention:cleanup'),'Production deploy must enforce retention cleanup');
+assert.ok(deployWorkflow.includes('RETENTION_DRY_RUN=true pnpm retention:cleanup'),'Production deploy may only preview retention');
 assert.ok(deployWorkflow.includes('/api/health/ready'),'Production deploy must verify readiness health');
 assert.ok((await readPageFile('scripts/check-deployed-auth.mjs','utf8')).includes('attempt<3'),'Production verification retains bounded transient retries');
 assert.ok(deployWorkflow.includes('scripts/check-deployed-auth.mjs'),'Production verifies retired demo denial and unauthenticated API protection without provisioning data');
-await fs.access('.github/workflows/retention-maintenance.yml');
+await fs.access('infrastructure/retention.bicep');
+await fs.access('app/api/jobs/retention/route.ts');
+await fs.access('app/api/health/retention/route.ts');
 await fs.access('.github/workflows/graph-mail-readiness.yml');
 await fs.access('app/api/health/ready/route.ts');
 await fs.access('docs/production-rollback.md');
