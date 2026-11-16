@@ -26,7 +26,7 @@ jobs:
           else
             git diff --check
           fi
-          if git grep -n -E '^(<<<<<<< |=======|>>>>>>> )' -- '*.yml' '*.yaml' '*.json'; then
-            echo "::error::Merge-Konfliktmarker in Konfigurationsdateien"
+          if git grep -n -E '^(<<<<<<< |=======|>>>>>>> )' -- '*.yml' '*.yaml' '*.json' '*.ts' '*.tsx' '*.js' '*.jsx' '*.html' '*.css'; then
+            echo "::error::Merge-Konfliktmarker in Quelldateien"
             exit 1
           fi
