@@ -25,6 +25,7 @@ Stand: 5. Oktober 2026
 
 ## Technisch verbindliche Auth-/Session-Retention
 - Verbrauchte oder abgelaufene E-Mail-Codes: automatische Löschung nach 7 Tagen.
+- Verbrauchte oder abgelaufene Token für Passwort-Reset und E-Mail-Bestätigung: automatische Löschung nach 7 Tagen.
 - Abgelaufene Kunden- und Operator-Sessions: automatische Löschung nach 30 Tagen.
 - Abgelaufene, noch nicht abgeschlossene MFA-Enrollment-Secrets: werden entfernt, sobald die hinterlegte Ablaufzeit überschritten ist.
 - Die Azure Logic App `logic-binso-one-retention-prod` ruft die Bereinigung täglich um 03:17 Uhr Schweizer Zeit auf. Ihre Managed Identity besitzt die Entra-Anwendungsrolle `Retention.Run`. Die App greift über ihr privates Netzwerk mit der vorhandenen Laufzeitrolle auf PostgreSQL zu.
