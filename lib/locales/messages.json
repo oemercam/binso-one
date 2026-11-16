@@ -5825,6 +5825,18 @@
     "La password è troppo lunga.",
     "Parola çok uzun."
   ],
+  "Bitte prüfe das Passwort.": [
+    "Please check the password.",
+    "Veuillez vérifier le mot de passe.",
+    "Controlla la password.",
+    "Lütfen parolayı kontrol et."
+  ],
+  "Mindestens 8 Zeichen mit Gross- und Kleinbuchstaben sowie einer Zahl oder einem Sonderzeichen.": [
+    "At least 8 characters with uppercase and lowercase letters plus a digit or a symbol.",
+    "Au moins 8 caractères, avec majuscules, minuscules et un chiffre ou un symbole.",
+    "Almeno 8 caratteri, con maiuscole, minuscole e un numero o un simbolo.",
+    "En az 8 karakter, büyük ve küçük harf ile bir rakam veya simge."
+  ],
   "Das Passwort muss mindestens 12 Zeichen haben.": [
     "The password must contain at least 12 characters.",
     "Le mot de passe doit comporter au moins 12 caractères.",
