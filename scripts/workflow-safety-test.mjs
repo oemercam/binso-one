@@ -49,7 +49,7 @@ assert.equal(watch.permissions['id-token'],undefined,'Operations Watch only uses
 assert(watch.jobs['readiness-and-maintenance'].steps.some(step=>step.run?.includes('/api/health/retention')));
 assert.equal(graph.on.workflow_dispatch.inputs.send_self_test.default,false);
 const deploy=workflows['deploy-azure.yml'].jobs.deploy;
-const appRelease=workflows['deploy-production-app.yml'];
+const appRelease=workflows['deploy-production.yml'];
 assert.deepEqual(Object.keys(appRelease.on),['workflow_dispatch'],'App promotion is deliberately dispatched');
 assert.equal(appRelease.on.workflow_dispatch.inputs.deploy.default,false);
 assert.equal(appRelease.concurrency.group,workflows['deploy-azure.yml'].concurrency.group);
