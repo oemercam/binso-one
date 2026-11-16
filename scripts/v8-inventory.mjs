@@ -51,6 +51,13 @@ export function v8Inventory(){
 }
 if(process.argv[1]===fileURLToPath(import.meta.url)){
  const output=process.argv[2]??'docs/architecture/v8-global-simple-workflow/inventory.json';
- if(fs.existsSync(output))throw Error('Preserve the pre-change inventory; choose a new explicit output path.');
- const result=v8Inventory();fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result.counts));
+ const result=v8Inventory();
+ fs.mkdirSync(path.dirname(output),{recursive:true});
+ try{
+  fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n',{flag:'wx'});
+ }catch(error){
+  if(error?.code==='EEXIST')throw Error('Preserve the pre-change inventory; choose a new explicit output path.',{cause:error});
+  throw error;
+ }
+ console.log(JSON.stringify(result.counts));
 }
