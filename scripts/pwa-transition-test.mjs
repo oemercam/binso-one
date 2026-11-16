@@ -56,7 +56,7 @@ try{
  let dirty=false,busy=false,openForm=false,reloads=0,checkTimer,clock=100000,fetches=0,visible='visible';
  const events=new Map(),windowEvents=new Map();
  globalThis.document={get visibilityState(){return visible;},querySelector:()=>openForm?{}:null,addEventListener:(name,fn)=>events.set(name,fn),removeEventListener:name=>events.delete(name)};
- globalThis.window={setTimeout:fn=>{checkTimer=fn;return 1;},clearTimeout(){},addEventListener:(name,fn)=>windowEvents.set(name,fn),removeEventListener:name=>windowEvents.delete(name),location:{reload:()=>reloads++}};
+ globalThis.window={setTimeout:fn=>{checkTimer=fn;return 1;},clearTimeout(){},setInterval:()=>2,clearInterval(){},addEventListener:(name,fn)=>windowEvents.set(name,fn),removeEventListener:name=>windowEvents.delete(name),location:{reload:()=>reloads++}};
  const noticeHooks=hooks(),originalDateNow=Date.now;Date.now=()=>clock;
  const oldBuild=process.env.BINSO_BUILD_SHA,oldMode=process.env.NODE_ENV;
  process.env.BINSO_BUILD_SHA='a'.repeat(40);process.env.NODE_ENV='production';

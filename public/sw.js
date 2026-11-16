@@ -1,8 +1,9 @@
-const CACHE = "binso-one-shell-v8";
+const CACHE = "binso-one-shell-v9";
 const OFFLINE_URL = "/offline";
 const SHELL_ASSETS = [
   OFFLINE_URL,
   "/manifest.webmanifest",
+  "/manifest-app.webmanifest",
   "/manifest-admin.webmanifest",
   "/manifest-portal.webmanifest",
   "/brand/logo-black.svg",
@@ -12,7 +13,7 @@ const SHELL_ASSETS = [
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE)
-      .then(cache => cache.addAll(SHELL_ASSETS))
+      .then(cache => Promise.allSettled(SHELL_ASSETS.map(path => cache.add(path))))
   );
 });
 
@@ -42,7 +43,7 @@ async function fetchNavigation(request) {
 
 self.addEventListener("fetch", event => {
   const request = event.request;
-  if (request.method !== "GET") return;
+  if (request.method !== "GET" || request.headers?.has("Range")) return;
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
@@ -56,21 +57,25 @@ self.addEventListener("fetch", event => {
   if (request.mode === "navigate") {
     event.respondWith(
       fetchNavigation(request)
-        .catch(() => caches.open(CACHE).then(cache => cache.match(OFFLINE_URL)))
+        .catch(async () => {
+          const cached = await caches.open(CACHE).then(cache => cache.match(OFFLINE_URL)).catch(() => undefined);
+          return cached || new Response("Keine Verbindung. Bitte lade die Seite erneut, sobald du wieder online bist.", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+        })
     );
     return;
   }
 
   // Small stable public shell assets may use network-first caching.
-  if (url.pathname.startsWith("/brand/") || ["/manifest.webmanifest", "/manifest-admin.webmanifest", "/manifest-portal.webmanifest"].includes(url.pathname)) {
+  if (url.pathname.startsWith("/brand/") || (url.pathname !== OFFLINE_URL && SHELL_ASSETS.includes(url.pathname))) {
     event.respondWith(
       fetch(request, { cache: "no-store" })
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE).then(cache => cache.put(request, clone));
+        .then(async response => {
+          if (response.status === 200 && !response.redirected) {
+            await caches.open(CACHE).then(cache => cache.put(request, response.clone())).catch(() => undefined);
+          }
           return response;
         })
-        .catch(() => caches.open(CACHE).then(cache => cache.match(request)))
+        .catch(async () => (await caches.open(CACHE).then(cache => cache.match(request)).catch(() => undefined)) || Response.error())
     );
   }
 });

@@ -572,6 +572,10 @@
 .app-launch-brand{position:relative;width:92px;height:92px;padding:0;display:grid;place-items:center;border:0;background:transparent;color:inherit}
 .app-start-icon,.app-launch-brand .logo{width:80px;height:80px;object-fit:contain}
 html[data-theme="dark"] .app-start-icon{filter:invert(1)}
+.app-start-icon{display:none}
+@media (max-width:1366px) and (pointer:coarse), (display-mode:standalone), (display-mode:minimal-ui), (display-mode:window-controls-overlay){
+ .app-start-icon{display:block}
+}
 .app-launch-error{position:absolute;top:calc(50% + 72px);max-width:320px;margin:0;color:var(--color-danger);font-size:var(--type-secondary);text-align:center}
 
 /* App task headers: one visible title and one creation entry on narrow screens. */

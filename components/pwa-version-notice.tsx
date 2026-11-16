@@ -32,9 +32,10 @@ export function PwaVersionNotice(){
   };
   // Keep this public metadata check out of the first authenticated data burst.
   const timer=window.setTimeout(()=>void check(),10000);
+  const interval=window.setInterval(()=>void check(),60000);
   const resume=()=>void check();
   document.addEventListener('visibilitychange',resume);window.addEventListener('focus',resume);
-  return()=>{active=false;window.clearTimeout(timer);document.removeEventListener('visibilitychange',resume);window.removeEventListener('focus',resume);};
+  return()=>{active=false;window.clearTimeout(timer);window.clearInterval(interval);document.removeEventListener('visibilitychange',resume);window.removeEventListener('focus',resume);};
  },[]);
  if(!available)return null;
  return <Toast tone="info" title="Neue Version verfügbar" text={blocked?'Bitte offene Änderungen zuerst speichern oder verwerfen.':undefined} actionLabel="Aktualisieren" onAction={()=>{

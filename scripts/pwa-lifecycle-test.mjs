@@ -26,7 +26,7 @@ async function scenario({controlled=false,waiting=false,unmount=false}={}){
 }
 await scenario();await scenario({controlled:true,waiting:true});await scenario({unmount:true});
 const swEvents={};let skip=0;
-vm.runInNewContext(await fs.readFile('public/sw.js','utf8'),{self:{location:{origin:"https://fixture.invalid"},addEventListener:(name,fn)=>swEvents[name]=fn,skipWaiting:()=>{skip++}},caches:{open:async()=>({addAll:async()=>{}})}});
+vm.runInNewContext(await fs.readFile('public/sw.js','utf8'),{self:{location:{origin:"https://fixture.invalid"},addEventListener:(name,fn)=>swEvents[name]=fn,skipWaiting:()=>{skip++}},caches:{open:async()=>({add:async()=>{}})}});
 let installed;swEvents.install({waitUntil:promise=>installed=promise});await installed;assert.equal(skip,0,'Shell caching finishes before requested activation');
 swEvents.message({origin:'https://other.invalid',source:{type:'window'},data:{type:'SKIP_WAITING'}});
 swEvents.message({origin:'https://fixture.invalid',source:{type:'worker'},data:{type:'SKIP_WAITING'}});

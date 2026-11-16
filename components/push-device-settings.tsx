@@ -23,7 +23,12 @@ export function PushDeviceSettings(){
    const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();
    if(permission!=='granted')throw Error('Push benötigt eine Browserfreigabe. Aktiviere Benachrichtigungen in den Geräteeinstellungen.');
    const registration=await navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'});
-   await navigator.serviceWorker.ready;
+   let timeout: ReturnType<typeof setTimeout> | undefined;
+   try {
+    await Promise.race([navigator.serviceWorker.ready, new Promise((_, reject) => {
+     timeout = setTimeout(() => reject(Error("Benachrichtigungen konnten nicht gestartet werden. Bitte versuche es erneut.")), 10000);
+    })]);
+   } finally { clearTimeout(timeout); }
    const raw=atob(config.publicKey!.replaceAll('-','+').replaceAll('_','/')),key=Uint8Array.from(raw,c=>c.charCodeAt(0));
    let previous=await registration.pushManager.getSubscription();
    if(previous){
