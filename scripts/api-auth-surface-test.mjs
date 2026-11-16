@@ -7,7 +7,7 @@ const port=process.env.BINSO_AUTH_TEST_PORT??'3217',base='http://127.0.0.1:'+por
 const inventory=JSON.parse(await fs.readFile('docs/architecture/v21-3-data-inventory.json','utf8'));
 const publicPaths=new Set([
  '/api/auth/invitation','/api/auth/login','/api/auth/logout','/api/auth/password','/api/auth/recover','/api/auth/register','/api/auth/resend-verification','/api/auth/session','/api/auth/verify-email',
- '/api/public/offer','/api/public/report','/api/billing/catalog','/api/billing/webhook','/api/health','/api/health/ready','/api/telemetry/web-vitals',
+ '/api/public/offer','/api/public/report','/api/billing/catalog','/api/billing/webhook','/api/health','/api/health/ready','/api/health/retention','/api/telemetry/web-vitals',
  '/api/demo/session','/api/operator/demo-session','/api/operator/logout','/api/operator/sso/callback',
 ]);
 // Passkey routes are dual-purpose: registration remains private and is probed

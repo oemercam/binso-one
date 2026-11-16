@@ -59,6 +59,12 @@ try{
  server=spawn(process.execPath,['--import',new URL('./isolated-sql-probe.mjs',import.meta.url).href,'node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3218'],{stdio:['ignore','pipe','pipe'],env:serverEnv});
  let logs='';server.stdout.on('data',data=>{logs+=data});server.stderr.on('data',data=>{logs+=data});
  for(let i=0;;i++){if(server.exitCode!==null)throw new Error('Synthetic HTTP server exited: '+logs);try{if((await fetch(base+'/api/health')).ok)break;}catch{}if(i>80)throw new Error('Synthetic server unavailable');await new Promise(resolve=>setTimeout(resolve,250));}
+ const retentionStatus=await fetch(base+'/api/health/retention');
+ assert.equal(retentionStatus.status,503,'Disabled retention never reports a recent successful run');
+ assert.deepEqual(await retentionStatus.json(),{status:'overdue'},'Public job status exposes no operational details');
+ assert.match(retentionStatus.headers.get('cache-control')??'',/(^|,\s*)no-store(,|$)/);
+ const retentionRequest=await fetch(base+'/api/jobs/retention',{method:'POST',headers:{cookie:cookies.get('0:owner')}});
+ assert.equal(retentionRequest.status,401,'A tenant owner session cannot invoke retention');
  const get=async(path,cookie)=>{
   // Sample before the unchanged 15-second deadline cancels the SQL statement;
   // after cancellation pg_stat_activity no longer contains the responsible query.
@@ -238,7 +244,7 @@ try{
  for(const path of ['/api/reports/exports/[id]','/api/reports/exports/[id]/send','/api/reports/exports/[id]/share'])covered.add(path);
  for(const path of ['/api/expenses/[id]','/api/documents/[number]','/api/documents/[number]/pdf','/api/documents/[number]/versions','/api/documents/[number]/followups','/api/files/[id]/download'])covered.add(path);
  for(const path of await verifyAdditionalHttpReads({pool,base,get,cookies,roles,organizations,customer,project,employee}))covered.add(path);
- const publicEntries=new Set(['/api/auth/invitation','/api/health','/api/health/ready','/api/demo/session','/api/operator/sso/callback']);
+ const publicEntries=new Set(['/api/auth/invitation','/api/health','/api/health/ready','/api/health/retention','/api/demo/session','/api/operator/sso/callback']);
  const uncoveredGets=[];
  for(const api of inventory.apis.filter(item=>item.methods.includes('GET'))){
   if(api.path.startsWith('/api/operator/')&&!publicEntries.has(api.path)||api.path.startsWith('/api/demo/')&&!publicEntries.has(api.path)){
