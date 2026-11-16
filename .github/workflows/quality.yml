@@ -127,6 +127,8 @@ jobs:
       - run: pnpm test
       - name: PWA worker regressions
         run: node scripts/pwa-worker-regression.mjs
+      - name: Error boundary recovery
+        run: node scripts/error-boundary-test.mjs
       - name: Legacy checksum attestation adversaries
         run: node scripts/legacy-checksum-attestation-test.mjs
       - name: Zurich browser calendar boundaries
