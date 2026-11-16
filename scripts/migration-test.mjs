@@ -942,8 +942,9 @@ try{
  // Seat-limit countercases are exercised above. These identity/password cases
  // need room for the newly explicit, independent synthetic reviewers.
  await db.query("update organization_subscriptions set plan='professional' where organization_id=$1",[demo]);
- const passwords=dataModule((await fs.readFile('lib/server/password.ts','utf8')).replace('import "server-only";',''));const {hashPassword}=await import(passwords);
- const invitationSource=(await fs.readFile('app/api/auth/invitation/route.ts','utf8')).replace('"@/lib/money"',JSON.stringify(moneyModule)).replace('"@/lib/server/http"',JSON.stringify(processHttp)).replace('"@/lib/server/db"',JSON.stringify(processDb)).replace('"@/lib/server/password"',JSON.stringify(passwords)).replace('"@/lib/server/rate-limit"',JSON.stringify(dataModule('export async function enforceRateLimit(){}')));
+ const passwordPolicy=dataModule(await fs.readFile('lib/password-policy.ts','utf8'));
+ const passwords=dataModule((await fs.readFile('lib/server/password.ts','utf8')).replace('import "server-only";','').replace('"@/lib/password-policy"',JSON.stringify(passwordPolicy)));const {hashPassword}=await import(passwords);
+ const invitationSource=(await fs.readFile('app/api/auth/invitation/route.ts','utf8')).replace('"@/lib/money"',JSON.stringify(moneyModule)).replace('"@/lib/server/http"',JSON.stringify(processHttp)).replace('"@/lib/server/db"',JSON.stringify(processDb)).replace('"@/lib/server/password"',JSON.stringify(passwords)).replace('"@/lib/password-policy"',JSON.stringify(passwordPolicy)).replace('"@/lib/server/rate-limit"',JSON.stringify(dataModule('export async function enforceRateLimit(){}')));
  const invitationHandler=await import(dataModule(invitationSource));
  const {createHash}=await import('node:crypto');
  const seedInvitation=async(userId,email,status,password,token)=>{

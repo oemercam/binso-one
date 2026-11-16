@@ -1,10 +1,12 @@
 import {LocalizedText} from "@/lib/client/locale";
-import type {Metadata} from "next";
+import { publicPageMetadata } from "@/lib/public-metadata";
 import Link from "next/link";
 import {LegalPage} from "@/components/legal-page";
 import {legalConfig} from "@/config/legal";
 
-export const metadata:Metadata={title:"Auftragsbearbeitung – Binso One",description:"Vereinbarung zur Auftragsbearbeitung für Binso One.",alternates:{canonical:"/auftragsbearbeitung"}};
+export function generateMetadata() {
+  return publicPageMetadata("/auftragsbearbeitung", { title: "Auftragsbearbeitung", description: "Vereinbarung zur Auftragsbearbeitung für Binso One." });
+}
 
 export default function Page(){
  return <LegalPage eyebrow="DPA" title="Vereinbarung zur Auftragsbearbeitung" intro="Diese Vereinbarung gilt, soweit Binso GmbH Personendaten im Auftrag eines Geschäftskunden in Binso One bearbeitet.">

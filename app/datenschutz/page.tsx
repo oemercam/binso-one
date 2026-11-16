@@ -1,10 +1,12 @@
 import {LocalizedText} from "@/lib/client/locale";
-import type {Metadata} from "next";
+import { publicPageMetadata } from "@/lib/public-metadata";
 import Link from "next/link";
 import {LegalPage} from "@/components/legal-page";
 import {legalConfig} from "@/config/legal";
 
-export const metadata:Metadata={title:"Datenschutz – Binso One",description:"Datenschutzerklärung der Binso GmbH für Binso One.",alternates:{canonical:"/datenschutz"}};
+export function generateMetadata() {
+  return publicPageMetadata("/datenschutz", { title: "Datenschutz", description: "Datenschutzerklärung der Binso GmbH für Binso One." });
+}
 
 export default function Page(){
  const c=legalConfig.company;

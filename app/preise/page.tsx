@@ -1,24 +1,14 @@
-import {localizeMetadata} from "@/lib/server/locale";
+import { publicPageMetadata } from "@/lib/public-metadata";
 import {LocalizedText} from "@/lib/client/locale";
-import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingFooter, MarketingHeader } from "@/components/marketing";
 import { Button, Icon } from "@/components/ui";
 import { domainConfig } from "@/config/domain";
 import { plans } from "@/lib/plans";
 
-const baseMetadata: Metadata = {
-  title: "Preise – Binso One",
-  description: `Transparente Preise für Binso One. Business-Software für Schweizer KMU ab CHF ${plans[0].monthly} pro Monat, mit ${domainConfig.trialDays} Tagen kostenloser Testphase.`,
-  alternates: { canonical: "/preise" },
-  openGraph: {
-    title: "Binso One Preise",
-    description: `Transparente Pläne für Schweizer KMU – ${domainConfig.trialDays} Tage kostenlos testen.`,
-    url: "/preise",
-    images: ["/opengraph-image"]
-  },
-};
-export async function generateMetadata():Promise<Metadata>{return localizeMetadata(baseMetadata,"/preise");}
+export function generateMetadata() {
+  return publicPageMetadata("/preise", { title: "Preise", description: `Transparente Preise für Binso One. Business-Software für Schweizer KMU ab CHF ${plans[0].monthly} pro Monat, mit ${domainConfig.trialDays} Tagen kostenloser Testphase.` });
+}
 
 
 export default function Prices(){

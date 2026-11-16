@@ -1,3 +1,4 @@
+import {hasValidNewPassword, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
 import {NextRequest} from "next/server";
 import {randomUUID} from "node:crypto";
 import {hashPassword} from "@/lib/server/password";
@@ -32,7 +33,8 @@ export async function POST(request:NextRequest){
   const lastName=hasStructuredName?stringField(body,"lastName",{max:80,min:1}):undefined;
   const contactName=hasStructuredName?[firstName,lastName].join(" "):stringField(body,"name",{max:180,min:2});
   const email=emailField(body);
-  const password=stringField(body,"password",{max:256,min:12});
+  const password=typeof body.password==="string"?body.password:"";
+  if(!hasValidNewPassword(password))throw new ApiError(400,"password_invalid",PASSWORD_REQUIREMENTS);
   const context=registrationContext(body.plan??null,body.billingCycle??null);
   const locale=registrationLocale(body.locale);
   if(body.acceptedTerms!==true||body.acceptedDpa!==true)throw new ApiError(400,"terms_required","Bitte die Vertragsbedingungen bestätigen.");

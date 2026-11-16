@@ -1,3 +1,4 @@
+import {hasValidNewPassword, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
 import {canonicalPlanId,effectiveUserLimit,capacityReached} from '@/config/plans';
 import {createHash} from "node:crypto";
 import {NextRequest} from "next/server";
@@ -30,13 +31,14 @@ export async function POST(request:NextRequest){try{
  assertSameOrigin(request);await enforceRateLimit(request,"invitation-accept",10,15*60_000);
  const b=await readJson<{token?:unknown;password?:unknown;name?:unknown;firstName?:unknown;lastName?:unknown}>(request,8192);
  const token=cleanText(b.token,200),password=typeof b.password==='string'?b.password:'';
- if(password.length<12||password.length>512)throw new ApiError(400,"password_invalid","Das Passwort muss zwischen 12 und 512 Zeichen haben.");
+ if(!password||password.length>512)throw new ApiError(400,"password_invalid","Bitte prüfe das Passwort.");
  // Read without consuming; invalid credentials must not destroy a valid invitation.
  const preview=await invitation(token);
  if(preview.user_status==='active'&&!await verifyPassword(password,preview.password_hash))throw new ApiError(403,"credentials_invalid","Das bestehende Passwort stimmt nicht.");
  const structured=b.firstName!==undefined||b.lastName!==undefined;
  const firstName=cleanText(b.firstName,80),lastName=cleanText(b.lastName,80);
  if(preview.user_status!=='active'&&structured&&(!firstName||!lastName))throw new ApiError(400,'name_required','Bitte Vorname und Nachname eingeben.');
+ if(preview.user_status!=='active'&&!hasValidNewPassword(password))throw new ApiError(400,"password_invalid",PASSWORD_REQUIREMENTS);
  const passwordHash=preview.user_status==='active'?null:await hashPassword(password);
  await withPlatform(async c=>{
   const row=(await c.query("select * from auth_tokens where token_hash=$1 and token_type='invitation' and consumed_at is null and expires_at>now() for update",[digest(token)])).rows[0];

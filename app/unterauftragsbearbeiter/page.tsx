@@ -1,9 +1,11 @@
 import {LocalizedText} from "@/lib/client/locale";
-import type {Metadata} from "next";
+import { publicPageMetadata } from "@/lib/public-metadata";
 import {LegalPage} from "@/components/legal-page";
 import {legalConfig} from "@/config/legal";
 
-export const metadata:Metadata={title:"Unterauftragsbearbeiter – Binso One",description:"Liste wesentlicher Dienstleister und Unterauftragsbearbeiter von Binso One.",alternates:{canonical:"/unterauftragsbearbeiter"}};
+export function generateMetadata() {
+  return publicPageMetadata("/unterauftragsbearbeiter", { title: "Unterauftragsbearbeiter", description: "Liste wesentlicher Dienstleister und Unterauftragsbearbeiter von Binso One." });
+}
 
 const processors=[
  {name:"Microsoft Azure / Microsoft 365 / Microsoft Entra ID",purpose:"Hosting der Anwendung, Azure Database for PostgreSQL, Dateispeicher und technische Infrastruktur; Microsoft Entra ID für interne Binso-Administrationszugriffe; Microsoft Graph / Microsoft 365 für transaktionale E-Mails.",location:"Die produktive Webanwendung wird in Azure Switzerland North betrieben. Datenbank-, Microsoft-365-, Support- und weitere Microsoft-Dienste richten sich nach der jeweils produktiv konfigurierten Azure-/Microsoft-Region und den vertraglichen Datenstandortregeln.",transfer:"Vertragliche Datenschutz- und Transfermechanismen von Microsoft; soweit erforderlich geeignete Garantien für Drittstaatentransfers."},

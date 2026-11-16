@@ -123,7 +123,8 @@ try{
  await assert.rejects(()=>globalThis.__registrationQuery("insert into organizations(name,slug) values('Forbidden Direct Create','forbidden-direct-runtime') returning id"),e=>e.code==='42501','Direct organization bootstrap must remain RLS denied');
  await assert.rejects(()=>globalThis.__registrationQuery("select bootstrap_organization('missing-user','missing@example.invalid','Bad Bootstrap','bad-bootstrap','trial')"),e=>e.code==='42501','The fixed helper cannot attach an unknown account');
  assert.equal(translations.registrationLocale('fr-CH'),'fr');assert.equal(translations.registrationLocale('untrusted'),'de');
- const body={name:'Synthetic Contact',firstName:'Synthetic',lastName:'Contact',company:'Same Company GmbH',email:'first@example.invalid',password:'a sufficiently long password',plan:'business',billingCycle:'yearly',locale:'fr-CH',acceptedTerms:true,acceptedDpa:true,...Object.fromEntries(['termsVersion','privacyVersion','dpaVersion'].map(key=>[key,context[key]]))};
+ const body={name:'Synthetic Contact',firstName:'Synthetic',lastName:'Contact',company:'Same Company GmbH',email:'first@example.invalid',password:'Binso-8!',plan:'business',billingCycle:'yearly',locale:'fr-CH',acceptedTerms:true,acceptedDpa:true,...Object.fromEntries(['termsVersion','privacyVersion','dpaVersion'].map(key=>[key,context[key]]))};
+ assert.equal((await register.POST(request('POST',{...body,password:'abcabc12'}))).status,400,'New registration requires mixed case');
  assert.equal((await register.POST(request('POST',{...body,firstName:''}))).status,400,'Contact person cannot be omitted');
  assert.equal((await register.POST(request('POST',{...body,acceptedDpa:false}))).status,400);
  assert.equal((await register.POST(request('POST',{...body,dpaVersion:'old'}))).status,409);

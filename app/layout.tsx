@@ -1,6 +1,5 @@
 import {getLocaleCatalogue} from '@/lib/server/locale-catalogue';
 import {FontPreload} from "@/components/font-preload";
-import {localizeMetadata} from "@/lib/server/locale";
 import {cookies} from "next/headers";
 import {LocaleProvider} from "@/lib/client/locale";
 import {asLocale,localeCookie,localeTags} from "@/lib/locales/config";
@@ -15,38 +14,18 @@ import { siteConfig } from "@/lib/config";
 import { PrivacyConsent } from "@/components/privacy-consent";
 import {FreshAuthenticationDialog} from '@/components/fresh-authentication-dialog';
 
-const metadataBase = new URL(siteConfig.marketingUrl);
+const metadataBase = new URL(siteConfig.publicOrigin);
 
-const baseMetadata: Metadata = {
+export const metadata: Metadata = {
   metadataBase,
   title: { default: siteConfig.name, template: `%s | ${siteConfig.name}` },
   description: siteConfig.description,
-  keywords: ["Business-Software Schweiz","KMU Software","Rechnungssoftware Schweiz","Zeiterfassung KMU","Angebotssoftware","Binso One"],
   applicationName: siteConfig.name,
   category: "business",
-  authors: [{ name: "Binso GmbH", url: "https://www.binso.ch" }],
+  authors: [{ name: "Binso GmbH", url: "https://binso.ch" }],
   creator: "Binso GmbH",
   publisher: "Binso GmbH",
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    locale: "de_CH",
-    siteName: siteConfig.name,
-    title: siteConfig.name,
-    description: siteConfig.description,
-    url: "/",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Binso One – Business-Software für Schweizer KMU" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: siteConfig.name,
-    description: siteConfig.description,
-    images: ["/opengraph-image"],
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: false, follow: false, noarchive: true },
   manifest: "/manifest.webmanifest",
   verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
   appleWebApp: {
@@ -62,7 +41,6 @@ const baseMetadata: Metadata = {
     apple: [{ url: "/brand/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
   },
 };
-export async function generateMetadata():Promise<Metadata>{return localizeMetadata(baseMetadata,"/");}
 
 
 export const viewport: Viewport = {

@@ -1,18 +1,13 @@
-import {localizeMetadata} from "@/lib/server/locale";
+import { publicPageMetadata } from "@/lib/public-metadata";
 import {LocalizedText} from "@/lib/client/locale";
-import type { Metadata } from "next";
 import { MarketingFooter, MarketingHeader, ProductPreview } from "@/components/marketing";
 import { Button, Icon } from "@/components/ui";
 import {domainConfig} from "@/config/domain";
 
 
-const baseMetadata: Metadata = {
-  title: "Produkt – Business-Software für Schweizer KMU",
-  description: "Binso One verbindet Kunden, Angebote, Rechnungen, Zahlungen, Zeiterfassung, Spesen und Mitarbeiter in einer klaren Business-Plattform für Schweizer KMU.",
-  alternates: { canonical: "/produkt" },
-  openGraph: { title: "Binso One Produkt", description: "Eine Plattform für die wichtigsten Abläufe Schweizer KMU.", url: "/produkt", images: ["/opengraph-image"] },
-};
-export async function generateMetadata():Promise<Metadata>{return localizeMetadata(baseMetadata,"/produkt");}
+export function generateMetadata() {
+  return publicPageMetadata("/produkt", { title: "Produkt", description: "Binso One verbindet Kunden, Angebote, Rechnungen, Zahlungen, Zeiterfassung, Spesen und Mitarbeiter in einer klaren Business-Plattform für Schweizer KMU." });
+}
 
 const modules=[
   ["users","Kunden","Kontakte, Aktivitäten und Finanzen zentral."],

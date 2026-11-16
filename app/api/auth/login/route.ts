@@ -18,7 +18,8 @@ export async function POST(request:NextRequest){
   await enforceRateLimit(request,"login",10,15*60_000);
   const body=asObject(await readJson(request,16_000));
   const email=emailField(body);
-  const password=stringField(body,"password",{max:256,min:1});
+  const password=typeof body.password==="string"?body.password:"";
+  if(!password||password.length>256)return json({error:"invalid_credentials",message:"E-Mail oder Passwort ist falsch."},401);
   const emailCode=body.emailCode!=null?stringField(body,"emailCode",{max:6,min:6}):"";
   // Credential lookup is identity-only. Tenant discovery follows password proof.
   const identity=(await query<{
@@ -26,7 +27,10 @@ export async function POST(request:NextRequest){
    language:string;mfa_enabled:boolean;mfa_secret_enc:string|null;recovery_code_hashes:string[];email_verified_at:Date|null
   }>(`select id,display_name as name,email,password_hash,language,mfa_enabled,mfa_secret_enc,recovery_code_hashes,email_verified_at
       from app_users where lower(email)=lower($1) and status='active' limit 1`,[email])).rows[0];
-  if(!identity?.password_hash||!(await verifyPassword(password,identity.password_hash)))return json({error:"invalid_credentials",message:"E-Mail oder Passwort ist falsch."},401);
+  // Older registrations trimmed whitespace before hashing. Try the exact input first.
+  const trimmed=password.trim();
+  if(!identity?.password_hash||(!await verifyPassword(password,identity.password_hash)&&
+      (trimmed===password||!await verifyPassword(trimmed,identity.password_hash))))return json({error:"invalid_credentials",message:"E-Mail oder Passwort ist falsch."},401);
   const membership=await withTransaction(async client=>{
    await client.query("select set_config('app.user_id',$1,true)",[identity.id]);
    return (await client.query<{organization_id:string;role:"owner"|"admin"|"finance"|"hr"|"project_manager"|"manager"|"member"|"reader"}>(`
