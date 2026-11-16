@@ -30,7 +30,7 @@ for(const [file,workflow] of Object.entries(workflows)){
  for(const [name,job] of Object.entries(workflow.jobs)){
   assert(job['timeout-minutes']>0&&job['timeout-minutes']<=45,'Bounded job: '+file+'/'+name);
   for(const step of job.steps??[])if(step.uses&&!step.uses.startsWith('./'))assert(/@[a-f0-9]{40}$/.test(step.uses),'Immutable action: '+step.uses);
-  if(job.environment==='production'){
+  if(['production','production-app'].includes(job.environment)){
    assert(job.if,'Production job needs an explicit branch guard: '+file);
    for(const event_name of ['push','schedule','workflow_dispatch'])assert.equal(Boolean(evaluate(job.if,{event_name,ref:'refs/heads/feature'},{approve_production:true})),false,file);
   }
@@ -49,6 +49,13 @@ assert.equal(watch.permissions['id-token'],undefined,'Operations Watch only uses
 assert(watch.jobs['readiness-and-maintenance'].steps.some(step=>step.run?.includes('/api/health/retention')));
 assert.equal(graph.on.workflow_dispatch.inputs.send_self_test.default,false);
 const deploy=workflows['deploy-azure.yml'].jobs.deploy;
+const appRelease=workflows['deploy-production-app.yml'];
+assert.deepEqual(Object.keys(appRelease.on),['workflow_dispatch'],'App promotion is deliberately dispatched');
+assert.equal(appRelease.on.workflow_dispatch.inputs.deploy.default,false);
+assert.equal(appRelease.concurrency.group,workflows['deploy-azure.yml'].concurrency.group);
+const artifactCheck=appRelease.jobs.release.steps.find(step=>step.id==='package').run;
+for(const guard of ['head_sha=$GITHUB_SHA','node scripts/release-artifact.mjs verify','git merge-base --is-ancestor','git diff --quiet'])
+ assert(artifactCheck.includes(guard),'App release guard: '+guard);
 const attestation=workflows['legacy-checksum-attestation.yml'];
 assert.deepEqual(Object.keys(attestation.on),['workflow_dispatch'],'Legacy metadata correction is manual only');
 assert.equal(attestation.on.workflow_dispatch.inputs.apply.default,false,'Read-only plan is the default');

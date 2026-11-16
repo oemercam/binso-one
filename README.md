@@ -221,7 +221,12 @@ Wichtige Workflows:
   - Production Build
   - Runtime Smoke Tests
 
-- **Deploy Azure App Service**
+- **Azure production app release**
+  - Nach erfolgreichem Quality-Lauf auf `main` starten und `deploy` auswählen.
+  - Der Workflow prüft das Paket für den exakten `main`-Commit, die Datenbankkompatibilität und das verfügbare Rollback-Paket. Die Azure-Identität ist auf die Produktions-App und ihren Release-Container begrenzt.
+  - Der Rollout prüft die produktive Revision, Datenbankbereitschaft, Anmeldung, Service Worker und Datenbereinigung. Bei Fehler aktiviert er das vorige Paket.
+
+- **Deploy Azure App Service** für Datenbankmigrationen und Änderungen an der Laufzeitkonfiguration
   - Datenbankmigration
   - Datenbankprüfung
   - Retention Cleanup
