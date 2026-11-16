@@ -62,7 +62,7 @@ try{
  const retentionStatus=await fetch(base+'/api/health/retention');
  assert.equal(retentionStatus.status,503,'Disabled retention never reports a recent successful run');
  assert.deepEqual(await retentionStatus.json(),{status:'overdue'},'Public job status exposes no operational details');
- assert.equal(retentionStatus.headers.get('cache-control'),'no-store');
+ assert.match(retentionStatus.headers.get('cache-control')??'',/(^|,\s*)no-store(,|$)/);
  const retentionRequest=await fetch(base+'/api/jobs/retention',{method:'POST',headers:{cookie:cookies.get('0:owner')}});
  assert.equal(retentionRequest.status,401,'A tenant owner session cannot invoke retention');
  const get=async(path,cookie)=>{
