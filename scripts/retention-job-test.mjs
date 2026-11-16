@@ -62,6 +62,7 @@ try {
 
   await db.exec(`
     create table auth_email_codes(id int primary key, consumed_at timestamptz, expires_at timestamptz);
+    create table auth_tokens(id int primary key, token_type text, consumed_at timestamptz, expires_at timestamptz);
     create table auth_sessions(id int primary key, expires_at timestamptz);
     create table platform_auth_sessions(like auth_sessions including all);
     create table app_users(id int primary key, mfa_pending_secret_enc text, mfa_pending_expires_at timestamptz);
@@ -70,14 +71,20 @@ try {
     insert into auth_email_codes select n,null,now()-interval '8 days' from generate_series(1,1001) n;
     insert into auth_email_codes values(1002,now()-interval '8 days',now()+interval '1 day'),
       (1003,null,now()-interval '6 days');
+    insert into auth_tokens values
+      (1,'password_reset',null,now()-interval '8 days'),
+      (2,'verify_email',now()-interval '8 days',now()+interval '1 day'),
+      (3,'invitation',null,now()-interval '8 days'),
+      (4,'password_reset',null,now()+interval '1 day');
     insert into auth_sessions values(1,now()-interval '31 days'),(2,now()-interval '29 days');
     insert into platform_auth_sessions select * from auth_sessions;
     insert into app_users values(1,'expired',now()-interval '1 hour'),(2,'active',now()+interval '1 hour');
   `);
   assert.equal(await job.retentionIsCurrent(), false);
-  assert.deepEqual(await job.runAuthRetention(), {emailCodes: 1000, sessions: 1, operatorSessions: 1, pendingMfa: 1});
+  assert.deepEqual(await job.runAuthRetention(), {emailCodes: 1000, recoveryTokens: 2, sessions: 1, operatorSessions: 1, pendingMfa: 1});
   assert.equal(await job.retentionIsCurrent(), true);
-  assert.deepEqual(await job.runAuthRetention(), {emailCodes: 2, sessions: 0, operatorSessions: 0, pendingMfa: 0});
+  assert.deepEqual(await job.runAuthRetention(), {emailCodes: 2, recoveryTokens: 0, sessions: 0, operatorSessions: 0, pendingMfa: 0});
+  assert.deepEqual((await db.query('select id from auth_tokens order by id')).rows, [{id: 3}, {id: 4}]);
   assert.deepEqual((await db.query('select id from auth_email_codes')).rows, [{id: 1003}]);
   assert.deepEqual((await db.query('select id from app_users where mfa_pending_secret_enc is not null')).rows, [{id: 2}]);
   await db.exec("update platform_audit_events set created_at=now()-interval '37 hours'");

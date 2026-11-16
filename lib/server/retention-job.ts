@@ -57,6 +57,12 @@ export async function runAuthRetention() {
       where consumed_at < now() - interval '7 days' or expires_at < now() - interval '7 days'
       order by expires_at,id limit $1 for update skip locked
     ) delete from auth_email_codes target using batch where target.id=batch.id`, [batchLimit]);
+    const recoveryTokens = await client.query(`with batch as (
+      select id from auth_tokens
+      where token_type in ('password_reset', 'verify_email')
+        and (consumed_at < now() - interval '7 days' or expires_at < now() - interval '7 days')
+      order by expires_at,id limit $1 for update skip locked
+    ) delete from auth_tokens target using batch where target.id=batch.id`, [batchLimit]);
     const sessions = await client.query(`with batch as (
       select id from auth_sessions where expires_at < now() - interval '30 days'
       order by expires_at,id limit $1 for update skip locked
@@ -72,6 +78,7 @@ export async function runAuthRetention() {
       from batch where target.id=batch.id`, [batchLimit]);
     const counts = {
       emailCodes: codes.rowCount ?? 0,
+      recoveryTokens: recoveryTokens.rowCount ?? 0,
       sessions: sessions.rowCount ?? 0,
       operatorSessions: operatorSessions.rowCount ?? 0,
       pendingMfa: mfa.rowCount ?? 0,
