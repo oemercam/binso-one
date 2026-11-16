@@ -1,0 +1,121 @@
+name: Azure production app release
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Promote the checked main package to production
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository_id == '1379293391' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production-app
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      AZURE_CORE_OUTPUT: none
+      APP: app-binso-one-prod
+      GROUP: rg-binso-one-prod
+      ACCOUNT: binsowebstagingpkg57c4
+      CONTAINER: binso-one-prod-releases
+      BASE: https://one.binso.ch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Verify checked main package and compatibility with live database
+        id: package
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          run_id="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/quality.yml/runs?branch=main&event=push&head_sha=$GITHUB_SHA&status=success&per_page=1" \
+            | jq -er --arg sha "$GITHUB_SHA" '.workflow_runs[] | select(.head_sha == $sha and .head_repository.id == 1379293391 and .conclusion == "success") | .id')"
+          gh run download "$run_id" -R "$GITHUB_REPOSITORY" -n "binso-candidate-$GITHUB_SHA" -D deploy
+          node scripts/release-artifact.mjs verify deploy "$GITHUB_SHA"
+          live="$(curl -fsS --max-time 15 "$BASE/api/health" | jq -er '.sha | select(test("^[a-f0-9]{40}$"))')"
+          git merge-base --is-ancestor "$live" "$GITHUB_SHA"
+          if ! git diff --quiet "$live" "$GITHUB_SHA" -- database config infrastructure lib/server/env.ts .github/workflows/deploy-azure.yml ':(exclude)config/create-actions.ts'; then
+            echo '::error::This release changes the database or runtime configuration. Use Deploy Azure App Service with private network access.'
+            exit 1
+          fi
+          curl -fsS --max-time 15 "$BASE/api/health/ready" | jq -e '.status == "ready"'
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_DEPLOY_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_DEPLOY_SUBSCRIPTION_ID }}
+      - name: Verify the live rollback package through Azure
+        id: rollback
+        env:
+          LIVE: ${{ steps.package.outputs.live }}
+        run: |
+          set -euo pipefail
+          origin="https://$ACCOUNT.blob.core.windows.net/$CONTAINER/"
+          previous="$(az webapp config appsettings list -g "$GROUP" -n "$APP" --query "[?name=='WEBSITE_RUN_FROM_PACKAGE'].value | [0]" -o tsv)"
+          previous_blob="${previous#"$origin"}"
+          [[ "$previous" == "$origin"* && "$previous_blob" =~ ^binso-one-$LIVE(-[a-f0-9]{64})?\.zip$ ]]
+          test "$(az storage blob exists --account-name "$ACCOUNT" -c "$CONTAINER" -n "$previous_blob" --auth-mode login --query exists -o tsv)" = true
+          echo "previous=$previous" >> "$GITHUB_OUTPUT"
+      - name: Promote checked package
+        id: release
+        if: inputs.deploy
+        env:
+          LIVE: ${{ steps.package.outputs.live }}
+          PREVIOUS: ${{ steps.rollback.outputs.previous }}
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(curl -fsS --max-time 15 "$BASE/api/health" | jq -er '.sha')" = "$LIVE"
+          origin="https://$ACCOUNT.blob.core.windows.net/$CONTAINER/"
+          digest="$(sha256sum deploy/binso-one.zip | cut -d ' ' -f 1)"
+          blob="binso-one-$GITHUB_SHA-$digest.zip"
+          if [[ "$(az storage blob exists --account-name "$ACCOUNT" -c "$CONTAINER" -n "$blob" --auth-mode login --query exists -o tsv)" != true ]]; then
+            az storage blob upload --account-name "$ACCOUNT" -c "$CONTAINER" -n "$blob" -f deploy/binso-one.zip --auth-mode login --overwrite false --validate-content --metadata "sha256=$digest"
+          fi
+          test "$(az storage blob show --account-name "$ACCOUNT" -c "$CONTAINER" -n "$blob" --auth-mode login --query metadata.sha256 -o tsv)" = "$digest"
+          echo "previous=$PREVIOUS" >> "$GITHUB_OUTPUT"
+          az webapp config appsettings set -g "$GROUP" -n "$APP" --settings "WEBSITE_RUN_FROM_PACKAGE=$origin$blob"
+      - name: Verify live deployment
+        if: inputs.deploy
+        run: |
+          set -euo pipefail
+          unzip -p deploy/binso-one.zip public/sw.js > "$RUNNER_TEMP/expected-sw.js"
+          test -s "$RUNNER_TEMP/expected-sw.js"
+          deadline=$((SECONDS + 600))
+          while (( SECONDS < deadline )); do
+            if curl -fsS --max-time 12 "$BASE/api/health" | jq -e --arg sha "$GITHUB_SHA" '.status == "ok" and .sha == $sha' &&
+               curl -fsS --max-time 12 "$BASE/api/health/ready" | jq -e '.status == "ready"' &&
+               curl -fsS --max-time 12 "$BASE/api/health/retention" | jq -e '.status == "current"' &&
+               curl -fsS --max-time 12 "$BASE/login" -o /dev/null &&
+               curl -fsS --max-time 12 -H 'Cache-Control: no-cache' "$BASE/sw.js" -o "$RUNNER_TEMP/live-sw.js" &&
+               cmp -s "$RUNNER_TEMP/expected-sw.js" "$RUNNER_TEMP/live-sw.js"; then
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+      - name: Restore previous package on failure
+        if: failure() && steps.release.outputs.previous != ''
+        env:
+          PREVIOUS: ${{ steps.release.outputs.previous }}
+        run: az webapp config appsettings set -g "$GROUP" -n "$APP" --settings "WEBSITE_RUN_FROM_PACKAGE=$PREVIOUS"
