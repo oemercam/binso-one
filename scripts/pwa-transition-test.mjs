@@ -51,31 +51,6 @@ try{
  routeSearch='status=Aktiv';const drilldown=hooks(),drilldownHook=load('components/records.tsx',{react:drilldown.react,'next/navigation':navigation,'@/lib/client/list-state':{listStateStore:store},'@/lib/list-filter':{listStatusOverride:statusOverride}}).useRecordsController;drilldown.hydrate();
  assert.equal(drilldown.render(()=>drilldownHook(options)).activeChip,'Aktiv','A destination drilldown uses router search parameters rather than the old browser query');
 
- // Production version detection uses real component/effect code, bounded public
- // metadata reads and an explicit action; not a forced controllerchange reload.
- let dirty=false,busy=false,openForm=false,reloads=0,checkTimer,clock=100000,fetches=0,visible='visible';
- const events=new Map(),windowEvents=new Map();
- globalThis.document={get visibilityState(){return visible;},querySelector:()=>openForm?{}:null,addEventListener:(name,fn)=>events.set(name,fn),removeEventListener:name=>events.delete(name)};
- globalThis.window={setTimeout:fn=>{checkTimer=fn;return 1;},clearTimeout(){},setInterval:()=>2,clearInterval(){},addEventListener:(name,fn)=>windowEvents.set(name,fn),removeEventListener:name=>windowEvents.delete(name),location:{reload:()=>reloads++}};
- const noticeHooks=hooks(),originalDateNow=Date.now;Date.now=()=>clock;
- const oldBuild=process.env.BINSO_BUILD_SHA,oldMode=process.env.NODE_ENV;
- process.env.BINSO_BUILD_SHA='a'.repeat(40);process.env.NODE_ENV='production';
- let serverSha='a'.repeat(40),ok=true;
- globalThis.fetch=async()=>{fetches++;return {ok,json:async()=>({status:'ok',sha:serverSha})};};
- try{
-  const notice=load('components/pwa-version-notice.tsx',{react:noticeHooks.react,'@/lib/client/backend':{hasPendingClientMutation:()=>busy},'./use-browser-back-guard':{hasProtectedDraft:()=>dirty},'./ui':{Toast:()=>null}});
-  assert.equal(noticeHooks.render(notice.PwaVersionNotice),null);const cleanup=noticeHooks.effects.shift()();
-  const settle=async()=>{await Promise.resolve();await Promise.resolve();};
-  checkTimer();await settle();assert.equal(fetches,1);assert.equal(noticeHooks.render(notice.PwaVersionNotice),null);
-  windowEvents.get('focus')();await settle();assert.equal(fetches,1,'Duplicate focus/visibility signals share a 60s throttle');
-  serverSha='b'.repeat(40);clock+=60001;visible='hidden';events.get('visibilitychange')();await settle();assert.equal(fetches,1);
-  visible='visible';events.get('visibilitychange')();await settle();let tree=noticeHooks.render(notice.PwaVersionNotice);assert.equal(tree.props.title,'Neue Version verfügbar');assert.equal(reloads,0);
-  for(const reason of ['dirty','busy','form']){dirty=reason==='dirty';busy=reason==='busy';openForm=reason==='form';tree.props.onAction();assert.equal(reloads,0,'An explicit update still protects '+reason);}
-  dirty=busy=openForm=false;tree.props.onAction();assert.equal(reloads,1,'A clean workspace can explicitly load the deployed build');
-  clock+=60001;ok=false;events.get('visibilitychange')();await settle();assert.ok(noticeHooks.render(notice.PwaVersionNotice),'An unsuccessful health request cannot invent a new version or dismiss a verified update');
-  cleanup();assert.equal(events.size,0);assert.equal(windowEvents.size,0);
- }finally{Date.now=originalDateNow;if(oldBuild===undefined)delete process.env.BINSO_BUILD_SHA;else process.env.BINSO_BUILD_SHA=oldBuild;if(oldMode===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=oldMode;}
-
  // The write guard covers fetch, JSON parsing, validation, failures and uploads.
  let releaseBody;
  globalThis.fetch=async()=>({ok:true,status:200,json:()=>new Promise(resolve=>releaseBody=resolve)});
@@ -84,7 +59,7 @@ try{
   const pending=backend[method](...args);await new Promise(resolve=>setImmediate(resolve));assert.equal(backend.hasPendingClientMutation(),true,'Response bodies remain protected for '+method);releaseBody({ok:true,item:{id:'fixture'}});await pending;assert.equal(backend.hasPendingClientMutation(),false);
  }
  globalThis.fetch=async()=>{throw new Error('Offline');};await assert.rejects(()=>backend.apiPost('/api/settings/company',{}));assert.equal(backend.hasPendingClientMutation(),false,'A failed write always releases its guard');
- console.log('Actual PWA transition owners: pre-paint list restoration, malformed/forbidden state, safe explicit version switching, resume throttling and complete mutation lifecycle passed.');
+ console.log('Actual PWA transition owners: pre-paint list restoration, malformed/forbidden state, and complete mutation lifecycle passed.');
 }finally{globalThis.window=originalWindow;globalThis.document=originalDocument;globalThis.fetch=originalFetch;}
 
 // Dashboard plan entitlement must execute on the existing authorized snapshot

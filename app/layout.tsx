@@ -8,7 +8,6 @@ import type { Metadata, Viewport } from "next";
 import "./binso-ui.css";
 import {AppShellLayout} from "@/components/app-shell";
 import { PwaRegister } from "@/components/pwa-register";
-import { PwaVersionNotice } from "@/components/pwa-version-notice";
 import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import {initializeTheme} from "@/lib/theme";
 import {ThemeRuntime} from "@/components/theme-runtime";
@@ -85,7 +84,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <PrivacyConsent />
         <FreshAuthenticationDialog />
         <PwaRegister />
-        <PwaVersionNotice />
         <WebVitalsReporter />
         </LocaleProvider>
       </body>
