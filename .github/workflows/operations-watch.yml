@@ -19,7 +19,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          URL=https://binso-admin-prod-asctesfvhnd5b6ay.switzerlandnorth-01.azurewebsites.net
+          URL=https://one.binso.ch
           curl --fail --silent --show-error --retry 2 --max-time 20 "$URL/api/health" | jq -e '.status == "ok"' > /dev/null
           curl --fail --silent --show-error --retry 2 --max-time 20 "$URL/api/health/ready" | jq -e '.status == "ready"' > /dev/null
       - name: Detect overdue scheduled retention without bypassing production approval
