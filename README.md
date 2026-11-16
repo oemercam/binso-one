@@ -221,7 +221,7 @@ Wichtige Workflows:
   - Production Build
   - Runtime Smoke Tests
 
-- **Azure production app release**
+- **Azure production release**
   - Nach erfolgreichem Quality-Lauf auf `main` starten und `deploy` auswählen.
   - Der Workflow prüft das Paket für den exakten `main`-Commit, die Datenbankkompatibilität und das verfügbare Rollback-Paket. Die Azure-Identität ist auf die Produktions-App und ihren Release-Container begrenzt.
   - Der Rollout prüft die produktive Revision, Datenbankbereitschaft, Anmeldung, Service Worker und Datenbereinigung. Bei Fehler aktiviert er das vorige Paket.

@@ -1,4 +1,4 @@
-name: Azure production app release
+name: Azure production release
 
 on:
   workflow_dispatch:
