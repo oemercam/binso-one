@@ -58,8 +58,7 @@ try {
 
   offline = false
   await page.getByRole('link', { name: 'Erneut versuchen' }).click()
-  await page.locator('h1').waitFor()
-  assert.equal(await page.locator('h1').innerText(), 'Isolated PWA fixture')
+  await page.getByRole('heading', { name: 'Isolated PWA fixture', exact: true }).waitFor()
 
   await page.goto(origin + privatePath)
   assert.equal(await page.locator('h1').innerText(), 'alice')
@@ -76,7 +75,7 @@ try {
   account = 'bob'
   offline = false
   await page.getByRole('link', { name: 'Erneut versuchen' }).click()
-  assert.equal(await page.locator('h1').innerText(), 'bob')
+  await page.getByRole('heading', { name: 'bob', exact: true }).waitFor()
   const recovered = await page.goto(origin + '/reconnected')
   assert.equal(recovered?.status(), 200)
   assert.equal(await page.locator('h1').innerText(), 'Isolated PWA fixture')

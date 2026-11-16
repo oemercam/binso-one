@@ -1,4 +1,6 @@
 {
+  "Produkt übernehmen": ["Use product", "Reprendre un produit", "Usa prodotto", "Ürün kullan"],
+  "Ausgabe": ["Expense", "Dépense", "Spesa", "Gider"],
   "Bitte Datum und Dauer prüfen.": ["Please check the date and duration.","Veuillez vérifier la date et la durée.","Controlla la data e la durata.","Lütfen tarih ve süreyi kontrol et."],
   "Bisherige Zeit zuordnen": ["Assign earlier time","Répartir le temps antérieur","Assegna il tempo precedente","Önceki süreyi günlere ata"],
   "Für diese ältere Zeitmessung fehlen Tagesangaben. Bestätige die tatsächlichen Arbeitstage; Pausen werden nicht als Arbeitszeit verteilt.": ["This older timer has no daily records. Confirm the actual working dates; breaks are not allocated as working time.","Cette ancienne mesure ne contient pas les jours. Confirmez les dates de travail réelles ; les pauses ne sont pas réparties comme du travail.","Questa vecchia misurazione non contiene i giorni. Conferma le date effettive di lavoro; le pause non sono ripartite come lavoro.","Bu eski zaman kaydının gün bilgileri eksik. Gerçek çalışma günlerini doğrula; molalar çalışma süresi olarak dağıtılmaz."],
