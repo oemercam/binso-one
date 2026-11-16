@@ -63,7 +63,7 @@
     "exceljs": "4.4.0",
     "jose": "^6.2.17",
     "lucide-react": "0.468.0",
-    "next": "16.4.1",
+    "next": "16.4.5",
     "nodemailer": "10.1.7",
     "pdfjs-dist": "5.4.296",
     "pdfkit": "0.17.2",
