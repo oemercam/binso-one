@@ -11,6 +11,8 @@ const browserModule = process.env.BINSO_PLAYWRIGHT_MODULE
 const playwright = await import(browserModule)
 const worker = await readFile('public/sw.js')
 const expectedOffline = /Keine Verbindung/i
+const privatePath = '/dashboard/pwa-fixture'
+let account = 'alice'
 let offline = false
 let browser
 const server = createServer((request, response) => {
@@ -21,6 +23,12 @@ const server = createServer((request, response) => {
   if (request.url === '/sw.js') {
     response.writeHead(200, { 'Content-Type': 'text/javascript', 'Cache-Control': 'no-store' })
     response.end(worker)
+    return
+  }
+  if (request.url === privatePath) {
+    // Even cacheable-looking private HTML must stay outside Cache Storage.
+    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' })
+    response.end('<!doctype html><h1>' + account + '</h1>')
     return
   }
   response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
@@ -49,10 +57,30 @@ try {
   assert.equal(await page.evaluate(() => caches.has('independent-browser-feature')), true)
 
   offline = false
+  await page.getByRole('link', { name: 'Erneut versuchen' }).click()
+  await page.locator('h1').waitFor()
+  assert.equal(await page.locator('h1').innerText(), 'Isolated PWA fixture')
+
+  await page.goto(origin + privatePath)
+  assert.equal(await page.locator('h1').innerText(), 'alice')
+  const privateCacheKeys = await page.evaluate(async () => {
+    const names = await caches.keys()
+    return (await Promise.all(names.map(async name => (await (await caches.open(name)).keys())
+      .map(request => new URL(request.url).pathname)))).flat()
+  })
+  assert.ok(!privateCacheKeys.includes(privatePath), 'Private HTML must not be saved in Cache Storage')
+
+  offline = true
+  await page.goto(origin + privatePath)
+  assert.match(await page.locator('h1').innerText(), expectedOffline)
+  account = 'bob'
+  offline = false
+  await page.getByRole('link', { name: 'Erneut versuchen' }).click()
+  assert.equal(await page.locator('h1').innerText(), 'bob')
   const recovered = await page.goto(origin + '/reconnected')
   assert.equal(recovered?.status(), 200)
   assert.equal(await page.locator('h1').innerText(), 'Isolated PWA fixture')
-  console.log(engine + ': real worker activation, empty-cache offline navigation and reconnect passed')
+  console.log(engine + ': real worker activation, empty-cache retry, reconnect and account isolation passed')
 } finally {
   try {
     await browser?.close()

@@ -25,9 +25,11 @@ export function PwaRegister() {
       updateFound();activateWaiting();check();
     }).catch(()=>undefined);
     document.addEventListener("visibilitychange",check);
+    window.addEventListener("online",check);
     return()=>{
       active=false;
       document.removeEventListener("visibilitychange",check);
+      window.removeEventListener("online",check);
       registration?.removeEventListener("updatefound",updateFound);
       installing?.removeEventListener("statechange",stateChanged);
     };

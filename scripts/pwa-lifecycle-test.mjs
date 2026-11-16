@@ -9,11 +9,11 @@ const source=(await fs.readFile('components/pwa-register.tsx','utf8')).replace('
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
 function target(){const listeners=new Map();return {listeners,addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:(name,fn)=>{if(listeners.get(name)===fn)listeners.delete(name)},fire:name=>listeners.get(name)?.()};}
 async function scenario({controlled=false,waiting=false,unmount=false}={}){
- const serviceWorker=target(),registration=target(),worker=target(),document=target();let updates=0,activations=0,reloads=0,cleanup;
+ const serviceWorker=target(),registration=target(),worker=target(),document=target(),window=target();let updates=0,activations=0,reloads=0,cleanup;
  document.visibilityState='visible';worker.state='installing';worker.postMessage=message=>{assert.equal(message.type,'SKIP_WAITING');activations++;serviceWorker.fire('controllerchange')};
  Object.assign(registration,{waiting:waiting?worker:null,installing:worker,update:async()=>{updates++}});
  Object.assign(serviceWorker,{controller:controlled?{}:null,register:async()=>registration});
- const exports={};Function('require','exports','useEffect','navigator','document','window','process',compiled)(require,exports,fn=>cleanup=fn(),{serviceWorker},document,{location:{reload:()=>reloads++}},{env:{NODE_ENV:'production'}});
+ const exports={};Function('require','exports','useEffect','navigator','document','window','process',compiled)(require,exports,fn=>cleanup=fn(),{serviceWorker},document,Object.assign(window,{location:{reload:()=>reloads++}}),{env:{NODE_ENV:'production'}});
  assert.equal(exports.PwaRegister(),null,'No update UI is rendered on initial mount');
  if(unmount)cleanup();await Promise.resolve();await Promise.resolve();
  if(unmount){assert.equal(registration.listeners.size,0);assert.equal(activations,0);return;}
@@ -22,7 +22,8 @@ async function scenario({controlled=false,waiting=false,unmount=false}={}){
  assert.equal(reloads,0,'Worker ownership changes never reload an in-progress draft');
  document.visibilityState='hidden';document.fire('visibilitychange');assert.equal(updates,1);
  document.visibilityState='visible';document.fire('visibilitychange');assert.equal(updates,2,'App resume checks for newer workers');
- cleanup();assert.equal(worker.listeners.size,0);assert.equal(registration.listeners.size,0);assert.equal(document.listeners.size,0,'Every lifecycle listener is cleaned up');
+ window.fire('online');assert.equal(updates,3,'Reconnect checks for newer workers');
+ cleanup();assert.equal(window.listeners.size,0);assert.equal(worker.listeners.size,0);assert.equal(registration.listeners.size,0);assert.equal(document.listeners.size,0,'Every lifecycle listener is cleaned up');
 }
 await scenario();await scenario({controlled:true,waiting:true});await scenario({unmount:true});
 const swEvents={};let skip=0;
