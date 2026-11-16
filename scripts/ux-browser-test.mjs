@@ -1155,7 +1155,7 @@ try{
     await create.waitFor({state:'visible'});const size=await create.boundingBox();
     assert.ok(size.width>=44&&size.height>=44,'Content creation keeps at least 44px touch targets');assert.equal(await create.evaluate(el=>!!el.closest('.workspace-command-bar,.app-section-dashboard .page-actions')),true,'Creation belongs to content controls or the dashboard heading');if(width>760)assert.ok(size.width>size.height,'Desktop creation exposes its visible text label');
     await create.click();const menu=page.getByRole('dialog',{name:'Neu erstellen',exact:true});
-    assert.deepEqual(await menu.locator('.action-row>span').allTextContents(),['Kunde','Angebot','Rechnung','Zeit erfassen','Auftrag','Zahlung','Spese','Produkt','Mitarbeiter','Support-Anfrage']);
+    assert.deepEqual(await menu.locator('.action-row>span').allTextContents(),['Kunde','Angebot','Auftrag','Rechnung','Zeiteintrag','Ausgabe']);
     assert.equal(await page.getByRole('button',{name:'Weiter',exact:true}).count(),0,'Opening global plus never starts an invoice wizard');
     await menu.getByRole('link',{name:'Kunde',exact:true}).click();await page.waitForURL(url=>url.pathname==='/kunden/neu'&&url.searchParams.get('returnTo')==='/dashboard');
     await page.getByRole('region',{name:'Kunde erstellen',exact:true}).getByRole('button',{name:'Abbrechen',exact:true}).click();await waitForLocalizedRoute(page,base+'/dashboard');
