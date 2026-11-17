@@ -27,11 +27,6 @@ async function assertReviewGeometry(sheet,page,caseName){
  try{await assertChoiceGeometry(sheet.locator('.form-check'));}
  catch(error){
   console.log('Registration transition diagnostic',JSON.stringify(await sheet.evaluate(el=>({progress:el.querySelector('.wizard-progress')?.textContent,steps:Array.from(el.querySelectorAll('.wizard-content>div[hidden],.wizard-content>div:not([hidden])')).map(step=>({hidden:step.hidden,height:step.getBoundingClientRect().height})),inputs:Array.from(el.querySelectorAll('input')).map(input=>({name:input.name,type:input.type,visible:input.getClientRects().length>0,disabled:input.disabled,valid:input.validity.valid,missing:input.validity.valueMissing,typeMismatch:input.validity.typeMismatch,tooShort:input.validity.tooShort})),focus:document.activeElement?.getAttribute('name')}))));
-  for (const incompletePassword of ['SyntheticPassword1', 'SyntheticPassword!']) {
-   await sheet.locator('input[name="password"]').fill(incompletePassword);
-   await sheet.getByRole('button',{name:t('next'),exact:true}).click();
-   await sheet.getByRole('alert').getByText(t('passwordHelp'),{exact:true}).waitFor();
-  }
   await page.screenshot({path:path.join(output,caseName+'-transition-failure.png'),animations:'disabled'});throw error;
  }
 }
@@ -74,6 +69,11 @@ try{
   await page.goto(base+'/registrieren?lang='+locale);await sheet.waitFor();await sheet.locator('input[name="email"]').fill(syntheticEmail);await sheet.getByRole('button',{name:t('cancel'),exact:true}).click();const discard=page.getByRole('alertdialog',{name:t('leaveTitle')});await discard.waitFor();await discard.getByRole('button',{name:t('keep'),exact:true}).click();await sheet.getByRole('button',{name:t('cancel'),exact:true}).click();await discard.getByRole('button',{name:t('discard'),exact:true}).click();await page.waitForURL('**/preise*');await page.goto(base+'/registrieren?lang='+locale);await sheet.waitFor();assert.equal(await sheet.locator('input[name="email"]').inputValue(),'');
   await sheet.locator('input[name="email"]').fill('invalid-email');await sheet.getByRole('button',{name:t('next'),exact:true}).click();assert.equal(await sheet.locator('input[name="email"]').evaluate(input=>input.validity.typeMismatch),true);await sheet.locator('input[name="email"]').fill(syntheticEmail);assert.equal(await sheet.locator('input[name="email"]').getAttribute('autocomplete'),'email');await sheet.getByRole('button',{name:t('next'),exact:true}).click();
   await sheet.locator('input[name="password"]').fill('short');await sheet.getByRole('button',{name:t('next'),exact:true}).click();assert.equal(await sheet.locator('input[name="password"]').evaluate(input=>input.validity.tooShort),true);
+  for (const incompletePassword of ['SyntheticPassword1', 'SyntheticPassword!']) {
+   await sheet.locator('input[name="password"]').fill(incompletePassword);
+   await sheet.getByRole('button',{name:t('next'),exact:true}).click();
+   await sheet.getByRole('alert').getByText(t('passwordHelp'),{exact:true}).waitFor();
+  }
   await sheet.locator('input[name="password"]').fill('Synthetic-Test-Password1!');
   await page.evaluate(()=>history.back());await discard.waitFor();await discard.getByRole('button',{name:t('keep'),exact:true}).click();await sheet.locator('input[name="password"]').waitFor({state:'visible'});
   await sheet.getByRole('button',{name:t('back'),exact:true}).click();assert.equal(await sheet.locator('input[name="email"]').inputValue(),syntheticEmail);await sheet.getByRole('button',{name:t('next'),exact:true}).click();assert.equal(await sheet.locator('input[name="password"]').inputValue(),'Synthetic-Test-Password1!');await sheet.getByRole('button',{name:t('next'),exact:true}).click();
