@@ -2,7 +2,9 @@ import type {ModuleKey} from '@/lib/modules';
 import {planCatalog} from './plans';
 import type {PlanId} from './domain';
 export type {PlanId} from './domain';
-export const pilotEnabled=process.env.NEXT_PUBLIC_BINSO_PILOT==='1';
+export const pilotEnabled=typeof document==='undefined'
+ ? process.env.BINSO_PILOT==='1'||process.env.NEXT_PUBLIC_BINSO_PILOT==='1'
+ : document.documentElement.dataset.binsoPilot==='1';
 export const pilotPlan='start' satisfies PlanId;
 const pilotModules=new Set(['kunden','offerten','auftraege','projekte','zeiterfassung','rechnungen','zahlungen','aufgaben','einstellungen']);
 const pilotExcludedRoutes=['/finanzen','/belege','/einstellungen/abwesenheiten'];

@@ -22,7 +22,7 @@ ARTIFACT_PORT="$(node --input-type=module -e 'import net from "node:net";const s
 (
   cd "$ARTIFACT_ROOT"
   node --input-type=module -e 'import {createRequire} from "node:module";const require=createRequire(process.cwd()+"/package.json");require("next/dist/server/next.js");require("@next/env");require("@swc/helpers/_/_interop_require_default");require("pdfkit");require("exceljs");require("swissqrbill/pdf");const sharp=require("sharp");await sharp({create:{width:1,height:1,channels:4,background:"#ffffff"}}).png().toBuffer();'
-  exec env PORT="$ARTIFACT_PORT" FILE_SCAN_SOCKET=/tmp/binso-scanner/clamd.sock BINSO_SCANNER_SIDECAR=true node scripts/start-scanner-production.mjs
+  exec env BINSO_PILOT=1 PORT="$ARTIFACT_PORT" FILE_SCAN_SOCKET=/tmp/binso-scanner/clamd.sock BINSO_SCANNER_SIDECAR=true node scripts/start-scanner-production.mjs
 ) > "$ARTIFACT_ROOT/server.log" 2>&1 &
 ARTIFACT_PID=$!
 READY=0
@@ -44,6 +44,9 @@ if [ "$READY" -ne 1 ]; then
   exit 1
 fi
 BINSO_ARTIFACT_ROOT="$ARTIFACT_ROOT" node --input-type=module -e 'import fs from "node:fs";import path from "node:path";import {createHash} from "node:crypto";import {validateScope,scopeDigest} from "./scripts/compliance/release-scope.mjs";const root=process.env.BINSO_ARTIFACT_ROOT;const raw=fs.readFileSync(path.join(root,"ux-compliance/release-scope.v1.json"));const scope=validateScope(JSON.parse(raw));const meta=JSON.parse(fs.readFileSync(path.join(root,"public/deployment.json")));const health=JSON.parse(fs.readFileSync(path.join(root,"health.json")));if(health.status!=="ok"||health.sha!==process.env.GITHUB_SHA||meta.sha!==process.env.GITHUB_SHA||meta.releaseProfile!==scope.id||meta.productionAcceptance!==false||meta.releaseScopeSha256!==createHash("sha256").update(raw).digest("hex")||meta.releaseScopeSha256!==scopeDigest())throw Error("Exact ZIP runtime/source/release scope mismatch");'
+curl --max-time 15 -fsS "http://127.0.0.1:$ARTIFACT_PORT/preise?lang=de" > "$ARTIFACT_ROOT/pilot-prices.html"
+grep -q 'data-binso-pilot="1"' "$ARTIFACT_ROOT/pilot-prices.html"
+node --input-type=module -e 'import fs from "node:fs";const html=fs.readFileSync(process.argv[1],"utf8");if((html.match(/class="plan-name"/g)||[]).length!==1||!/<h2>Start<\/h2>/.test(html))throw Error("Pilot pricing must render exactly the Start plan")' "$ARTIFACT_ROOT/pilot-prices.html"
 test -S /tmp/binso-scanner/clamd.sock
 test "$(stat -c %a /tmp/binso-scanner/clamd.sock)" = 600
 test "$(stat -c %a /tmp/binso-scanner)" = 700
