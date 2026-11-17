@@ -32,7 +32,7 @@ export const registrationMessages={
  accessHelp:['Mit diesen Angaben meldest du dich später bei Binso One an.','Use these details to sign in to Binso One.','Ces informations vous permettront de vous connecter à Binso One.','Usa questi dati per accedere a Binso One.','Binso One’a bu bilgilerle giriş yapacaksınız.'],
  email:['Geschäftliche E-Mail-Adresse','Business email address','Adresse e-mail professionnelle','Indirizzo e-mail aziendale','İş e-posta adresi'],
  password:['Passwort','Password','Mot de passe','Password','Parola'],
- passwordHelp:['Mindestens 8 Zeichen mit Gross- und Kleinbuchstaben sowie einer Zahl oder einem Sonderzeichen.','At least 8 characters with uppercase and lowercase letters plus a digit or a symbol.','Au moins 8 caractères, avec majuscules, minuscules et un chiffre ou un symbole.','Almeno 8 caratteri, con maiuscole, minuscole e un numero o un simbolo.','En az 8 karakter, büyük ve küçük harf ile bir rakam veya simge.'],
+ passwordHelp:['Mindestens 8 Zeichen mit Gross- und Kleinbuchstaben sowie einer Zahl und einem Sonderzeichen.','At least 8 characters with uppercase and lowercase letters plus a digit and a symbol.','Au moins 8 caractères, avec majuscules, minuscules et un chiffre et un symbole.','Almeno 8 caratteri, con maiuscole, minuscole e un numero e un simbolo.','En az 8 karakter, büyük ve küçük harf ile bir rakam ve bir simge.'],
  showPassword:['Passwort anzeigen','Show password','Afficher le mot de passe','Mostra password','Parolayı göster'],
  hidePassword:['Passwort ausblenden','Hide password','Masquer le mot de passe','Nascondi password','Parolayı gizle'],
  review:['Angaben bestätigen','Confirm your details','Confirmer les informations','Conferma i dati','Bilgileri onaylayın'],

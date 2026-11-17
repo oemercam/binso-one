@@ -124,7 +124,7 @@ export function SecuritySettingsPage(){
     <FormSheet open={panel==="password"} label="Passwort ändern" onClose={()=>setPanel(null)} busy={busy} dirty={!!(currentPassword||newPassword||confirmPassword)}><section className="settings-form">
       <div className="form-grid">
         <Field label="Aktuelles Passwort"><Input value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} type="password" autoComplete="current-password"/></Field>
-        <Field label="Neues Passwort"><Input value={newPassword} onChange={e=>setNewPassword(e.target.value)} type="password" autoComplete="new-password"/></Field>
+        <Field label="Neues Passwort" hint={PASSWORD_REQUIREMENTS}><Input value={newPassword} onChange={e=>setNewPassword(e.target.value)} type="password" autoComplete="new-password"/></Field>
         <Field label="Neues Passwort bestätigen"><Input value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} type="password" autoComplete="new-password"/></Field>
       </div>
       <Button variant="secondary" disabled={busy} onClick={()=>void changePassword()}><LocalizedText>{"Passwort speichern"}</LocalizedText></Button>

@@ -5833,11 +5833,11 @@
     "Controlla la password.",
     "Lütfen parolayı kontrol et."
   ],
-  "Mindestens 8 Zeichen mit Gross- und Kleinbuchstaben sowie einer Zahl oder einem Sonderzeichen.": [
-    "At least 8 characters with uppercase and lowercase letters plus a digit or a symbol.",
-    "Au moins 8 caractères, avec majuscules, minuscules et un chiffre ou un symbole.",
-    "Almeno 8 caratteri, con maiuscole, minuscole e un numero o un simbolo.",
-    "En az 8 karakter, büyük ve küçük harf ile bir rakam veya simge."
+  "Mindestens 8 Zeichen mit Gross- und Kleinbuchstaben sowie einer Zahl und einem Sonderzeichen.": [
+    "At least 8 characters with uppercase and lowercase letters plus a digit and a symbol.",
+    "Au moins 8 caractères, avec majuscules, minuscules et un chiffre et un symbole.",
+    "Almeno 8 caratteri, con maiuscole, minuscole e un numero e un simbolo.",
+    "En az 8 karakter, büyük ve küçük harf ile bir rakam ve bir simge."
   ],
   "Das Passwort muss mindestens 12 Zeichen haben.": [
     "The password must contain at least 12 characters.",
