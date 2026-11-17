@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import captures from "@/public/product/captures.json";
 import {LocaleSwitcher} from "./locale-switcher";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Icon, Logo } from "./ui";
 import {DetailTabs} from "./binso-ux";
 import {PrivacySettingsButton} from "./privacy-settings-button";
@@ -16,9 +16,19 @@ export function ProductCapabilities(){
 
 export function MarketingHeader() {
   const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    const mobile = window.matchMedia("(max-width: 760px)");
+    const onResize = () => { if (!mobile.matches) setOpen(false); };
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      setOpen(false);
+      menuButton.current?.focus({ preventScroll: true });
+    };
+    mobile.addEventListener("change", onResize);
+    window.addEventListener("keydown", onEscape);
     const scrollY = window.scrollY;
     const body = document.body;
     const root = document.documentElement;
@@ -35,6 +45,8 @@ export function MarketingHeader() {
     body.style.overflow = "hidden";
     root.style.overflow = "hidden";
     return () => {
+      mobile.removeEventListener("change", onResize);
+      window.removeEventListener("keydown", onEscape);
       body.style.position = previous.position;
       body.style.top = previous.top;
       body.style.width = previous.width;
@@ -45,7 +57,7 @@ export function MarketingHeader() {
   }, [open]);
 
   return <>
-    <header className="marketing-header">
+    <header className="marketing-header" data-menu-open={open || undefined}>
       <div className="marketing-nav">
         <Link href="/" onClick={() => setOpen(false)}><Logo /></Link>
         <nav>
@@ -56,14 +68,15 @@ export function MarketingHeader() {
         <div className="marketing-actions"><LocaleSwitcher compact/>
           <Link href="/login"><LocalizedText>{"Anmelden"}</LocalizedText></Link>
           <Button href="/registrieren"><LocalizedText>{"14 Tage kostenlos testen"}</LocalizedText></Button>
-          <LocalizedElement as="button" className="marketing-menu-button" type="button" aria-label={open ? "Menü schliessen" : "Menü öffnen"} onClick={() => setOpen(!open)}>
+          <LocalizedElement as="button" ref={menuButton} className="marketing-menu-button" type="button" aria-expanded={open} aria-controls={open ? "marketing-mobile-menu" : undefined} aria-label={open ? "Menü schliessen" : "Menü öffnen"} onClick={() => setOpen(!open)}>
             <span className={`menu-morph ${open ? "is-open" : ""}`} aria-hidden="true"><i/><i/><i/></span>
           </LocalizedElement>
         </div>
       </div>
     </header>
 
-    {open && <div className="marketing-mobile-menu">
+    {open && <><div className="marketing-header-placeholder" aria-hidden="true" />
+    <div id="marketing-mobile-menu" className="marketing-mobile-menu">
       <nav>
         <Link href="/produkt" onClick={() => setOpen(false)}><LocalizedText>{"Produkt "}</LocalizedText><Icon name="arrow"/></Link>
         <Link href="/#funktionen" onClick={() => setOpen(false)}><LocalizedText>{"Funktionen "}</LocalizedText><Icon name="arrow"/></Link>
@@ -79,7 +92,7 @@ export function MarketingHeader() {
         <LocalizedElement as="span" className="marketing-social-placeholder marketing-social-xing" aria-label="XING Profil folgt"><LocalizedText>{"X"}</LocalizedText></LocalizedElement>
       </LocalizedElement>
       <small className="marketing-mobile-copyright">© 2026 <a href="https://binso.ch" target="_blank" rel="noreferrer"><LocalizedText>{"Binso GmbH"}</LocalizedText></a></small>
-    </div>}
+    </div></>}
   </>;
 }
 

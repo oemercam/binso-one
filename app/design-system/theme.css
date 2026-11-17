@@ -262,6 +262,9 @@
   --palette-35c778:#35c778;
   --palette-d9a514:#d9a514;
   --palette-c43b32:#c43b32;
+  --marketing-page-start:calc(2 * var(--space-32));
+  --marketing-mobile-nav-h:54px;
+  --marketing-mobile-header-h:calc(var(--marketing-mobile-nav-h) + var(--safe-top));
   --marketing-hero-size:44px;
   --marketing-mobile-hero-size:35px;
   --access-control-height:48px;
@@ -386,3 +389,5 @@ html{scroll-behavior:auto}
  .app-root[data-ux="master-v3"]{--ux-page-inset:24px;--ux-card-inset:16px}
 }
 @media(min-width:1920px){.app-root[data-ux="master-v3"]{--ux-page-inset:40px}}
+
+@media (max-width:760px){:root{--marketing-page-start:var(--space-32)}}

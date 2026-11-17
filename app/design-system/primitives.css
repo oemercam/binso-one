@@ -110,7 +110,6 @@ input[type="file"]:disabled::file-selector-button{opacity:var(--control-disabled
 .button-upload:not(:disabled):hover{background:var(--upload-hover);opacity:1}
 .button-upload:not(:disabled):active{background:var(--upload-active)}
 .form-fieldset{border:0;padding:0;margin:0;min-width:0}
-.price-card>.button{width:100%}
 .form-link{text-align:right;font-size:var(--type-label)}
 .form-link a{font-weight:700}
 .quick-grid .button{width:100%;min-width:0;white-space:normal;text-align:left;justify-content:flex-start}
