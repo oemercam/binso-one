@@ -10,6 +10,25 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # BINso One — binding product and UI rules
 
+## Production release approval (17 November 2026)
+
+One explicit owner approval of a named release or reviewed pull request covers
+its merge and production deployment. Once that approval is recorded, merge the
+reviewed candidate, check the resulting main commit, and deploy that checked
+commit through the approved production workflow without asking again just
+because the merge produced a new SHA. Verify production health after deployment.
+
+Record the reviewed source SHA and deployed main SHA. Verify that the deployed
+commit contains only the approved changes and that mandatory checks pass for
+that commit. If release content changes beyond the approved scope, obtain
+approval for the changed scope. Production data migrations and other operations
+must be covered by the approval if they are part of the release.
+
+This replaces older instructions below that require a separate deployment
+approval or renewed approval solely for the resulting merge SHA. It preserves
+the repository checks, environment protections and rollback procedure.
+
+
 ## Global module and workflow alignment (29 October 2026)
 
 The current owner assignment is byte-preserved in
