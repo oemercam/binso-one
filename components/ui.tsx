@@ -217,7 +217,7 @@ export function LoadingState({children="Daten werden geladen …",className,layo
 
 /** Retry remains local to the owning data source; callers retain their error text. */
 export function ErrorState({children,onRetry,retryLabel="Erneut versuchen",className}:{children:React.ReactNode;onRetry?:()=>void;retryLabel?:string;className?:string}){
-  return onRetry?<div role="alert" className={className}><p><LocalizedText>{children}</LocalizedText></p><Button variant="secondary" onClick={onRetry}><LocalizedText>{retryLabel}</LocalizedText></Button></div>:<p role="alert" className={className}><LocalizedText>{children}</LocalizedText></p>;
+  return <div role="alert" className={`error-feedback ${className??""}`.trim()}><div><LocalizedText>{children}</LocalizedText></div>{onRetry&&<Button variant="secondary" onClick={onRetry}><LocalizedText>{retryLabel}</LocalizedText></Button>}</div>;
 }
 
 /** Customer and operator conversations share one bubble; direction is contextual. */

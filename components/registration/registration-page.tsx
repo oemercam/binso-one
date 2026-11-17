@@ -96,9 +96,9 @@ export function RegistrationPage(){
    {error&&<ErrorState>{t(error as RegistrationTextKey)}{error==='conflict'&&<p><Link href="/passwort-vergessen" target="_blank" rel="noopener noreferrer">{t('resetPassword')}</Link></p>}</ErrorState>}
    <Button type="submit" disabled={busy||step===2&&!accepted}>{busy?t('creating'):t(step===2?'create':'next')}</Button>{step>0&&<Button variant="secondary" disabled={busy} onClick={()=>setStep(step-1)}>{t('back')}</Button>}<Button variant="secondary" disabled={busy} onClick={requestCancel}>{t('cancel')}</Button>
   </form>:stage==='pending'?<form id="registration-verification" ref={form} onSubmit={submit}>
-   <h2>{t('verification')}</h2>{status&&<p role="status">{t(status)}</p>}<p>{email}</p><Field label={t('code')+' *'}><Input name="code" required minLength={6} maxLength={6} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" value={code} onChange={event=>setCode(event.target.value.replace(/\D/g,'').slice(0,6))} placeholder="000000"/></Field>
+   <h2>{t('verification')}</h2>{status&&<p className="auth-feedback" data-tone="info" role="status">{t(status)}</p>}<p>{email}</p><Field label={t('code')+' *'}><Input name="code" required minLength={6} maxLength={6} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" value={code} onChange={event=>setCode(event.target.value.replace(/\D/g,'').slice(0,6))} placeholder="000000"/></Field>
    {error&&<ErrorState>{t(error as RegistrationTextKey)}</ErrorState>}<Button type="submit" disabled={busy||code.length!==6}>{busy?t('sending'):t('verify')}</Button><Button variant="secondary" disabled={busy} onClick={()=>void resend()}>{t('resend')}</Button>
-  </form>:<><h2>{t('verified')}</h2><p>{t('alreadyVerified')}</p></>}
+  </form>:<><h2>{t('verified')}</h2><p className="auth-feedback" role="status">{t('alreadyVerified')}</p></>}
   <p><Link href={'/login?lang='+locale} target="_blank" rel="noopener noreferrer">{t('signIn')}</Link></p>
   <ConfirmDialog open={discard} busy={busy} title={t('leaveTitle')} message={t('leaveHelp')} cancelLabel={t('keep')} confirmLabel={t('discard')} onCancel={()=>{setDiscard(false);setBackDiscard(false)}} onConfirm={()=>{setDiscard(false);allowDraftNavigation();if(destination)window.location.assign(destination);else if(backDiscard)leaveBack();else close()}}/>
  </section></AuthWorkspace>;

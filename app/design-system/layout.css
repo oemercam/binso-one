@@ -563,6 +563,7 @@
 .page-head:not(.page-head-detail):not([data-heading-placement="content"]) .page-actions{width:100%}
 .page-head:not(.page-head-detail) .bo-page-heading-main{width:100%}
 .app-root{--control-h:48px;--control-font:var(--type-control)}
+.app-root[data-pilot]{--app-control-radius:var(--shape-group);--button-radius:var(--app-control-radius)}
 .app-header-leading{min-width:0}
 .mobile-header-detail .mobile-header-title{max-width:none;width:auto;flex:1;font-size:var(--type-subheading)}
 }

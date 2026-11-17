@@ -4,8 +4,8 @@ import {AuthWorkspace} from "@/components/auth-workspace";
 
 import {LocalizedText} from "@/lib/client/locale";
 import Link from "next/link";
-import {FormEvent,useRef,useState} from "react";
-import {Button, Input, Field, ErrorState} from "@/components/ui";
+import {FormEvent,useEffect,useRef,useState} from "react";
+import {Button, Input, Field, ErrorState, Toast} from "@/components/ui";
 import {PasswordInput} from '@/components/password-input';
 import {authRequest} from '@/lib/client/auth-request';
 import {clearClientSession} from "@/lib/client/backend";
@@ -22,6 +22,18 @@ export default function Login(){
   const [stage,setStage]=useState<Stage>("credentials");
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState("");
+  const [signedOut,setSignedOut]=useState(false);
+  useEffect(()=>{
+    let active=true;
+    queueMicrotask(()=>{
+      if(!active)return;
+      try{
+        if(new URLSearchParams(window.location.search).get("signedOut")==="1"&&window.sessionStorage.getItem("binso.logout-confirmed")==="1"){          setSignedOut(true);
+        }
+      }catch{}
+    });
+    return()=>{active=false};
+  },[]);
   const nextPath=()=>safeAppPath(new URLSearchParams(window.location.search).get("next"));
 
   const finish=(payload:Record<string,unknown>)=>{
@@ -48,6 +60,7 @@ export default function Login(){
 
   const submitCredentials=async(event:FormEvent)=>{
     event.preventDefault();if(pending.current)return;pending.current=true;setLoading(true);setError("");
+    if(signedOut){setSignedOut(false);try{window.sessionStorage.removeItem("binso.logout-confirmed");}catch{}}
     try{await loginRequest();}catch(error){setError(error instanceof Error?error.message:"Anmeldung nicht möglich.");}
     finally{pending.current=false;setLoading(false);}
   };
@@ -88,7 +101,8 @@ export default function Login(){
   </section></AuthWorkspace>;
 
   return <AuthWorkspace><section className="auth-card">
-    <h1><LocalizedText>{"Willkommen zurück"}</LocalizedText>.</h1><p><LocalizedText>{"Melde dich sicher in deinem Binso One Konto an."}</LocalizedText></p>
+    <h1><LocalizedText>Anmelden</LocalizedText></h1><p><LocalizedText>{"Melde dich sicher in deinem Binso One Konto an."}</LocalizedText></p>
+    {signedOut&&<Toast title="Sitzung abgemeldet." inline/>}
     <form onSubmit={submitCredentials}>
       <Field label="E-Mail"><Input name="username" autoCapitalize="none" spellCheck={false} required value={email} onChange={e=>setEmail(e.target.value)} type="email" inputMode="email" autoComplete="username" placeholder="name@firma.ch"/></Field>
       <Field label="Passwort"><PasswordInput name="password" required value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" placeholder="••••••••"/></Field>

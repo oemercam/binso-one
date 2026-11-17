@@ -49,9 +49,10 @@ try{
   const operator=file.includes('operator');
   for(const failed of [false,true]){
    const actions=[];window.location={origin:'https://fixture.invalid',replace:path=>actions.push(['replace',path])};
+   window.sessionStorage={setItem:(key,value)=>actions.push(['store',key,value])};
    const deps={logoutBusy:false,logoutBusyRef:{current:false},setLogoutBusy:()=>{},setLogoutError:()=>{},setConfirmLogout:()=>{},hasProtectedDraft:()=>false,unsavedChanges:false,dirty:false,allowDraftNavigation:()=>actions.push(['allow']),logoutClientSession:async()=>{if(failed)throw Error('offline')},logoutOperatorClientSession:async()=>{if(failed)throw Error('offline');return {microsoftLogoutUrl:null}}};
    const run=Function(...Object.keys(deps),compile(handler+'; return logout;'))(...Object.values(deps));await run();
-   assert.deepEqual(actions,failed?[]:[['allow'],['replace',operator?'https://fixture.invalid/operator/login':'/login']],file+' logout '+failed);
+   assert.deepEqual(actions,failed?[]:operator?[['allow'],['replace','https://fixture.invalid/operator/login']]:[['store','binso.logout-confirmed','1'],['allow'],['replace','/login?signedOut=1']],file+' logout '+failed);
   }
  }
  console.log('Session lifecycle: expiry, periodic checks, resume, bfcache, other tabs, offline, concurrency, unmount and actual tenant/operator redirect effects passed.');

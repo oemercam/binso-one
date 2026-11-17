@@ -14,4 +14,12 @@ for(const [plan,monthly,yearly,users] of [['start',29,290,3],['business',69,690,
 assert.equal(canonicalPlanId('professional'),'pro');assert.equal(canonicalPlanId('enterprise'),'pro');assert.equal(canonicalPlanId('starter'),'start');assert.equal(canonicalPlanId('unknown'),null);
 assert.equal(effectiveUserLimit('start',50),3);assert.equal(effectiveUserLimit('business',5),5);assert.equal(capacityReached(2,3),false);assert.equal(capacityReached(3,3),true);
 for(const plan of ['start','business','pro']){assert.equal(limits.subscriptionEntitlements(plan).users,planCatalog[plan].limits.users);assert.deepEqual(limits.subscriptionEntitlements(plan).features,[...planCatalog[plan].features]);}
+const pilotSource=(await fs.readFile('config/plan-access.ts','utf8')).replace("'./plans'",JSON.stringify(planCatalogModuleUrl)).replace("process.env.NEXT_PUBLIC_BINSO_PILOT==='1'",'true');
+const pilot=await import(moduleUrl(pilotSource));
+assert.equal(pilot.pilotPlan,'start');
+for(const plan of ['start','business','pro']){
+ for(const path of ['/kunden','/angebote/neu','/projekte','/zeit','/rechnungen/123','/zahlungen','/einstellungen/team'])assert.equal(pilot.planAllowsPath(plan,path),true,path);
+ for(const path of ['/spesen/neu','/berichte','/produkte','/mitarbeiter','/vertraege','/finanzen/analyse','/belege','/einstellungen/abwesenheiten'])assert.equal(pilot.planAllowsPath(plan,path),false,path);
+ for(const key of ['spesen','buchhaltung','personal','berichte','dokumente','vertraege'])assert.equal(pilot.planAllowsModule(plan,key),false,key);
+}
 console.log('V25.4 tariffs: unchanged prices, Start order flow, Pro-only independent documents, unlimited Pro and capped-plan negatives passed.');

@@ -19,7 +19,7 @@ for(const [name,source] of [['landing',home],['pricing',pricing],['register',reg
 for(const legacy of ['CHF 19','CHF 49','CHF 89']){
   assert.ok(!home.includes(legacy)&&!pricing.includes(legacy),'Public pages must not contain legacy price '+legacy);
 }
-assert.ok(pricing.includes('domainConfig.trialDays')&&pricing.includes('plans.map'),'Pricing page must use canonical trial and plan configuration');
+assert.ok(pricing.includes('domainConfig.trialDays')&&/plans\.filter\(plan=>!pilotEnabled\|\|plan\.id===pilotPlan\)\.map\(plan=>/.test(pricing),'Pricing page must use canonical trial and plan configuration');
 assert.ok(register.includes('RegistrationPage'),'Registration must mount the shared full-page entry');
 const registrationSheet=await fs.readFile('components/registration/registration-page.tsx','utf8');
 assert.ok(registrationSheet.includes("search.get(\"plan\")")&&registrationSheet.includes("search.get(\"billing\")")&&registrationSheet.includes('billingCycle:context.billingCycle'),'Registration must preserve selected plan and billing cycle through the server context');

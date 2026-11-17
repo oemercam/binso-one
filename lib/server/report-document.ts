@@ -1,7 +1,7 @@
 import 'server-only';
 import type {PoolClient} from 'pg';
 import type {SessionUser} from './session';
-import type {PlanId} from '@/config/plan-access';
+import {pilotEnabled,planAllowsModule,type PlanId} from '@/config/plan-access';
 import {ApiError} from './http';
 import {businessDate} from '@/lib/financial-status';
 import {statisticBounds,type StatisticPeriod} from '@/lib/statistics-period';
@@ -20,6 +20,7 @@ export function parseReportInput(query:URLSearchParams){
 }
 export type ReportInput=ReturnType<typeof parseReportInput>;
 export async function readReport(c:PoolClient,s:SessionUser,input:ReportInput,plan:PlanId):Promise<TimeReport|ReportSummary>{
+ if(pilotEnabled&&input.kind==='summary'&&!planAllowsModule(plan,'berichte'))throw new ApiError(403,'module_unavailable','Diese Funktion ist in deinem aktuellen Plan nicht enthalten.');
  return input.kind==='time'?timeReport(c,s,input.period,plan,input.query):reportSummary(c,s,input.period,plan);
 }
 export function localizedReportRows(kind:ReportInput['kind'],result:TimeReport|ReportSummary,locale:Locale,format:'csv'|'pdf'){

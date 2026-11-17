@@ -13,6 +13,7 @@ export async function verifyPhase1Navigation(){
  assert.deepEqual(moreNavigation.map(group=>[group.title,group.items.map(item=>item.href)]),[
   ['Geschäft',['/angebote','/rechnungen','/zahlungen','/spesen','/finanzen','/produkte','/lieferanten','/vertraege']],['Auswertung',['/berichte']],['Verwaltung',['/einstellungen/firma','/einstellungen/team','/mitarbeiter','/abwesenheiten','/einstellungen']],['Hilfe',['/support','/hilfe']]]);
  for(const [route,expected]of [['/kunden/real-id','kunden'],['/projekte/real-id','projekte'],['/zeit','zeit'],['/finanzen/analyse','more'],['/einstellungen/konto','more'],['/produkte/real-id','more'],['/lieferanten/real-id','more'],['/vertraege/real-id','more'],['/mitarbeiter/real-id','more'],['/abwesenheiten','more']])assert.equal(primaryNavigationSection(route),expected);
+ for(const [route,expected] of [["/angebote/1","sales"],["/rechnungen","sales"],["/zahlungen/1","sales"],["/zeit","projekte"]])assert.equal(primaryNavigationSection(route,true),expected);
  const old=execFileSync('git',['show',base+':app/design-system/navigation.css'],{encoding:'utf8'});
  const normalize=css=>css.replace(/font-size:[^;}]+;?/g,'').replace(/font-weight:[^;}]+;?/g,'').replace(/\r\n/g,'\n');
  const current=read('app/design-system/navigation.css');
@@ -21,7 +22,7 @@ export async function verifyPhase1Navigation(){
   assert.ok(current.includes(from));assert.notEqual(normalize(current.replace(from,to)),normalize(old),'Geometry/material/label mutation must fail: '+from);
  }
  const shell=read('components/app-shell.tsx');
- assert.match(shell,/mainNavigation\.filter\([^)]*canOpen/,'Primary destinations retain access filtering');
+ assert.match(shell,/mobileItems\.filter\([^)]*canOpen/,'Primary destinations retain access filtering');
  assert.match(shell,/group\.items\.filter\([^)]*canOpen/,'More destinations retain access filtering');
  assert.doesNotMatch(shell,/navCompact|setNavCompact/,'Labels never disappear on scroll');
  const icon=read('components/ui.tsx');for(const name of ['House','Users','BriefcaseBusiness','Clock3','Ellipsis'])assert.match(icon,new RegExp('\\b'+name+'\\b'));

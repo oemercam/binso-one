@@ -62,7 +62,7 @@ export function NotificationsPage() {
     const visible=view==="all"?remoteItems:remoteItems.filter(item=>!item.read_at);
     return <AppShell title="Benachrichtigungen" subtitle="Wichtige Aktivitäten aus deinem Unternehmen." active="einstellungen">
       <div className="notification-center">
-        <DetailTabs label="Benachrichtigungen"><button className={view==="all"?"active":""} onClick={()=>setView("all")}><LocalizedText>{"Alle"}</LocalizedText></button><button className={view==="unread"?"active":""} onClick={()=>setView("unread")}><LocalizedText>{"Ungelesen"}</LocalizedText><LocalizedText>{unreadCount>0?` (${unreadCount})`:""}</LocalizedText></button></DetailTabs>
+        <DetailTabs label="Benachrichtigungen" role="navigation"><button type="button" aria-pressed={view==="all"} className={view==="all"?"active":""} onClick={()=>setView("all")}><LocalizedText>{"Alle"}</LocalizedText></button><button type="button" aria-pressed={view==="unread"} className={view==="unread"?"active":""} onClick={()=>setView("unread")}><LocalizedText>{"Ungelesen"}</LocalizedText><LocalizedText>{unreadCount>0?` (${unreadCount})`:""}</LocalizedText></button></DetailTabs>
         {loading&&remoteItems.length===0&&<LoadingState><LocalizedText>{"Benachrichtigungen werden geladen …"}</LocalizedText></LoadingState>}
         {error&&<ErrorState onRetry={load} retryLabel="Erneut laden"><LocalizedText>{error}</LocalizedText></ErrorState>}
         {!loading&&!error&&visible.length===0&&<EmptyState  title={view==="unread"?"Alles gelesen":"Noch keine Benachrichtigungen"} />}

@@ -14,6 +14,8 @@ import { siteConfig } from "@/lib/config";
 import { PrivacyConsent } from "@/components/privacy-consent";
 import {FreshAuthenticationDialog} from '@/components/fresh-authentication-dialog';
 
+import {pilotEnabled} from '@/config/plan-access';
+
 const metadataBase = new URL(siteConfig.publicOrigin);
 
 export const metadata: Metadata = {
@@ -53,7 +55,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale=asLocale((await cookies()).get(localeCookie)?.value);
   return (
-    <html lang={localeTags[locale]} suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang={localeTags[locale]} suppressHydrationWarning data-scroll-behavior="smooth" data-binso-pilot={pilotEnabled?"1":undefined}>
       <head><FontPreload/><script id="binso-theme-init" dangerouslySetInnerHTML={{__html:`(${initializeTheme.toString()})();`}} /></head>
       <body>
         <LocaleProvider initialLocale={locale} initialCatalogue={getLocaleCatalogue(locale)}>

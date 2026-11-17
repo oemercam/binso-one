@@ -32,10 +32,10 @@ export default function Page() {
     <section className="auth-card">
 
       <h1><LocalizedText>{"Passwort zurücksetzen"}</LocalizedText></h1>
-      {sent?<><p><LocalizedText>{"Die Anfrage wurde entgegengenommen. Prüfe deinen Posteingang. Wenn kein Link ankommt, versuche es später erneut."}</LocalizedText></p><Button href="/login"><LocalizedText>{"Zur Anmeldung"}</LocalizedText></Button></>:<>
+      {sent?<><p className="auth-feedback" data-tone="info" role="status"><LocalizedText>{"Die Anfrage wurde entgegengenommen. Prüfe deinen Posteingang. Wenn kein Link ankommt, versuche es später erneut."}</LocalizedText></p><Button href="/login"><LocalizedText>{"Zur Anmeldung"}</LocalizedText></Button></>:<>
         <p><LocalizedText>{"Gib deine E-Mail-Adresse ein. Wir senden dir einen Link zum Zurücksetzen."}</LocalizedText></p>
         <form onSubmit={submit}>
-          <Field label="E-Mail"><Input required autoFocus value={email} onChange={e=>setEmail(e.target.value)} type="email" inputMode="email" autoComplete="email" placeholder="name@firma.ch"/></Field>
+          <Field label="E-Mail"><Input required value={email} onChange={e=>setEmail(e.target.value)} type="email" inputMode="email" autoComplete="email" placeholder="name@firma.ch"/></Field>
           {error&&<ErrorState className="auth-error"><LocalizedText>{error}</LocalizedText></ErrorState>}
           <Button type="submit" disabled={loading}><LocalizedText>{loading?"Wird gesendet…":"Link senden"}</LocalizedText></Button>
         </form>

@@ -14,9 +14,11 @@ import {type TenantRole} from "@/lib/permissions";
 import {legalConfig} from "@/config/legal";
 import {plans} from "@/lib/plans";
 
+import {pilotEnabled,pilotPlan} from '@/config/plan-access';
+
 export const registrationCookie="binso_registration";
 export function registrationContext(plan:unknown,billing:unknown){
- if(plan!=null&&!planIds.includes(plan as PlanId))throw new ApiError(400,"invalid_plan","Ungültiger Tarif.");
+ if(plan!=null&&(!planIds.includes(plan as PlanId)||(pilotEnabled&&plan!==pilotPlan)))throw new ApiError(400,"invalid_plan","Ungültiger Tarif.");
  if(billing!=null&&!billingCycles.includes(billing as BillingCycle))throw new ApiError(400,"invalid_billing","Ungültiges Abrechnungsintervall.");
  const selected=plan==null?null:plans.find(item=>item.id===plan)!;
  return {plan:selected?{id:selected.id,name:selected.name,monthly:selected.monthly,yearly:selected.yearly}:null,billingCycle:(billing??"monthly") as BillingCycle,trialDays:domainConfig.trialDays,termsVersion:legalConfig.termsVersion,privacyVersion:legalConfig.privacyVersion,dpaVersion:legalConfig.dpaVersion};
