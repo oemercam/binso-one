@@ -1,6 +1,6 @@
 "use client";
 
-import {MIN_PASSWORD_LENGTH} from "@/lib/password-policy";
+import {hasValidNewPassword, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH} from "@/lib/password-policy";
 import Link from "next/link";
 import {useRouter,useSearchParams} from "next/navigation";
 import {useEffect,useRef,useState,type FormEvent} from "react";
@@ -63,6 +63,7 @@ export function RegistrationPage(){
   event.preventDefault();
   if(saving.current||!context)return;
   if(stage==="new"){const invalid=Array.from(form.current?.querySelectorAll<HTMLInputElement>("input")??[]).find(input=>!input.checkValidity());if(invalid){invalid.reportValidity();return;}}
+  if(stage==='new'&&step===1&&!hasValidNewPassword(password)){setError('passwordHelp');return;}
   if(stage==='new'&&step<2){setError('');setStep(step+1);return;}
   saving.current=true;setBusy(true);setError('');
   try{
@@ -84,7 +85,7 @@ export function RegistrationPage(){
   {!context?(error?<><ErrorState>{t('failure')}</ErrorState><Button onClick={()=>setRetry(retry+1)}>{t('open')}</Button></>:<LoadingState/>):stage==='new'?<form ref={form} onSubmit={submit} noValidate>
    <p className="registration-progress" role="status">{t('stepProgress',{step:step+1,total:3})} · {t(step===0?'email':step===1?'password':'company')}</p>
    {step===0&&<Field label={t('email')+' *'}><Input name="email" required type="email" inputMode="email" autoComplete="email" maxLength={320} value={email} onChange={event=>setEmail(event.target.value)} placeholder="name@firma.ch"/></Field>}
-   {step===1&&<Field label={t('password')+' *'} hint={t('passwordHelp')}><PasswordInput name="password" required minLength={MIN_PASSWORD_LENGTH} maxLength={256} autoComplete="new-password" value={password} onChange={event=>setPassword(event.target.value)} showLabel={t('showPassword')} hideLabel={t('hidePassword')}/></Field>}
+   {step===1&&<Field label={t('password')+' *'} hint={t('passwordHelp')}><PasswordInput name="password" required minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} autoComplete="new-password" value={password} onChange={event=>setPassword(event.target.value)} showLabel={t('showPassword')} hideLabel={t('hidePassword')}/></Field>}
    {step===2&&<>
    <Field label={t('companyName')+' *'}><Input name="company" required minLength={2} maxLength={180} autoComplete="organization" value={company} onChange={event=>setCompany(event.target.value)} placeholder={t('companyExample')}/></Field>
    <Field label={t('firstName')+' *'}><Input name="firstName" required maxLength={80} autoComplete="given-name" value={firstName} onChange={event=>setFirstName(event.target.value)}/></Field>

@@ -958,10 +958,10 @@ try{
  const newInvitation=await seedInvitation('flow-new-user','flow-new@example.invalid','invited',originalPassword,'flow-new-token');
  assert.equal((await invitationHandler.GET({nextUrl:new URL('https://example.invalid/?token=flow-new-token')})).data.existingAccount,false);
  assert.equal((await invitationHandler.POST({body:{token:'flow-new-token',password:'short'}})).status,400);
- const acceptedNew=await invitationHandler.POST({body:{token:'flow-new-token',password:'Fixture new password 456',name:'New colleague'}});assert.equal(acceptedNew.status,200,JSON.stringify(acceptedNew));
+ const acceptedNew=await invitationHandler.POST({body:{token:'flow-new-token',password:'Fixture new password 456!',name:'New colleague'}});assert.equal(acceptedNew.status,200,JSON.stringify(acceptedNew));
  assert.equal((await db.query('select role,status from organization_memberships where organization_id=$1 and user_id=$2',[demo,'flow-new-user'])).rows[0].role,'finance');
  assert.equal((await db.query('select status from organization_invitations where id=$1',[newInvitation])).rows[0].status,'accepted');
- assert.equal((await invitationHandler.POST({body:{token:'flow-new-token',password:'Fixture new password 456'}})).status,400);
+ assert.equal((await invitationHandler.POST({body:{token:'flow-new-token',password:'Fixture new password 456!'}})).status,400);
  const existingInvitation=await seedInvitation('flow-existing-user','flow-existing@example.invalid','active',originalPassword,'flow-existing-token');
  const originalHash=(await db.query('select password_hash from app_users where id=$1',['flow-existing-user'])).rows[0].password_hash;
  assert.equal((await invitationHandler.POST({body:{token:'flow-existing-token',password:'Fixture wrong password 789'}})).status,403);
