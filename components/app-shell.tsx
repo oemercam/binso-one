@@ -350,7 +350,7 @@ function AppShellFrame({
     if(logoutBusyRef.current)return;
     if(dirty&&!confirmed){setSheet(null);setConfirmLogout(true);return;}
     logoutBusyRef.current=true;setLogoutBusy(true);setLogoutError(null);
-    try{await logoutClientSession();try{window.sessionStorage.setItem("binso.logout-confirmed","1");}catch{}allowDraftNavigation();window.location.replace("/login");}
+    try{await logoutClientSession();try{window.sessionStorage.setItem("binso.logout-confirmed","1");}catch{}allowDraftNavigation();window.location.replace("/login?signedOut=1");}
     catch(error){setConfirmLogout(false);setLogoutError(error instanceof Error?error.message:"Abmelden ist fehlgeschlagen. Bitte erneut versuchen.");logoutBusyRef.current=false;setLogoutBusy(false);}
   }
 

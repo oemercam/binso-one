@@ -28,9 +28,7 @@ export default function Login(){
     queueMicrotask(()=>{
       if(!active)return;
       try{
-        if(window.sessionStorage.getItem("binso.logout-confirmed")==="1"){
-          window.sessionStorage.removeItem("binso.logout-confirmed");
-          setSignedOut(true);
+        if(new URLSearchParams(window.location.search).get("signedOut")==="1"&&window.sessionStorage.getItem("binso.logout-confirmed")==="1"){          setSignedOut(true);
         }
       }catch{}
     });
@@ -62,6 +60,7 @@ export default function Login(){
 
   const submitCredentials=async(event:FormEvent)=>{
     event.preventDefault();if(pending.current)return;pending.current=true;setLoading(true);setError("");
+    if(signedOut){setSignedOut(false);try{window.sessionStorage.removeItem("binso.logout-confirmed");}catch{}}
     try{await loginRequest();}catch(error){setError(error instanceof Error?error.message:"Anmeldung nicht möglich.");}
     finally{pending.current=false;setLoading(false);}
   };
