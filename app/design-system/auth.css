@@ -85,7 +85,7 @@
 .auth-card .button{width:100%}
 }
 @media (max-width:1100px){
-.auth-workspace.auth-page{gap:40px;padding-inline:max(var(--mobile-page-x),var(--safe-left)) max(var(--mobile-page-x),var(--safe-right));padding-top:calc(22px + var(--safe-top));padding-bottom:calc(24px + var(--safe-bottom));--button-height:var(--access-control-height)}
+.auth-workspace.auth-page{gap:40px;padding-inline:max(25px,var(--safe-left)) max(25px,var(--safe-right));padding-top:calc(22px + var(--safe-top));padding-bottom:calc(24px + var(--safe-bottom));--button-height:var(--access-control-height)}
 .auth-workspace-body{grid-template-columns:minmax(0,1fr);max-width:440px;padding-block:12px;align-items:start}
 .auth-workspace-body>.auth-card{border:0;padding:0}
 .auth-workspace-header .logo{width:88px;height:28px}
