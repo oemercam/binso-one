@@ -200,7 +200,7 @@ const toastHost=()=>document.body;
 const serverToastHost=()=>null;
 export function Toast({ title, text, tone = "success",inline=false,actionLabel,onAction }: { title: string; text?: string; tone?: "success" | "danger" | "info";inline?:boolean;actionLabel?:string;onAction?:()=>void }) {
   const host=useSyncExternalStore(subscribeToastHost,toastHost,serverToastHost);
-  const feedback=<div className={`${inline?"inline-feedback":"toast"} toast-${tone}`} role={tone==="danger"?"alert":"status"}>
+  const feedback=<div className={`${inline?"inline-feedback":"toast"} toast-${tone}`} role="status">
     <span className="toast-icon"><Icon name={tone === "danger" ? "close" : tone === "info" ? "bell" : "check"} size={16}/></span>
     <div><b><LocalizedText>{title}</LocalizedText></b>{text && <small><LocalizedText>{text}</LocalizedText></small>}</div>
     {onAction&&actionLabel&&<button type="button" className="text-action" onClick={onAction}><LocalizedText>{actionLabel}</LocalizedText></button>}
