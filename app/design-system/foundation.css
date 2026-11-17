@@ -132,6 +132,7 @@ html[data-theme="dark"] textarea{
   border:0;
   background:var(--color-line);
 }
+.error-feedback{display:grid;justify-items:start;gap:var(--space-8);color:var(--status-danger-fg);overflow-wrap:anywhere}
 .error-state{
   min-height:60dvh;
   display:grid;

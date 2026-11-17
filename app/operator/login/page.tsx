@@ -3,7 +3,8 @@
 import {LocalizedText} from "@/lib/client/locale";
 import Link from "next/link";
 import {useSearchParams} from "next/navigation";
-import {Button, Logo, ErrorState} from "@/components/ui";
+import {AuthWorkspace} from "@/components/auth-workspace";
+import {Button, ErrorState} from "@/components/ui";
 
 export default function OperatorLogin(){
   const search=useSearchParams();
@@ -17,8 +18,7 @@ export default function OperatorLogin(){
   };
 
 
-  return <main className="auth-page"><section className="auth-card operator-login-card">
-    <Link href="/"><Logo/></Link>
+  return <AuthWorkspace showLocaleSwitcher={false}><section className="auth-card operator-login-card">
     <span className="eyebrow"><LocalizedText>{"ONE ADMIN"}</LocalizedText></span>
     <h1><LocalizedText>{"Admin Portal"}</LocalizedText></h1>
     <p><LocalizedText>{"Interner Zugang für Binso-Mitarbeitende über Microsoft Entra ID."}</LocalizedText></p>
@@ -26,5 +26,5 @@ export default function OperatorLogin(){
     <p className="operator-login-note"><LocalizedText>{"Microsoft verwaltet Anmeldung, Microsoft Authenticator/MFA und Kontosicherheit. Zugriff erhalten nur im Binso-Entra-Tenant autorisierte Personen mit einer zugewiesenen Binso-One-App-Rolle."}</LocalizedText></p>
     {denied&&<ErrorState className="auth-error"><LocalizedText>{"Microsoft-Anmeldung erfolgreich, aber deinem Konto ist keine gültige Binso-One-Adminrolle zugewiesen."}</LocalizedText></ErrorState>}
     <p className="auth-bottom"><Link href="/"><LocalizedText>{"Zurück zu Binso One"}</LocalizedText></Link></p>
-  </section></main>;
+  </section></AuthWorkspace>;
 }

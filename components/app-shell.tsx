@@ -25,7 +25,7 @@ import {watchSession} from '@/lib/client/session-watch';
 import {useBrowserBackGuard,allowDraftNavigation} from "./use-browser-back-guard";
 import ConfirmDialog from "./confirm-dialog";
 import { ActionRow, ActionSheet, PageHeading, DetailHeading, DetailTabs, CreateAction, QuickCreateAction } from "./binso-ux";
-import {Button, EmptyState, Icon, IconButton, Logo, LoadingState, FormActions, Status} from "./ui";
+import {Button, EmptyState, Icon, IconButton, Logo, LoadingState, FormActions, Status, Toast} from "./ui";
 import {useApiQuery,useDataRevision,prefetchApiQuery} from "@/lib/client/use-api-query";
 import { apiGet, apiPatch, apiPost, clearClientSession, logoutClientSession, isProductionBackendEnabled, useBackendMode } from "@/lib/client/backend";
 import {invalidateClientSession,readClientSession,type ClientSession} from "@/lib/client/session-cache";
@@ -350,7 +350,7 @@ function AppShellFrame({
     if(logoutBusyRef.current)return;
     if(dirty&&!confirmed){setSheet(null);setConfirmLogout(true);return;}
     logoutBusyRef.current=true;setLogoutBusy(true);setLogoutError(null);
-    try{await logoutClientSession();allowDraftNavigation();window.location.replace("/login");}
+    try{await logoutClientSession();try{window.sessionStorage.setItem("binso.logout-confirmed","1");}catch{}allowDraftNavigation();window.location.replace("/login");}
     catch(error){setConfirmLogout(false);setLogoutError(error instanceof Error?error.message:"Abmelden ist fehlgeschlagen. Bitte erneut versuchen.");logoutBusyRef.current=false;setLogoutBusy(false);}
   }
 
@@ -362,7 +362,7 @@ function AppShellFrame({
     <ConfirmDialog open={confirmLogout} busy={logoutBusy} title="Änderungen verwerfen und abmelden?" message="Deine Änderungen sind noch nicht gespeichert." confirmLabel="Abmelden" onCancel={()=>setConfirmLogout(false)} onConfirm={()=>void logout(true)}/>
     <TimerResumeNotice enabled={workspaceReady&&!preview} onOpenTimer={()=>{if(dirty)setLeaveHref(new URL('/zeit',window.location.origin).href);else router.push('/zeit');}}/>
     <ConfirmDialog open={leaveHref!==null} title="Änderungen verwerfen?" message="Deine Änderungen sind noch nicht gespeichert und gehen verloren." cancelLabel="Weiter bearbeiten" confirmLabel="Verwerfen" onCancel={()=>setLeaveHref(null)} onConfirm={()=>{const href=leaveHref;setLeaveHref(null);if(href){window.dispatchEvent(new Event("binso-draft-discard"));allowDraftNavigation();if(href==="browser-back"){leaveBack();return;}const url=new URL(href);if(url.origin===window.location.origin)router.replace(url.pathname+url.search+url.hash);else window.location.assign(href);}}}/>
-    {logoutError&&<div className="toast" role="alert"><Icon name="close" size={16}/><span><LocalizedText>{logoutError}</LocalizedText></span><button type="button" className="text-action" disabled={logoutBusy} onClick={()=>void logout()}><LocalizedText>{"Erneut versuchen"}</LocalizedText></button></div>}
+    {logoutError&&<Toast tone="danger" title={logoutError} actionLabel="Erneut versuchen" onAction={()=>void logout()}/> }
     <aside id="customer-desktop-navigation" className="app-sidebar">
       <Link href={homeHref} className="sidebar-logo" aria-label={translate("Zur Übersicht")}>{(["/dashboard","/kunden","/finanzen","/zeit","/einstellungen"].includes(pathname)||pathname.startsWith("/einstellungen/"))?<><Logo compact/><span hidden={navigationCollapsed}>One</span></>:<><Icon name="home"/><span hidden={navigationCollapsed}><LocalizedText>{"Übersicht"}</LocalizedText></span></>}</Link>
       {companyQuery.data?.item.name&&canOpen("/einstellungen/firma")&&<Link href="/einstellungen/firma" className="workspace-company" title={companyQuery.data.item.name}><Icon name="home" size={20}/>{!navigationCollapsed&&<span>{companyQuery.data.item.name}<small><LocalizedText>{"Unternehmen"}</LocalizedText></small></span>}</Link>}

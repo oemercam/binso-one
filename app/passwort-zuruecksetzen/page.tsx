@@ -41,7 +41,7 @@ export default function Page(){
     try{
       const response=await authRequest("/api/auth/password",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({password,recoveryCode,token:new URLSearchParams(window.location.search).get("token")})});
       const payload=await response.json().catch(()=>({}));
-      if(!response.ok){if(payload.error==='recovery_factor_required')setFactorRequired(true);throw new Error(typeof payload?.message==="string"?payload.message:"Passwort konnte nicht geändert werden.");}
+      if(!response.ok){if(payload.error==='reset_invalid'){setPassword("");setConfirm("");setRecoveryCode("");setInvalid(true);return;}if(payload.error==='recovery_factor_required')setFactorRequired(true);throw new Error(typeof payload?.message==="string"?payload.message:"Passwort konnte nicht geändert werden.");}
       clearClientSession();const url=new URL(window.location.href);url.searchParams.delete("token");window.history.replaceState(window.history.state,"",url);setPassword("");setConfirm("");setDone(true);
     }catch(error){
       setError(error instanceof Error?error.message:"Passwort konnte nicht geändert werden.");
@@ -50,7 +50,7 @@ export default function Page(){
 
   return <><AuthWorkspace><section className="auth-card">
 
-    {!ready?<><LoadingState/></>:invalid?<><h1><LocalizedText>{"Link nicht gültig"}</LocalizedText></h1><p><LocalizedText>{"Der Link ist abgelaufen oder ungültig. Fordere einen neuen Link an."}</LocalizedText></p><Button href="/passwort-vergessen"><LocalizedText>{"Neuen Link anfordern"}</LocalizedText></Button></>:done?<><h1><LocalizedText>{"Passwort geändert"}</LocalizedText></h1><p><LocalizedText>{"Du kannst dich jetzt mit deinem neuen Passwort anmelden."}</LocalizedText></p><Button href="/login"><LocalizedText>{"Zur Anmeldung"}</LocalizedText></Button></>:<>
+    {!ready?<><LoadingState/></>:invalid?<><h1><LocalizedText>{"Link nicht gültig"}</LocalizedText></h1><p><LocalizedText>{"Der Link ist abgelaufen oder ungültig. Fordere einen neuen Link an."}</LocalizedText></p><Button href="/passwort-vergessen"><LocalizedText>{"Neuen Link anfordern"}</LocalizedText></Button></>:done?<><h1><LocalizedText>{"Passwort geändert"}</LocalizedText></h1><p className="auth-feedback" role="status"><LocalizedText>{"Du kannst dich jetzt mit deinem neuen Passwort anmelden."}</LocalizedText></p><Button href="/login"><LocalizedText>{"Zur Anmeldung"}</LocalizedText></Button></>:<>
       <h1><LocalizedText>{"Neues Passwort"}</LocalizedText></h1><p><LocalizedText>{"Lege ein neues Passwort für dein Binso One Konto fest."}</LocalizedText></p>
       <form onSubmit={submit}>
         <Field label="Neues Passwort" hint={PASSWORD_REQUIREMENTS}><PasswordInput required minLength={MIN_PASSWORD_LENGTH} maxLength={256} value={password} onChange={e=>setPassword(e.target.value)} autoComplete="new-password"/></Field>

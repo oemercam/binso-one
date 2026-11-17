@@ -7,6 +7,8 @@ const entries = new Map()
 const deleted = []
 let networkStatus = 503
 let online = false
+let windows = []
+const opened = []
 const origin = 'https://pwa.test'
 const key = request => typeof request === 'string' ? request : request.url
 const cache = {
@@ -17,7 +19,7 @@ vm.runInNewContext(await readFile('public/sw.js', 'utf8'), {
   URL, Response, AbortController, AbortSignal, setTimeout, clearTimeout,
   self: {
     location: { origin },
-    clients: { claim: async () => {} },
+    clients: { claim: async () => {}, matchAll: async () => windows, openWindow: async url => opened.push(url) },
     addEventListener: (name, callback) => handlers.set(name, callback),
   },
   caches: {
@@ -71,4 +73,27 @@ networkStatus = 503
 await request("/brand/logo.svg")
 online = false
 assert.equal((await request("/brand/logo.svg")).status, 200, 'A failed refresh must preserve the last valid asset')
+async function clickNotification() {
+  let work
+  let closed = false
+  handlers.get('notificationclick')({
+    notification: { close: () => { closed = true }, data: { url: 'https://external.test' } },
+    waitUntil: promise => { work = promise },
+  })
+  await work
+  assert.equal(closed, true)
+}
+
+let focused = 0
+windows = [{ url: origin + '/benachrichtigungen?filter=unread', focus: async () => { focused++ } }]
+await clickNotification()
+assert.equal(focused, 1)
+assert.deepEqual(opened, [])
+windows = [{ url: 'https://external.test/benachrichtigungen', focus: async () => { focused++ } }]
+await clickNotification()
+assert.deepEqual(opened, [origin + '/benachrichtigungen'])
+assert.equal(focused, 1)
+windows = [{ url: origin + '/benachrichtigungen', focus: async () => { throw new Error('Window closed') } }]
+await clickNotification()
+assert.deepEqual(opened, Array(2).fill(origin + '/benachrichtigungen'))
 console.log('PWA worker regression checks passed')

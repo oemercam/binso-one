@@ -200,7 +200,7 @@ const toastHost=()=>document.body;
 const serverToastHost=()=>null;
 export function Toast({ title, text, tone = "success",inline=false,actionLabel,onAction }: { title: string; text?: string; tone?: "success" | "danger" | "info";inline?:boolean;actionLabel?:string;onAction?:()=>void }) {
   const host=useSyncExternalStore(subscribeToastHost,toastHost,serverToastHost);
-  const feedback=<div className={`${inline?"inline-feedback":"toast"} toast-${tone}`} role="status">
+  const feedback=<div className={`${inline?"inline-feedback":"toast"} toast-${tone}`} role={tone==="danger"?"alert":"status"}>
     <span className="toast-icon"><Icon name={tone === "danger" ? "close" : tone === "info" ? "bell" : "check"} size={16}/></span>
     <div><b><LocalizedText>{title}</LocalizedText></b>{text && <small><LocalizedText>{text}</LocalizedText></small>}</div>
     {onAction&&actionLabel&&<button type="button" className="text-action" onClick={onAction}><LocalizedText>{actionLabel}</LocalizedText></button>}
@@ -217,7 +217,7 @@ export function LoadingState({children="Daten werden geladen …",className,layo
 
 /** Retry remains local to the owning data source; callers retain their error text. */
 export function ErrorState({children,onRetry,retryLabel="Erneut versuchen",className}:{children:React.ReactNode;onRetry?:()=>void;retryLabel?:string;className?:string}){
-  return onRetry?<div role="alert" className={className}><p><LocalizedText>{children}</LocalizedText></p><Button variant="secondary" onClick={onRetry}><LocalizedText>{retryLabel}</LocalizedText></Button></div>:<p role="alert" className={className}><LocalizedText>{children}</LocalizedText></p>;
+  return <div role="alert" className={`error-feedback ${className??""}`.trim()}><div><LocalizedText>{children}</LocalizedText></div>{onRetry&&<Button variant="secondary" onClick={onRetry}><LocalizedText>{retryLabel}</LocalizedText></Button>}</div>;
 }
 
 /** Customer and operator conversations share one bubble; direction is contextual. */

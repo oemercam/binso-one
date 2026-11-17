@@ -44,7 +44,7 @@ try{
   const html=first.body.toString('utf8'),paths=new Set();
   if(path.startsWith('/login?lang=')){
    const locale=new URL(path,base).searchParams.get('lang'),translations=JSON.parse(await fs.readFile('lib/locales/messages.json','utf8'));
-   const expected=translations['Willkommen zurück'][{en:0,fr:1,it:2,tr:3}[locale]]+'.';
+   const expected=translations['Anmelden'][{en:0,fr:1,it:2,tr:3}[locale]];
    // Compare the generated text markup exactly; this is not an HTML sanitizer.
    const heading=html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1].replaceAll('<!-- -->','');
    const escaped=expected.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('\"','&quot;').replaceAll("'",'&#x27;');

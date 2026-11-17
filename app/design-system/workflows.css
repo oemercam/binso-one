@@ -318,9 +318,6 @@
 .header-search-cancel{display:none}
 .header-search-scopes{display:none;flex:none;overflow-x:auto}
 .header-search-controls{display:flex;align-items:center;gap:10px;flex:none;padding:0 0 12px}
-.header-notification-filters{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:8px 0;border-bottom:1px solid var(--color-line)}
-.header-notification-filters button{min-height:36px;padding:0 8px;border:0;background:transparent;color:var(--color-muted);font-size:var(--type-label)}
-.header-notification-filters button[aria-pressed="true"]{color:var(--color-fg);font-weight:600}
 .time-record-list{min-width:0}
 .account-sheet-profile{
   min-height:74px;

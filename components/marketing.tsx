@@ -97,13 +97,28 @@ export function MarketingHeader() {
 }
 
 export function MarketingFooter() {
- return <footer className="marketing-footer"><div className="footer-links">
-  <Link href="/impressum"><LocalizedText>Impressum</LocalizedText></Link>
-  <Link href="/datenschutz"><LocalizedText>Datenschutz</LocalizedText></Link>
-  <Link href="/agb"><LocalizedText>AGB</LocalizedText></Link>
-  <PrivacySettingsButton/>
-  <Link href="/impressum#kontakt"><LocalizedText>Kontakt</LocalizedText></Link>
- </div><small>© 2026 <LocalizedText>Binso GmbH</LocalizedText>{" · "}<a href="https://binso.ch" target="_blank" rel="noreferrer"><LocalizedText verbatim>{"binso.ch ↗"}</LocalizedText></a></small></footer>;
+ return <footer className="marketing-footer">
+  <div className="footer-navigation">
+   <section className="footer-links">
+    <h2><LocalizedText>Produkt</LocalizedText></h2>
+    <Link href="/produkt"><LocalizedText>Binso One</LocalizedText></Link>
+    <Link href="/#funktionen"><LocalizedText>Funktionen</LocalizedText></Link>
+    <Link href="/preise"><LocalizedText>Preise</LocalizedText></Link>
+   </section>
+   <section className="footer-links">
+    <h2><LocalizedText>Rechtliches</LocalizedText></h2>
+    <Link href="/impressum"><LocalizedText>Impressum</LocalizedText></Link>
+    <Link href="/datenschutz"><LocalizedText>Datenschutz</LocalizedText></Link>
+    <Link href="/agb"><LocalizedText>AGB</LocalizedText></Link>
+    <PrivacySettingsButton/>
+   </section>
+  </div>
+  <div className="footer-company">
+   <small>© 2026 <LocalizedText>Binso GmbH</LocalizedText></small>
+   <Link href="/impressum#kontakt"><LocalizedText>Kontakt</LocalizedText></Link>
+   <a href="https://binso.ch" target="_blank" rel="noreferrer"><LocalizedText verbatim>{"binso.ch ↗"}</LocalizedText></a>
+  </div>
+ </footer>;
 }
 
 const productViews=[['dashboard','Übersicht'],['customers','Kunden'],['offers','Angebote'],['invoices','Rechnungen'],['payments','Zahlungen'],['time','Zeiterfassung']] as const;

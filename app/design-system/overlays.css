@@ -107,6 +107,8 @@
   background:var(--color-bg);
   box-shadow:var(--shadow-float);
 }
+.toast-danger .toast-icon{color:var(--status-danger-fg);background:var(--status-danger-bg)}
+.toast-success .toast-icon{color:var(--status-success-fg);background:var(--status-success-bg)}
 .toast-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:var(--shape-medium);background:var(--color-subtle)}
 .toast b{font-size:var(--type-secondary)}
 .toast small{display:block;margin-top:3px;color:var(--color-muted);font-size:var(--type-secondary)}

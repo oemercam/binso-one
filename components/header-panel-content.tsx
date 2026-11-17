@@ -10,7 +10,7 @@ import {searchSources,type SearchItem} from "@/lib/search";
 import {useState} from "react";
 import {usePageAccess} from "@/lib/client/page-access";
 import {Avatar} from "./avatar";
-import {ActionRow,SettingsGroup,ListSearch} from "./binso-ux";
+import {ActionRow,DetailTabs,SettingsGroup,ListSearch} from "./binso-ux";
 import {settingsGroups} from "./settings-navigation";
 import {Button, Toast, EmptyState, Icon, LoadingState, ErrorState} from "./ui";
 
@@ -45,7 +45,7 @@ export function SearchPanel({query,onQuery,items,loading,error,onClose,recent=[]
 export function NotificationPanel({items,loading,error,filter,onFilter,onRead,onRetry,onClose}:{items:PanelNotification[];loading:boolean;error:string|null;filter:"all"|"unread";onFilter:(filter:"all"|"unread")=>void;onRead:(id:string)=>void;onRetry:()=>void;onClose:()=>void}){
  const {locale}=useLocale();const pathname=usePathname();const access=usePageAccess();const visible=items.filter(item=>(filter==="all"||!item.read_at)&&(!item.href||access.canOpen(item.href)));
  return <div className="notification-list">
-  <div className="header-notification-filters"><button type="button" aria-pressed={filter==="all"} onClick={()=>onFilter("all")}><LocalizedText>{"Alle"}</LocalizedText></button><button type="button" aria-pressed={filter==="unread"} onClick={()=>onFilter("unread")}><LocalizedText>{"Ungelesen"}</LocalizedText></button></div>
+  <DetailTabs label="Benachrichtigungen"><button type="button" className={filter==="all"?"active":""} aria-pressed={filter==="all"} onClick={()=>onFilter("all")}><LocalizedText>{"Alle"}</LocalizedText></button><button type="button" className={filter==="unread"?"active":""} aria-pressed={filter==="unread"} onClick={()=>onFilter("unread")}><LocalizedText>{"Ungelesen"}</LocalizedText></button></DetailTabs>
   {loading&&<LoadingState><LocalizedText>{"Wird geladen …"}</LocalizedText></LoadingState>}
   {error&&<ErrorState onRetry={onRetry} retryLabel="Erneut laden"><LocalizedText>{error}</LocalizedText></ErrorState>}
   {!loading&&!error&&!visible.length&&<EmptyState  title={filter==="unread"?"Keine ungelesenen Benachrichtigungen":"Keine Benachrichtigungen"} />}

@@ -14,6 +14,15 @@ export function AuthWorkspace({children,lang,showLocaleSwitcher=true,variant='id
   <div className="auth-workspace-body">
    {children}
   </div>
-  <footer className="auth-workspace-footer"><span>© Binso GmbH</span><LocalizedElement as="nav" aria-label="Rechtliches"><Link href="/datenschutz"><LocalizedText>{"Datenschutz"}</LocalizedText></Link><Link href="/impressum"><LocalizedText>{"Impressum"}</LocalizedText></Link><PrivacySettingsButton/></LocalizedElement></footer>
+  <footer className="auth-workspace-footer">
+   <LocalizedElement as="nav" aria-label="Rechtliches">
+    <Link href="/impressum"><LocalizedText>Impressum</LocalizedText></Link>
+    <Link href="/datenschutz"><LocalizedText>Datenschutz</LocalizedText></Link>
+    <Link href="/agb"><LocalizedText>AGB</LocalizedText></Link>
+    <Link href="/impressum#kontakt"><LocalizedText>Kontakt</LocalizedText></Link>
+    <PrivacySettingsButton/>
+   </LocalizedElement>
+   <small>© <LocalizedText>Binso GmbH</LocalizedText></small>
+  </footer>
  </main>;
 }

@@ -33,7 +33,7 @@ export default function VerifyEmailPage(){
  },[attempt]);
  const t=(key:Parameters<typeof registrationText>[0])=>registrationText(key,locale);
  const card=<section className="auth-card">{locale==='tr'&&<Logo/>}
-  {state==='loading'?<><h1>{t('verification')}</h1><LoadingState>{t('sending')}</LoadingState></>:state==='unavailable'?<><h1>{t('verification')}</h1><ErrorState>{t('connectionFailure')}</ErrorState><Button onClick={()=>{flight.current=null;setState('loading');setAttempt(value=>value+1)}}>{t('tryAgain')}</Button></>:state==='invalid'?<><h1>{t('verification')}</h1><p>{t('invalidCode')}</p><Button href={'/login?lang='+locale}>{t('signIn')}</Button></>:<><h1>{t('verified')}</h1><p>{t(state==='already'?'alreadyVerified':'verified')}</p><Button href={state==='already'?'/login?lang='+locale:next}>{t(state==='already'?'signIn':'open')}</Button></>}
+  {state==='loading'?<><h1>{t('verification')}</h1><LoadingState>{t('sending')}</LoadingState></>:state==='unavailable'?<><h1>{t('verification')}</h1><ErrorState>{t('connectionFailure')}</ErrorState><Button onClick={()=>{flight.current=null;setState('loading');setAttempt(value=>value+1)}}>{t('tryAgain')}</Button></>:state==='invalid'?<><h1>{t('verification')}</h1><ErrorState className="auth-error">{t('invalidCode')}</ErrorState><Button href={'/login?lang='+locale}>{t('signIn')}</Button></>:<><h1>{t('verified')}</h1><p className="auth-feedback" role="status">{t(state==='already'?'alreadyVerified':'verified')}</p><Button href={state==='already'?'/login?lang='+locale:next}>{t(state==='already'?'signIn':'open')}</Button></>}
  </section>;
  // Registration mail supports Turkish; the general workspace currently has
  // four locales. Preserve the translated verification without inventing a
