@@ -1,3 +1,4 @@
+import {verifyMobileMarketingLayout} from './mobile-marketing-layout-browser.mjs';
 import {verifyConsentRejection} from './privacy-consent-browser.mjs';
 import {verifyLanguagePreference} from './language-preference-browser.mjs';
 import {createUiAuthFixture} from './ui-auth-fixture.mjs';
@@ -34,6 +35,10 @@ try{
   await navigation.goto(page,base+'/?lang='+locale,{waitUntil:'networkidle'});await page.locator('.reference-hero').waitFor();
   assert.equal(await page.locator('html').getAttribute('lang'),(locale==='tr'?'tr-TR':locale+'-CH'));
   await verifyConsentRejection(page,text,locale);
+  if(width===390&&locale==='de'){
+   await verifyMobileMarketingLayout(page,base,(url)=>navigation.goto(page,url,{waitUntil:'networkidle'}));
+   await navigation.goto(page,base+'/?lang='+locale,{waitUntil:'networkidle'});
+  }
   const selector=page.locator('.locale-switcher .app-select-trigger:visible').first();await selectAppOption(selector, locale==='en'?'fr':'en');
   const chosen=locale==='en'?'fr':'en';await page.waitForFunction(code=>document.documentElement.lang===(code==='tr'?'tr-TR':code+'-CH'),chosen);
   await navigation.reload(page,{waitUntil:'networkidle'});assert.equal(await page.locator('html').getAttribute('lang'),chosen+'-CH','Choice survives reload');

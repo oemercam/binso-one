@@ -520,10 +520,6 @@
 }
 @media (max-width:760px){
 html,body{width:100%;max-width:100%;min-width:0;overflow-x:clip}
-.subpage{
-    padding-left:max(var(--mobile-page-x),var(--safe-left));
-    padding-right:max(var(--mobile-page-x),var(--safe-right));
-  }
 .subhero h1{
     max-width:100%;
     font-size:clamp(36px,9.4vw,42px);
@@ -532,10 +528,8 @@ html,body{width:100%;max-width:100%;min-width:0;overflow-x:clip}
     word-break:normal;
   }
 .subhero p{font-size:var(--type-body)}
-.subpage{padding-top:38px;padding-bottom:54px}
 .workflow-list>article{min-height:72px;grid-template-columns:34px minmax(0,1fr)}
 .workflow-list h3{font-size:var(--type-body-large)}
-.product-modules{grid-template-columns:1fr}
 .price-card{min-height:0;padding:20px;border-radius:var(--shape-panel)}
 .price-card>p{min-height:0}
 .price strong{font-size:var(--type-display-small)}
