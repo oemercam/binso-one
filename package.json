@@ -95,7 +95,8 @@
   "packageManager": "pnpm@10.17.1",
   "pnpm": {
     "overrides": {
-      "minimatch": "11.0.1",
+      "minimatch": "11.0.5",
+      "tinyglobby": "file:./scripts/eslint/tsconfig-glob",
       "source-map-js": "1.2.2",
       "exceljs>uuid": "11.1.1",
       "@next/eslint-plugin-next>fast-glob": "-"
