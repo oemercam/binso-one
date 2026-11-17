@@ -5,7 +5,7 @@ import {LocalizedText,LocalizedElement,useTranslation,useLocale} from "@/lib/cli
 import {asLocale} from '@/lib/locales/config';
 import {PageAccessContext} from "@/lib/client/page-access";
 import {tenantCanOpenPath,tenantCan,tenantCanCreateAt,permissionForModule,type ModuleProfile} from "@/lib/permissions";
-import {isPlanId,moduleForPath,planAllowsPath,type PlanId} from "@/config/plan-access";
+import {isPlanId,moduleForPath,pilotEnabled,planAllowsPath,type PlanId} from "@/config/plan-access";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {loadTheme,saveTheme} from "@/lib/client/theme";
@@ -24,7 +24,7 @@ import {RecordsControls} from './records';
 import {watchSession} from '@/lib/client/session-watch';
 import {useBrowserBackGuard,allowDraftNavigation} from "./use-browser-back-guard";
 import ConfirmDialog from "./confirm-dialog";
-import { ActionRow, ActionSheet, PageHeading, DetailHeading, CreateAction, QuickCreateAction } from "./binso-ux";
+import { ActionRow, ActionSheet, PageHeading, DetailHeading, DetailTabs, CreateAction, QuickCreateAction } from "./binso-ux";
 import {Button, EmptyState, Icon, IconButton, Logo, LoadingState, FormActions, Status} from "./ui";
 import {useApiQuery,useDataRevision,prefetchApiQuery} from "@/lib/client/use-api-query";
 import { apiGet, apiPatch, apiPost, clearClientSession, logoutClientSession, isProductionBackendEnabled, useBackendMode } from "@/lib/client/backend";
@@ -34,7 +34,7 @@ import type {PanelNotification} from "./header-panel-content";
 import {HeaderPanel} from "./header-panel";
 import {Avatar} from "./avatar";
 import {SettingsWorkspace,settingsGroups} from "./settings-navigation";
-import {mainNavigation,moreNavigation,primaryNavigationSection} from '@/config/workspace-navigation';
+import {mainNavigation,moreNavigation,pilotSalesNavigation,pilotWorkNavigation,primaryNavigationSection} from '@/config/workspace-navigation';
 import {SettingsGroup} from './binso-ux';
 import {UserProfileContext} from '@/lib/client/user-profile';
 import {AppHeader,MobileDock} from "./app-chrome";
@@ -173,6 +173,17 @@ function AppShellFrame({
   const hasPermission=useCallback((permission:Parameters<typeof tenantCan>[1])=>!!access&&tenantCan(access.role,permission,access.moduleProfile),[access]);
   const pageAccess=useMemo(()=>({write:canWrite,canOpen,hasPermission}),[canWrite,canOpen,hasPermission]);
   const listControls=isValidElement<{children?:React.ReactNode}>(actions)&&actions.type===RecordsControls?actions:null;
+  const pilotNavigation=pilotEnabled&&access?.moduleProfile!=="time_only";
+  const sales=pilotSalesNavigation.filter(item=>canOpen(item.href));
+  const work=pilotWorkNavigation.filter(item=>canOpen(item.href));
+  const pilotItems=mainNavigation.filter(item=>item.section==="dashboard"||item.section==="kunden");
+  const mobileItems=pilotNavigation?[...pilotItems,
+    ...(work.length?[{href:work[0].href,label:work[0].label,icon:"briefcase-business" as const,section:"projekte"}]:[]),
+    ...(sales.length?[{href:sales[0].href,label:"Verkauf",icon:"file" as const,section:"sales"}]:[])
+  ]:mainNavigation;
+  const navItems=mobileItems.filter(item=>canOpen(item.href));
+  const navSection=primaryNavigationSection(pathname,pilotNavigation);
+  const pilotTabs=pilotNavigation&&(sales.some(item=>item.href===pathname)?sales:work.some(item=>item.href===pathname)?work:[]);
   const visibleActions=listControls?listControls.props.children:actions;
   const contentCreate=isValidElement<{icon?:string}>(visibleActions)&&(visibleActions.type===CreateAction||visibleActions.type===QuickCreateAction||visibleActions.type===Button&&visibleActions.props.icon==="plus");
   const childNodes=Children.toArray(children);
@@ -346,8 +357,8 @@ function AppShellFrame({
 
 
   return <UserProfileContext.Provider value={profileItem??(profileQuery.data||profileQuery.error?{}:null)}><WorkspaceActionContext.Provider value={registerContextActions}><PageAccessContext.Provider value={pageAccess}>
-    <WorkspaceStartup identityReady={!!access||!!accessError} contentReady={!!accessError||profileReady&&!loading}>
-    <div ref={shellRef} data-ux="master-v3" data-unsaved={dirty||undefined} data-navigation-collapsed={navigationCollapsed||undefined} className={`app-root app-section-${active} ${preview ? "app-preview" : ""} ${formActive ? "app-editing" : ""} ${chatActive ? "app-chat" : ""}`}>
+    <WorkspaceStartup identityReady={!!access||!!accessError} contentReady={!!accessError||profileReady&&(!loading||!allowed)}>
+    <div ref={shellRef} data-ux="master-v3" data-pilot={pilotEnabled||undefined} data-unsaved={dirty||undefined} data-navigation-collapsed={navigationCollapsed||undefined} className={`app-root app-section-${active} ${preview ? "app-preview" : ""} ${formActive ? "app-editing" : ""} ${chatActive ? "app-chat" : ""}`}>
     <ConfirmDialog open={confirmLogout} busy={logoutBusy} title="Änderungen verwerfen und abmelden?" message="Deine Änderungen sind noch nicht gespeichert." confirmLabel="Abmelden" onCancel={()=>setConfirmLogout(false)} onConfirm={()=>void logout(true)}/>
     <TimerResumeNotice enabled={workspaceReady&&!preview} onOpenTimer={()=>{if(dirty)setLeaveHref(new URL('/zeit',window.location.origin).href);else router.push('/zeit');}}/>
     <ConfirmDialog open={leaveHref!==null} title="Änderungen verwerfen?" message="Deine Änderungen sind noch nicht gespeichert und gehen verloren." cancelLabel="Weiter bearbeiten" confirmLabel="Verwerfen" onCancel={()=>setLeaveHref(null)} onConfirm={()=>{const href=leaveHref;setLeaveHref(null);if(href){window.dispatchEvent(new Event("binso-draft-discard"));allowDraftNavigation();if(href==="browser-back"){leaveBack();return;}const url=new URL(href);if(url.origin===window.location.origin)router.replace(url.pathname+url.search+url.hash);else window.location.assign(href);}}}/>
@@ -357,7 +368,7 @@ function AppShellFrame({
       {companyQuery.data?.item.name&&canOpen("/einstellungen/firma")&&<Link href="/einstellungen/firma" className="workspace-company" title={companyQuery.data.item.name}><Icon name="home" size={20}/>{!navigationCollapsed&&<span>{companyQuery.data.item.name}<small><LocalizedText>{"Unternehmen"}</LocalizedText></small></span>}</Link>}
       <nav aria-label={translate("Navigation")}>
         {canOpen("/dashboard")&&<Link href="/dashboard" aria-label={translate("Übersicht")} title={translate("Übersicht")} className={active==="dashboard"?"active":""} aria-current={active==="dashboard"?"page":undefined}><Icon name="home"/><span><LocalizedText>{"Übersicht"}</LocalizedText></span></Link>}
-        {desktopNavGroups.map(group=>desktopNav.some(([href])=>group.paths.includes(href)&&canOpen(href))&&<div className="sidebar-nav-group" key={group.label}><span className="sidebar-nav-label"><LocalizedText>{group.label}</LocalizedText></span>{desktopNav.filter(([href])=>group.paths.includes(href)&&canOpen(href)).map(([href,label,icon])=><Link key={href} href={href} aria-label={translate(label)} title={translate(label)} className={active===href.slice(1)?"active":""} aria-current={active===href.slice(1)?"page":undefined}><Icon name={icon}/><span><LocalizedText>{label}</LocalizedText></span></Link>)}</div>)}
+        {pilotNavigation?navItems.filter(item=>item.section!=="dashboard").map(item=><Link key={item.section} href={item.href} aria-label={translate(item.label)} title={translate(item.label)} className={navSection===item.section?"active":""} aria-current={navSection===item.section?"page":undefined}><Icon name={item.icon}/><span><LocalizedText>{item.label}</LocalizedText></span></Link>):desktopNavGroups.map(group=>desktopNav.some(([href])=>group.paths.includes(href)&&canOpen(href))&&<div className="sidebar-nav-group" key={group.label}><span className="sidebar-nav-label"><LocalizedText>{group.label}</LocalizedText></span>{desktopNav.filter(([href])=>group.paths.includes(href)&&canOpen(href)).map(([href,label,icon])=><Link key={href} href={href} aria-label={translate(label)} title={translate(label)} className={active===href.slice(1)?"active":""} aria-current={active===href.slice(1)?"page":undefined}><Icon name={icon}/><span><LocalizedText>{label}</LocalizedText></span></Link>)}</div>)}
       </nav>
       <div className="sidebar-bottom">
         <Link href="/support" aria-label={translate("Support")} title={translate("Support")} className={active==="support" ? "active" : ""} aria-current={active==="support"?"page":undefined}><Icon name="support"/><span><LocalizedText>{"Support"}</LocalizedText></span></Link>
@@ -390,6 +401,7 @@ function AppShellFrame({
         </div>
         {allowed&&orientation&&<p className="page-orientation"><LocalizedText>{orientation}</LocalizedText></p>}
         <SettingsWorkspace>
+        {allowed&&pilotTabs&&pilotTabs.length>1&&!hasListBack&&<DetailTabs label={navSection==="sales"?"Verkauf":"Aufträge"}>{pilotTabs.map(item=><Link key={item.href} href={item.href} className={pathname===item.href?"active":""} aria-current={pathname===item.href?"page":undefined}><LocalizedText>{item.label}</LocalizedText></Link>)}</DetailTabs>}
         {allowed&&(bodyControls||contentCreate&&!headingCreate||!headerOwnsDetail&&headerActions)&&<div className="workspace-command-bar" inert={loading||undefined}>{bodyControls}{contentCreate&&!headingCreate&&visibleActions}{!headerOwnsDetail&&headerActions}</div>}
 
         {accessError?<div role="alert"><p><LocalizedText>{accessError}</LocalizedText></p><FormActions sheet><Button onClick={()=>{invalidateClientSession();setAccessError(null);setAccessRetry(value=>value+1)}}><LocalizedText>{"Erneut versuchen"}</LocalizedText></Button><Link className="button button-secondary" href="/login"><LocalizedText>{"Anmelden"}</LocalizedText></Link></FormActions></div>:!access?null:allowed?pageChildren:<EmptyState  title="Kein Zugriff" description="Diese Seite ist für deine Rolle oder deinen Plan nicht verfügbar."/>}
@@ -398,9 +410,9 @@ function AppShellFrame({
 
       {timerNotice&&<div className="timer-notice" role="status">{timerNotice}</div>}
 
-      {!preview && !formActive && !chatActive && <MobileDock><LocalizedElement as="nav" className="bottom-nav" data-module-profile={access?.moduleProfile} data-visible-count={1+mainNavigation.filter(item=>canOpen(item.href)).length} aria-label="Hauptnavigation">
-        {mainNavigation.filter(item=>canOpen(item.href)).map(item=><Link key={item.href} href={item.href} className={primaryNavigationSection(pathname)===item.section?'active':''} aria-current={primaryNavigationSection(pathname)===item.section?'page':undefined}><Icon name={item.icon} size={20}/><span><LocalizedText>{item.label}</LocalizedText></span></Link>)}
-        <button type="button" className={primaryNavigationSection(pathname)==='more'?'active':''} aria-current={primaryNavigationSection(pathname)==='more'?'page':undefined} aria-haspopup="dialog" aria-expanded={sheet==='more'} onClick={() => setSheet("more")}><Icon name="ellipsis" size={20}/><span><LocalizedText>{"Mehr"}</LocalizedText></span></button>
+      {!preview && !formActive && !chatActive && <MobileDock><LocalizedElement as="nav" className="bottom-nav" data-module-profile={access?.moduleProfile} data-visible-count={1+navItems.length} aria-label="Hauptnavigation">
+        {navItems.map(item=><Link key={item.href} href={item.href} className={navSection===item.section?'active':''} aria-current={navSection===item.section?'page':undefined}><Icon name={item.icon} size={20}/><span><LocalizedText>{item.label}</LocalizedText></span></Link>)}
+        <button type="button" className={navSection==='more'?'active':''} aria-current={navSection==='more'?'page':undefined} aria-haspopup="dialog" aria-expanded={sheet==='more'} onClick={() => setSheet("more")}><Icon name="ellipsis" size={20}/><span><LocalizedText>{"Mehr"}</LocalizedText></span></button>
       </LocalizedElement></MobileDock>}
 
       {headerPanel&&<HeaderPanel key={sheet} kind={sheet} label={sheet==="search"?"Suche":sheet==="account"?"Konto":"Benachrichtigungen"} onClose={()=>setSheet(null)}>
@@ -409,7 +421,7 @@ function AppShellFrame({
         {sheet==="account"&&<AccountPanel profile={profile} logoutBusy={logoutBusy} onLogout={()=>void logout()} onClose={()=>setSheet(null)}/>}
       </HeaderPanel>}
       <ActionSheet label="Mehr" open={sheet==='more'} onClose={()=>setSheet(null)}>
-        {moreNavigation.map(group=>group.items.some(item=>canOpen(item.href))&&<SettingsGroup key={group.title} title={group.title}><div className="action-list">{group.items.filter(item=>canOpen(item.href)).map(item=><ActionRow key={item.href} href={item.href} icon={item.icon} title={item.label} navigation onClick={()=>setSheet(null)}/>)}</div></SettingsGroup>)}
+        {moreNavigation.filter(group=>!pilotNavigation||group.title==="Verwaltung"||group.title==="Hilfe").map(group=>group.items.some(item=>canOpen(item.href))&&<SettingsGroup key={group.title} title={group.title}><div className="action-list">{group.items.filter(item=>canOpen(item.href)).map(item=><ActionRow key={item.href} href={item.href} icon={item.icon} title={item.label} navigation onClick={()=>setSheet(null)}/>)}</div></SettingsGroup>)}
       </ActionSheet>
     </div>
   </div></WorkspaceStartup></PageAccessContext.Provider></WorkspaceActionContext.Provider></UserProfileContext.Provider>;

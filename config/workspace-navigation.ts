@@ -32,7 +32,20 @@ export const moreNavigation = [
  ]},
 ] as const;
 
+export const pilotSalesNavigation=[
+ {href:"/angebote",label:"Angebote",icon:"file"},
+ {href:"/rechnungen",label:"Rechnungen",icon:"receipt"},
+ {href:"/zahlungen",label:"Zahlungen",icon:"wallet"},
+] as const;
+
+export const pilotWorkNavigation=[
+ {href:"/projekte",label:"Aufträge"},
+ {href:"/zeit",label:"Zeiterfassung"},
+] as const;
+
 /** Nested routes keep their owning primary destination; every other route belongs to More. */
-export function primaryNavigationSection(pathname:string){
+export function primaryNavigationSection(pathname:string,pilot=false){
+ if(pilot&&pilotSalesNavigation.some(item=>pathname===item.href||pathname.startsWith(item.href+"/")))return "sales";
+ if(pilot&&(pathname==="/zeit"||pathname.startsWith("/zeit/")))return "projekte";
  return mainNavigation.find(item=>pathname===item.href||pathname.startsWith(item.href+'/'))?.section??'more';
 }

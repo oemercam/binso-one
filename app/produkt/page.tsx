@@ -1,3 +1,4 @@
+import {pilotEnabled} from '@/config/plan-access';
 import { publicPageMetadata } from "@/lib/public-metadata";
 import {LocalizedText} from "@/lib/client/locale";
 import { MarketingFooter, MarketingHeader, ProductPreview } from "@/components/marketing";
@@ -6,7 +7,7 @@ import {domainConfig} from "@/config/domain";
 
 
 export function generateMetadata() {
-  return publicPageMetadata("/produkt", { title: "Produkt", description: "Binso One verbindet Kunden, Angebote, Rechnungen, Zahlungen, Zeiterfassung, Spesen und Mitarbeiter in einer klaren Business-Plattform für Schweizer KMU." });
+  return publicPageMetadata("/produkt", { title: "Produkt", description: pilotEnabled?"Binso One verbindet Kunden, Angebote, Aufträge, Zeiterfassung, Rechnungen und Zahlungen.":"Binso One verbindet Kunden, Angebote, Rechnungen, Zahlungen, Zeiterfassung, Spesen und Mitarbeiter in einer klaren Business-Plattform für Schweizer KMU." });
 }
 
 const modules=[
@@ -54,7 +55,7 @@ export default function Product(){
         <h2><LocalizedText>{"Nur was im Alltag gebraucht wird."}</LocalizedText></h2>
       </div>
       <div className="product-module-list">
-        {modules.map(([icon,title,text])=><div key={title}><span><Icon name={icon} size={17}/></span><div><b><LocalizedText>{title}</LocalizedText></b><small><LocalizedText>{text}</LocalizedText></small></div><Icon name="arrow" size={15}/></div>)}
+        {(pilotEnabled?modules.slice(0,5):modules).map(([icon,title,text])=><div key={title}><span><Icon name={icon} size={17}/></span><div><b><LocalizedText>{title}</LocalizedText></b><small><LocalizedText>{text}</LocalizedText></small></div><Icon name="arrow" size={15}/></div>)}
       </div>
     </section>
 

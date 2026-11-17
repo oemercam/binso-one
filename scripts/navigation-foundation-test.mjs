@@ -39,7 +39,7 @@ export function navigationAccess(read){
  for(const file of ['components/app-shell.tsx','components/operator.tsx']){
   const ast=ts.createSourceFile(file,withoutLocalization(read(file)),99,true,4);
   function visit(node){
-   if(ts.isVariableDeclaration(node)&&/^(formActive|canOpen|operatorNav|operatorNavGroups|settingsWrite|personalSettings|canWrite)$/.test(node.name.getText(ast)))permissions.push({file,source:node.getText(ast)});
+   if(ts.isVariableDeclaration(node)&&/^(formActive|canOpen|navItems|operatorNav|operatorNavGroups|settingsWrite|personalSettings|canWrite)$/.test(node.name.getText(ast)))permissions.push({file,source:node.getText(ast)});
    if(ts.isJsxElement(node)&&node.openingElement.tagName.getText(ast)==='nav'&&/bottom-nav|operator-mobile-nav/.test(node.openingElement.attributes.getText(ast)))destinations.push({file,source:node.children.map(child=>child.getText(ast)).join('')});
    ts.forEachChild(node,visit);
   }visit(ast);

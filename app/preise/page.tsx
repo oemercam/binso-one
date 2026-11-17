@@ -1,3 +1,4 @@
+import {pilotEnabled,pilotPlan} from '@/config/plan-access';
 import { publicPageMetadata } from "@/lib/public-metadata";
 import {LocalizedText} from "@/lib/client/locale";
 import Link from "next/link";
@@ -23,15 +24,15 @@ export default function Prices(){
         <span><Icon name="check" size={16}/><LocalizedText>{"CHF-Abrechnung über Stripe"}</LocalizedText></span>
       </div>
     </div>
-    <div className="pricing-grid">
-      {plans.map(plan=><article className={plan.popular?"price-card featured":"price-card"} key={plan.id}>
+    <div className="pricing-grid" data-pilot={pilotEnabled||undefined}>
+      {plans.filter(plan=>!pilotEnabled||plan.id===pilotPlan).map(plan=><article className={plan.popular?"price-card featured":"price-card"} key={plan.id}>
         {plan.popular&&<span className="popular"><LocalizedText>{"BELIEBT"}</LocalizedText></span>}
         <div className="plan-name"><h2>{plan.name}</h2>{plan.popular&&<small><LocalizedText>{"Empfohlen für KMU"}</LocalizedText></small>}</div>
         <p><LocalizedText>{plan.description}</LocalizedText></p>
         <div className="price"><strong><LocalizedText>{"CHF "}</LocalizedText>{plan.monthly}</strong><span><LocalizedText>{"/ Monat"}</LocalizedText></span></div>
         <p><small><LocalizedText>{"oder CHF "}</LocalizedText>{plan.yearly}<LocalizedText>{" / Jahr · exkl. MWST, sofern geschuldet"}</LocalizedText></small></p>
         <Button href={`/registrieren?plan=${plan.id}&billing=monthly`} variant={plan.popular?"primary":"secondary"}>{domainConfig.trialDays}<LocalizedText>{" Tage kostenlos testen"}</LocalizedText></Button><Link className="marketing-text-link" href={`/registrieren?plan=${plan.id}&billing=yearly`}><LocalizedText>{"Jährlich starten"}</LocalizedText></Link>
-        <ul>{plan.features.map(feature=><li key={feature}><Icon name="check" size={15}/><LocalizedText>{feature}</LocalizedText></li>)}</ul>
+        <ul>{plan.features.filter(feature=>!pilotEnabled||!["Zeiterfassung und Spesen","Basisberichte"].includes(feature)).concat(pilotEnabled?["Zeiterfassung"]:[]).map(feature=><li key={feature}><Icon name="check" size={15}/><LocalizedText>{feature}</LocalizedText></li>)}</ul>
       </article>)}
     </div>
     <section className="pricing-foot"><div><h2><LocalizedText>{"Alle Pläne starten mit 14 Tagen Testphase."}</LocalizedText></h2><p><LocalizedText>{"Keine Kreditkarte nötig. Ohne aktiviertes Abo wechselt das Konto nach der Testphase in den Nur-Lesen-Modus; deine Daten bleiben erhalten."}</LocalizedText></p><small><LocalizedText>{"Geschäftskundenangebot. Alle Preise in CHF, exkl. gesetzlich geschuldeter MWST. Der verbindliche Gesamtbetrag wird vor dem kostenpflichtigen Abschluss im Stripe Checkout angezeigt."}</LocalizedText></small></div><Button href="/registrieren" variant="secondary"><LocalizedText>{"Jetzt starten"}</LocalizedText></Button></section>

@@ -94,6 +94,7 @@
   gap:18px;
   align-items:stretch;
 }
+.pricing-grid[data-pilot]{grid-template-columns:minmax(0,440px)}
 .price-card{
   position:relative;
   min-height:430px;

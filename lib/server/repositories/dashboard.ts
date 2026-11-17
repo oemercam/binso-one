@@ -1,6 +1,7 @@
 import 'server-only';
 import type {PoolClient} from 'pg';
 import type {SessionUser} from '../session';
+import {pilotEnabled} from '@/config/plan-access';
 import {tenantCan} from '@/lib/permissions';
 import {listApiBusiness} from './business-api';
 export async function dashboardAnalytics(c:PoolClient,organizationId:string){
@@ -19,7 +20,7 @@ export async function dashboardAttention(c:PoolClient,s:SessionUser,customerId:s
 
 /** Personal work and independent review queues use the same tenant/RLS boundary. */
 export async function dashboardWork(c:PoolClient,s:SessionUser){
- const canTime=tenantCan(s.role,'time:read'),canExpenses=tenantCan(s.role,'expenses:read');
+ const canTime=tenantCan(s.role,'time:read'),canExpenses=!pilotEnabled&&tenantCan(s.role,'expenses:read');
  const reviewer=['owner','admin','project_manager','manager'].includes(s.role);
  const params=[s.organizationId,s.userId];
  const time=canTime?(await c.query(`select coalesce(sum(hours) filter(where created_by_user_id=$2 and work_date>=date_trunc('month',now() at time zone 'Europe/Zurich')::date and work_date<=(now() at time zone 'Europe/Zurich')::date),0) hours,
@@ -30,5 +31,5 @@ export async function dashboardWork(c:PoolClient,s:SessionUser){
  count(*) filter(where created_by_user_id<>$2 and status='submitted')::int reviews from expenses where organization_id=$1 and archived_at is null`,params)).rows[0]:null;
  return {hours:time?Number(time.hours):null,pending:time?Number(time.pending):null,expenses:expenses?Number(expenses.pending):null,
  timeReviews:reviewer&&tenantCan(s.role,'time:write')?Number(time?.reviews??0):null,
- expenseReviews:reviewer&&tenantCan(s.role,'expenses:write')?Number(expenses?.reviews??0):null};
+ expenseReviews:canExpenses&&reviewer&&tenantCan(s.role,'expenses:write')?Number(expenses?.reviews??0):null};
 }

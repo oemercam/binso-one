@@ -22,7 +22,7 @@ financeVisibility(shell);
 assert.equal(tenantCanOpenPath('reader','/finanzen','standard'),true,'Existing read-only Finance access remains available');
 assert.throws(()=>financeVisibility(shell.replace('group.items.filter(item=>canOpen(item.href))','group.items.filter(item=>access?.moduleProfile!=="time_only"||canOpen(item.href))')),'The former unauthorized Finance shortcut must fail');
 for(const role of ['member','hr','unknown'])assert.equal(tenantCanOpenPath(role,'/finanzen','standard'),false,role+' cannot receive a Finance shortcut');
-assert.match(shell,/mainNavigation\.filter\(item=>canOpen\(item\.href\)\)/);
+assert.match(shell,/mobileItems\.filter\(item=>canOpen\(item\.href\)\)/);
 console.log('Module profile navigation: positive/negative permission and shell wiring checks passed.');
 
 const permissionUrl=moduleUrl(await fs.readFile('lib/permissions.ts','utf8'));
