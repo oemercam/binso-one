@@ -117,7 +117,8 @@
     "0113_variable_advance_allocations.sql",
     "0114_expense_beneficiary_review.sql",
     "0115_resource_quotas.sql",
-    "0116_timer_calendar_days.sql"
+    "0116_timer_calendar_days.sql",
+    "0117_operator_email_login.sql"
   ],
   "tables": [
     {
@@ -7709,6 +7710,11 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "required": true
+        },
+        {
+          "name": "auth_source",
+          "type": "text",
+          "required": true
         }
       ],
       "policies": []
@@ -8048,6 +8054,26 @@
           "name": "language",
           "type": "text",
           "required": false
+        },
+        {
+          "name": "email_login_hash",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "email_login_challenge_hash",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "email_login_expires_at",
+          "type": "timestamp with time zone",
+          "required": false
+        },
+        {
+          "name": "email_login_attempts",
+          "type": "integer",
+          "required": true
         }
       ],
       "policies": []

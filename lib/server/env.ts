@@ -21,6 +21,7 @@ export const env={
   appUrl:optional("APP_URL")||"http://localhost:3000",
   sessionCookieName:optional("SESSION_COOKIE_NAME")||"binso_session",
   operatorSessionCookieName:optional("OPERATOR_SESSION_COOKIE_NAME")||"binso_operator_session",
+  operatorEmailLoginEnabled:bool("OPERATOR_EMAIL_LOGIN_ENABLED"),
   operatorEntraTenantId:optional("OPERATOR_ENTRA_TENANT_ID"),
   operatorAllowedDomain:optional("OPERATOR_ALLOWED_DOMAIN")||"binso.ch",
   sessionTtlHours:int("SESSION_TTL_HOURS",168),

@@ -3271,6 +3271,14 @@
     "Eventi di audit amministrativi",
     "İdari denetim olayları"
   ],
+  "Nur Firmeninhaber können Firmenadmins verwalten.": ["Only company owners can manage company admins.","Seuls les propriétaires de l’entreprise peuvent gérer ses administrateurs.","Solo i titolari dell’azienda possono gestire gli amministratori aziendali.","Firma yöneticilerini yalnızca firma sahipleri yönetebilir."],
+  "Firmenadmin": ["Company admin","Administrateur de l’entreprise","Amministratore aziendale","Firma yöneticisi"],
+  "Firmeninhaber": ["Company owner","Propriétaire de l’entreprise","Titolare dell’azienda","Firma sahibi"],
+  "Plattform-Admin": ["Platform admin","Administrateur de la plateforme","Amministratore della piattaforma","Platform yöneticisi"],
+  "Bitte warte eine Minute, bevor du einen neuen Code anforderst.": ["Wait one minute before requesting another code.","Attendez une minute avant de demander un nouveau code.","Attendi un minuto prima di richiedere un altro codice.","Yeni bir kod istemeden önce bir dakika bekle."],
+  "Benutzer können hier nicht angelegt werden.": ["Users cannot be created here.","Les utilisateurs ne peuvent pas être créés ici.","Non è possibile creare utenti qui.","Burada kullanıcı oluşturulamaz."],
+  "Plattformzugänge": ["Platform access","Accès à la plateforme","Accessi alla piattaforma","Platform erişimleri"],
+  "Hier siehst du die freigeschalteten Plattformkonten und ihre Rollen.": ["View enabled platform accounts and their roles.","Consultez les comptes de plateforme activés et leurs rôles.","Visualizza gli account di piattaforma abilitati e i relativi ruoli.","Etkin platform hesaplarını ve rollerini görüntüle."],
   "Administrator": [
     "Administrator",
     "Administrateur",

@@ -5,7 +5,7 @@ import {ApiError,apiError,assertSameOrigin,cleanText,json,readJson} from "@/lib/
 import {requireSession} from "@/lib/server/session";
 import {authorize} from "@/lib/server/rbac";
 import {withTenant} from "@/lib/server/db";
-const roles=new Set(["admin","finance","hr","project_manager","manager","member","reader"]);
+const roles=new Set(["admin","member"]);
 export async function PATCH(request:NextRequest,{params}:{params:Promise<{userId:string}>}){try{
  assertSameOrigin(request);const s=await requireSession();authorize(s,"users:manage");await requireFreshAuthentication(s);
  const {userId}=await params,b=await readJson<{action?:unknown;role?:unknown;moduleProfile?:unknown}>(request,4096);
@@ -16,6 +16,7 @@ export async function PATCH(request:NextRequest,{params}:{params:Promise<{userId
   const current=(await c.query("select role,module_profile,status from organization_memberships where organization_id=$1 and user_id=$2 for update",[s.organizationId,userId])).rows[0];
   if(!current)throw new ApiError(404,'not_found','Mitarbeiter wurde nicht gefunden.');
   if(current.role==='owner')throw new ApiError(409,'owner_locked','Die Inhaberrolle kann hier nicht geändert werden.');
+  if(actor.role!=='owner'&&current.role==='admin')throw new ApiError(403,'owner_required','Nur Firmeninhaber können Firmenadmins verwalten.');
   if(b.action==='deactivate'){
    if(userId===s.userId)throw new ApiError(409,'self_deactivation_forbidden','Der eigene Zugang kann hier nicht gesperrt werden.');
    if(current.status==='suspended')return {user_id:userId,status:'suspended'};
@@ -33,7 +34,8 @@ export async function PATCH(request:NextRequest,{params}:{params:Promise<{userId
    await audit(c,{organizationId:s.organizationId,userId:s.userId,action:'membership.access_suspended',entityType:'organization_memberships',entityId:userId,metadata:{timer:'preserved_paused',history:'retained'}});
    return {user_id:userId,status:'suspended'};
   }
-  const role=cleanText(b.role,40);if(!roles.has(role))throw new ApiError(400,'role_invalid','Ungültige Rolle.');
+  const role=cleanText(b.role,40);if(!roles.has(role)&&role!==current.role)throw new ApiError(400,'role_invalid','Ungültige Rolle.');
+  if(role==='admin'&&actor.role!=='owner')throw new ApiError(403,'owner_required','Nur Firmeninhaber können Firmenadmins verwalten.');
   if(current.status!=='active')throw new ApiError(409,'membership_changed','Die Teamzuordnung hat sich geändert.');
   const moduleProfile=b.moduleProfile??(role==='member'?current.module_profile??'standard':'standard');
   if((moduleProfile!=='standard'&&moduleProfile!=='time_only')||moduleProfile==='time_only'&&role!=='member')throw new ApiError(400,'profile_invalid','Ungültiges Modulprofil.');

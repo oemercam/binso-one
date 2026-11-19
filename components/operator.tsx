@@ -642,7 +642,7 @@ function SecurityView() {
 
   const resource=useApiQuery<{items:Array<Record<string,unknown>>}>("/api/operator/users");
   const items=resource.data?.items??[];
-  const roleLabel:Record<string,string>={platform_owner:'Plattform Owner',platform_admin:'Administrator',platform_support:'Support',platform_billing:'Finanzen',platform_auditor:'Audit'};
+  const roleLabel:Record<string,string>={platform_owner:'Plattform Owner',platform_admin:'Plattform-Admin',platform_support:'Support',platform_billing:'Finanzen',platform_auditor:'Audit'};
   const chips=['Alle','Aktiv','Inaktiv'];
   const columns=[{label:'Benutzer',index:0},{label:'Rolle',index:1},{label:'Status',index:2,status:true},{label:'Synchronisiert',index:3}];
   const controller=useRecordsController({placeholder:'Adminbenutzer suchen...',chips,columns});
@@ -657,8 +657,8 @@ function SecurityView() {
 
   return <>
     <WorkspaceSection>
-      <SectionTitle title="Microsoft Entra Zugriffe"/>
-      <p className="technical-hint"><LocalizedText>{"Interne Identitäten, MFA und Rollen werden in Microsoft Entra ID verwaltet. Binso One zeigt hier nur die zuletzt synchronisierte Berechtigung."}</LocalizedText></p>
+      <SectionTitle title="Plattformzugänge"/>
+      <p className="technical-hint"><LocalizedText>{"Hier siehst du die freigeschalteten Plattformkonten und ihre Rollen."}</LocalizedText></p>
       <RecordsControls inline controller={controller} placeholder="Adminbenutzer suchen..." chips={chips} columns={columns}/>
       <RecordsView controller={controller} items={rows} placeholder="Adminbenutzer suchen..." chips={chips} columns={columns} toolbarActions={false} showCount={false} countLabel="Adminbenutzer" emptyLabel={()=>'Noch keine Entra-Anmeldung'}>{row=><RecordRow compact title={row[0]} meta={[row[4],row[1],row[3]].join(' · ')} status={row[2]}/>}</RecordsView>
     </WorkspaceSection>
