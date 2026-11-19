@@ -189,7 +189,8 @@ try{
  assert.equal((await memberPatch(user,{action:'deactivate'})).status,409,'Owner access cannot be removed through normal membership management');
  assert.equal((await memberPatch(foreign,{action:'deactivate'})).status,404,'A foreign direct ID cannot be suspended');
  const targetSession=randomUUID();await db.query("insert into auth_sessions(id,user_id,organization_id,token_hash,expires_at) values($1,$2,$3,'synthetic-member-token',now()+interval '1 hour')",[targetSession,normalUser,org]);
- assert.equal((await memberPatch(normalUser,{role:'reader'})).status,200);
+ assert.equal((await memberPatch(normalUser,{role:'reader'})).status,400,'Legacy read-only role cannot be newly assigned');
+ assert.equal((await memberPatch(normalUser,{role:'admin'})).status,200,'The company owner can assign the company admin role');
  assert.equal((await db.query('select count(*)::int n from auth_sessions where user_id=$1',[normalUser])).rows[0].n,0,'Role changes revoke sessions rather than retaining stale privileges');
  assert.equal((await memberPatch(normalUser,{role:'member',moduleProfile:'time_only'})).status,200);
  await db.query("insert into active_time_trackers(organization_id,user_id,state,active_since,accumulated_seconds,activity_label,billable) values($1,$2,'running',now()-interval '1 hour',120,'Synthetic active work',false)",[org,normalUser]);

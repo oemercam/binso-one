@@ -16,6 +16,7 @@ export async function PATCH(request:NextRequest,{params}:{params:Promise<{userId
   const current=(await c.query("select role,module_profile,status from organization_memberships where organization_id=$1 and user_id=$2 for update",[s.organizationId,userId])).rows[0];
   if(!current)throw new ApiError(404,'not_found','Mitarbeiter wurde nicht gefunden.');
   if(current.role==='owner')throw new ApiError(409,'owner_locked','Die Inhaberrolle kann hier nicht geändert werden.');
+  if(b.action==='deactivate'&&userId===s.userId)throw new ApiError(409,'self_deactivation_forbidden','Der eigene Zugang kann hier nicht gesperrt werden.');
   if(actor.role!=='owner'&&current.role==='admin')throw new ApiError(403,'owner_required','Nur Firmeninhaber können Firmenadmins verwalten.');
   if(b.action==='deactivate'){
    if(userId===s.userId)throw new ApiError(409,'self_deactivation_forbidden','Der eigene Zugang kann hier nicht gesperrt werden.');
