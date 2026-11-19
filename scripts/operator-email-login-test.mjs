@@ -25,7 +25,8 @@ const http=await load('lib/server/http.ts',{'next/server':import.meta.resolve('n
 const audit=await load('lib/server/operator/audit.ts',{'@/lib/server/db':database});
 const session=await load('lib/server/operator/session.ts',{'next/headers':nextHeaders,'@/lib/server/db':database,'@/lib/server/env':env,'@/lib/server/operator/entra':moduleUrl('export const getEntraOperatorIdentity=async()=>null;')});
 const mail=moduleUrl('export const sendMail=async message=>{globalThis.operatorMail=message; return {delivered:!globalThis.operatorMailFailure};};');
-const password=await load('lib/server/password.ts');
+const policy=await load('lib/password-policy.ts');
+const password=await load('lib/server/password.ts',{'@/lib/password-policy':policy});
 const login=await import(await load('lib/server/operator/email-login.ts',{'next/headers':nextHeaders,'@/lib/server/db':database,'@/lib/server/env':env,'@/lib/server/http':http,'@/lib/server/password':password,'@/lib/server/email':mail,'./audit':audit,'./session':session}));
 const {getOperatorSession}=await import(session);
 const jar=await (await import(nextHeaders)).cookies();
@@ -38,7 +39,7 @@ try{
  }
  const query=db.query.bind(db);
  globalThis.__binsoPool={query,connect:async()=>({query,release(){}})};
- const email='operator@example.invalid',secret='local test password';
+ const email='operator@example.invalid',secret='Local test password!7';
  const hash=await (await import(password)).hashPassword(secret);
  await db.query("insert into platform_operator_assignments(user_id,email,role,auth_source,password_hash) values('local-admin',$1,'platform_admin','email_code',$2)",[email,hash]);
  await assert.rejects(login.beginOperatorEmailLogin(email,'wrong'),{code:'invalid_credentials'});

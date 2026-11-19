@@ -2,6 +2,7 @@ import {randomBytes,randomUUID,scrypt as derive} from 'node:crypto';
 import {promisify} from 'node:util';
 import {text} from 'node:stream/consumers';
 import pg from 'pg';
+import {hasValidNewPassword,PASSWORD_REQUIREMENTS} from '../lib/password-policy.ts';
 
 const [emailArgument,displayName]=process.argv.slice(2);
 const email=emailArgument?.trim().toLowerCase();
@@ -10,7 +11,7 @@ if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!displayName?.trim()||proc
 }
 if(!process.env.DATABASE_URL)throw new Error('DATABASE_URL is required.');
 const password=(await text(process.stdin)).replace(/\r?\n$/,'');
-if(password.length<12||password.length>256)throw new Error('Password must be 12–256 characters.');
+if(password.length<12||!hasValidNewPassword(password))throw new Error(PASSWORD_REQUIREMENTS.replace('8','12'));
 const salt=randomBytes(16).toString('hex');
 const hash='scrypt$'+salt+'$'+(await promisify(derive)(password,salt,64)).toString('hex');
 
