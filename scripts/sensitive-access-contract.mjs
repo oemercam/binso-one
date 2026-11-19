@@ -49,16 +49,18 @@ export async function verifySensitiveAccessContract({load,db,transaction,org,oth
  await assert.rejects(()=>transaction(org,hr.userId,c=>requireSensitiveCapability(hr,'family:read',c)),e=>e.status===403,'Revocation applies even to a cached session object');
  as('owner');response=await write('hr',{grants:['hr_sensitive:read'],expectedRevision:3});assert.equal(response.status,200);
  const team=load('app/api/settings/team/members/[userId]/route.ts');
- setAuditFailure(true);response=await team.PATCH(request({role:'finance',moduleProfile:'standard'},randomUUID(),'PATCH'),{params:Promise.resolve({userId:hr.userId})});assert.equal(response.status,500);setAuditFailure(false);
+ setAuditFailure(true);response=await team.PATCH(request({role:'admin',moduleProfile:'standard'},randomUUID(),'PATCH'),{params:Promise.resolve({userId:hr.userId})});assert.equal(response.status,500);setAuditFailure(false);
  assert.deepEqual((await db.query('select sensitive_grants from organization_memberships where organization_id=$1 and user_id=$2',[org,hr.userId])).rows[0].sensitive_grants,['hr_sensitive:read'],'Failed role-change audit restores grants too');
- response=await team.PATCH(request({role:'finance',moduleProfile:'standard'},randomUUID(),'PATCH'),{params:Promise.resolve({userId:hr.userId})});assert.equal(response.status,200,await response.clone().text());
+ response=await team.PATCH(request({role:'admin',moduleProfile:'standard'},randomUUID(),'PATCH'),{params:Promise.resolve({userId:hr.userId})});assert.equal(response.status,200,await response.clone().text());
  const reset=(await db.query('select sensitive_grants,sensitive_grants_version from organization_memberships where organization_id=$1 and user_id=$2',[org,hr.userId])).rows[0];assert.deepEqual(reset.sensitive_grants,[]);assert.equal(reset.sensitive_grants_version,5,'Role change clears old grants and advances the revision');
- response=await team.PATCH(request({role:'hr',moduleProfile:'standard'},randomUUID(),'PATCH'),{params:Promise.resolve({userId:hr.userId})});assert.equal(response.status,200);
+ response=await team.PATCH(request({role:'member',moduleProfile:'standard'},randomUUID(),'PATCH'),{params:Promise.resolve({userId:hr.userId})});assert.equal(response.status,200);
  assert.equal((await db.query('select id from auth_sessions where id=$1',[hr.sessionId])).rows.length,0,'Old authentication proof is revoked by role changes');
  const renewed=randomUUID();await db.query("insert into auth_sessions(id,user_id,organization_id,token_hash,expires_at,step_up_at) values($1,$2,$3,$4,now()+interval '1 hour',now())",[renewed,hr.userId,org,'synthetic-'+renewed]);
  as('owner',other);assert.equal((await read()).status,404);assert.equal((await write('hr',{grants:[],expectedRevision:5})).status,404);
  as('owner',org,{organizationStatus:'read_only'});assert.equal((await write('hr',{grants:[],expectedRevision:5})).status,403);
  as('owner');
+ // Restore this shared fixture's legacy role for the subsequent payroll contract.
+ await db.query("update organization_memberships set role='hr' where organization_id=$1 and user_id=$2",[org,hr.userId]);
  await db.query("update organization_memberships set status='invited' where organization_id=$1 and user_id='employee-dossier-finance'",[org]);
  assert.deepEqual((await db.query("select sensitive_grants from organization_memberships where organization_id=$1 and user_id='employee-dossier-finance'",[org])).rows[0].sensitive_grants,[],'Suspension/reset clears payroll access');
  await db.query("update organization_memberships set status='active' where organization_id=$1 and user_id='employee-dossier-finance'",[org]);
