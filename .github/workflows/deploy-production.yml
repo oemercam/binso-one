@@ -3,6 +3,13 @@ name: Azure production release
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '.github/workflows/deploy-production.yml'
+      - 'scripts/invoke-private-migrations.mjs'
+      - 'scripts/package-private-migrations.sh'
+      - 'scripts/private-migration-*.mjs'
+      - 'scripts/workflow-safety-test.mjs'
+      - 'docs/**'
   workflow_dispatch:
     inputs:
       probe_migrations:
@@ -76,6 +83,7 @@ jobs:
           path: deploy
       - name: Verify package identity and compatibility with live database
         id: package
+        if: inputs.probe_migrations != true
         run: |
           set -euo pipefail
           test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
@@ -116,7 +124,10 @@ jobs:
           echo "previous=$previous" >> "$GITHUB_OUTPUT"
       - name: Probe the private PostgreSQL migration slot
         if: inputs.probe_migrations == true
-        run: node scripts/invoke-private-migrations.mjs deploy/private-migration-probe.tar.gz
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          node scripts/invoke-private-migrations.mjs deploy/private-migration-probe.tar.gz
       - name: Apply migrations through the private Azure slot
         if: inputs.probe_migrations != true && steps.package.outputs.migrate == 'true'
         run: |
