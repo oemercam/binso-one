@@ -15,7 +15,7 @@ export async function assertIdentityReference({page,context,width,output}){
   await verifyCanonicalFieldRegression(page);
   const reference=await context.newPage();await reference.setViewportSize({width,height:page.viewportSize()?.height??900});await reference.setContent((await fs.readFile('docs/audit/v25-revision7/identity-reference.html','utf8')).replace('../../../public/brand/logo-black.svg','data:image/svg+xml;base64,'+(await fs.readFile('public/brand/logo-black.svg')).toString('base64')).replace('../../../public/fonts/inter/inter-latin-wght-normal.woff2','data:font/woff2;base64,'+(await fs.readFile('public/fonts/inter/inter-latin-wght-normal.woff2')).toString('base64')));
   const rootFont=await page.locator("html").evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
-  const expected={width:Math.min(400,width-40),center:width/2,inputHeight:width<=760?48:52,font:Math.min(2.5*rootFont,Math.max(1.875*rootFont,width*.04)),inputFont:16};
+  const expected={width:Math.min(400,width-32),center:width/2,inputHeight:width<=760?48:52,font:Math.min(2.5*rootFont,Math.max(1.875*rootFont,width*.04)),inputFont:16};
   for(const key of Object.keys(expected)){const delta=Math.abs(parseFloat(actual[key])-expected[key]);assert.ok(delta<=1,"Login "+key+" at "+width+": "+actual[key]+" (expected "+expected[key]+")");}
   await reference.screenshot({path:path.join(output,`identity-reference-${width}.png`),animations:'disabled'});await page.screenshot({path:path.join(output,`identity-actual-${width}.png`),animations:'disabled'});await reference.close();
 }
