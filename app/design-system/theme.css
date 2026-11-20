@@ -5,13 +5,13 @@
 :root{
   --content-progress-duration:1.2s;
   --bar-value:0%;
-  /* Shared Microsoft appearance and navigation roles. */
+  /* Shared appearance and navigation roles. */
   --auth-control-border:#dfe5ed;
   --workspace-font:var(--font-sans);
-  --workspace-ink:#202b3b;
-  --workspace-mobile-ink:#213047;
-  --workspace-muted:#647080;
-  --workspace-line:#edf1f6;
+  --workspace-ink:#000000;
+  --workspace-mobile-ink:#000000;
+  --workspace-muted:#63636B;
+  --workspace-line:#D1D1D6;
   --workspace-title-size:18px;
   --app-title-line-height:24px;
   --section-title-line-height:20px;
@@ -22,15 +22,15 @@
   --workspace-value-size:24px;
   --workspace-value-weight:600;
   --timer-value-size:44px;
-  --app-canvas:#fff;
-  --app-surface:#fff;
+  --app-canvas:#F2F2F7;
+  --app-surface:#FFFFFF;
   --app-chrome:#fff;
   --navigation-content-gap:20px;
   --navigation-base-inset:calc(var(--mobile-nav-h) + var(--safe-bottom) + 1px + var(--navigation-content-gap));
   --navigation-content-inset:var(--navigation-base-inset);
-  --app-text:#222225;
-  --app-secondary:#626267;
-  --app-divider:#dedee2;
+  --app-text:#000000;
+  --app-secondary:#63636B;
+  --app-divider:#D1D1D6;
   --app-accent:#006ec7;
   --app-accent-soft:#edf4ff;
   --app-action-accent:#2566bd;
@@ -78,7 +78,7 @@
   --status-neutral-fg:#555;
   --status-neutral-line:#dededb;
 
-  --font-sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
   /* Existing shared component values, now centrally owned. No visual change. */
   --button-height:44px;
   --button-font-size:14px;
@@ -277,16 +277,16 @@
 }
 html[data-theme="dark"]{
   --auth-control-border:#2a3545;
-  --workspace-ink:#d7e3f3;
-  --workspace-mobile-ink:#d7e3f3;
-  --workspace-muted:#b1bfce;
-  --workspace-line:#2a3545;
-  --app-canvas:#000;
-  --app-surface:#141414;
+  --workspace-ink:#FFFFFF;
+  --workspace-mobile-ink:#FFFFFF;
+  --workspace-muted:#AEAEB2;
+  --workspace-line:#38383A;
+  --app-canvas:#000000;
+  --app-surface:#1C1C1E;
   --app-chrome:#212121;
-  --app-text:#dedee2;
-  --app-secondary:#a0a0a5;
-  --app-divider:#2b2b2e;
+  --app-text:#FFFFFF;
+  --app-secondary:#AEAEB2;
+  --app-divider:#38383A;
   --app-accent:#48a7ff;
   --app-accent-soft:#102b42;
   --app-action-accent:#48a7ff;
