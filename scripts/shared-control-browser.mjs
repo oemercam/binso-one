@@ -30,7 +30,7 @@ export async function verifyContentGroupRegression(page){
  const card=page.locator(':is(.app-root,.operator-root) '+contentGroupSelector).filter({visible:true}).first();
  if(!await card.count())return;
  const original=await card.getAttribute('style');
- for(const [property,value,message] of [['border-width','2px',/One card perimeter/],['border-radius','7px',/Shared customer-detail card radius/],['padding-left','11px',/Shared customer-detail card inset/]]){
+ for(const [property,value,message] of [['border','2px solid currentColor',/One card perimeter/],['border-radius','7px',/Shared customer-detail card radius/],['padding-left','11px',/Shared customer-detail card inset/]]){
   try{await card.evaluate((el,{property,value})=>el.style.setProperty(property,value,'important'),{property,value});await assert.rejects(()=>assertContentGroups(page),message);}
   finally{await card.evaluate((el,value)=>value===null?el.removeAttribute('style'):el.setAttribute('style',value),original);}
  }
