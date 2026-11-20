@@ -50,12 +50,17 @@ assert(watch.jobs['readiness-and-maintenance'].steps.some(step=>step.run?.includ
 assert.equal(graph.on.workflow_dispatch.inputs.send_self_test.default,false);
 const deploy=workflows['deploy-azure.yml'].jobs.deploy;
 const appRelease=workflows['deploy-production.yml'];
-assert.deepEqual(Object.keys(appRelease.on),['workflow_dispatch'],'App promotion is deliberately dispatched');
-assert.equal(appRelease.on.workflow_dispatch.inputs.deploy.default,false);
+assert.deepEqual(appRelease.on.push.branches,['main'],'Only main pushes trigger customer releases');
+assert.ok(appRelease.on.workflow_dispatch,'Manual retry remains available');
+assert.equal(appRelease.on.workflow_dispatch.inputs.deploy,undefined,'Customer releases do not require a manual approval input');
 assert.equal(appRelease.concurrency.group,workflows['deploy-azure.yml'].concurrency.group);
+assert.equal(appRelease.jobs.release.needs,'package');
+assert.equal(appRelease.jobs.package.permissions?.['id-token'],undefined,'Packaging cannot authenticate to Azure');
 const artifactCheck=appRelease.jobs.release.steps.find(step=>step.id==='package').run;
-for(const guard of ['head_sha=$GITHUB_SHA','node scripts/release-artifact.mjs verify','git merge-base --is-ancestor','git diff --quiet'])
+for(const guard of ['node scripts/release-artifact.mjs verify','git merge-base --is-ancestor','git diff --quiet'])
  assert(artifactCheck.includes(guard),'App release guard: '+guard);
+assert.doesNotMatch(artifactCheck,/workflows\/quality|gh run download/,'Customer deploy builds in the same workflow');
+assert.equal(appRelease.jobs.release.steps.find(step=>step.id==='release').if,undefined);
 const attestation=workflows['legacy-checksum-attestation.yml'];
 assert.deepEqual(Object.keys(attestation.on),['workflow_dispatch'],'Legacy metadata correction is manual only');
 assert.equal(attestation.on.workflow_dispatch.inputs.apply.default,false,'Read-only plan is the default');
