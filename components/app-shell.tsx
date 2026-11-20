@@ -412,7 +412,7 @@ function AppShellFrame({
 
       {!preview && !formActive && !chatActive && <MobileDock><LocalizedElement as="nav" className="bottom-nav" data-module-profile={access?.moduleProfile} data-visible-count={1+navItems.length} aria-label="Hauptnavigation">
         {navItems.map(item=><Link key={item.href} href={item.href} className={navSection===item.section?'active':''} aria-current={navSection===item.section?'page':undefined}><Icon name={item.icon} size={20}/><span><LocalizedText>{item.label}</LocalizedText></span></Link>)}
-        <button type="button" className={navSection==='more'?'active':''} aria-current={navSection==='more'?'page':undefined} aria-haspopup="dialog" aria-expanded={sheet==='more'} onClick={() => setSheet("more")}><Icon name="ellipsis" size={20}/><span><LocalizedText>{"Mehr"}</LocalizedText></span></button>
+        <button type="button" className={navSection==='more'?'active':''} aria-current={navSection==='more'?'page':undefined} aria-haspopup="dialog" aria-expanded={sheet==='more'} onClick={() => setSheet("more")}><Icon name="menu" size={20}/><span><LocalizedText>{"Mehr"}</LocalizedText></span></button>
       </LocalizedElement></MobileDock>}
 
       {headerPanel&&<HeaderPanel key={sheet} kind={sheet} label={sheet==="search"?"Suche":sheet==="account"?"Konto":"Benachrichtigungen"} onClose={()=>setSheet(null)}>
