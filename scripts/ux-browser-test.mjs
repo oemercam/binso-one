@@ -429,7 +429,7 @@ try{
     // Apple workspace canvas and grouped surfaces are independent roles.
     if(!process.env.BINSO_UX_BASELINE){
       const canvas=theme==='light'?'rgb(242, 242, 247)':'rgb(0, 0, 0)';
-      const surfaces=await page.locator('.app-root,.operator-root,.page-container,.operator-app-content,.desktop-appbar,.mobile-header,.operator-app-header').evaluateAll(nodes=>nodes.filter(el=>el.getClientRects().length).map(el=>({name:el.className,background:getComputedStyle(el).backgroundColor})));
+      const surfaces=await page.locator('.app-root,.operator-root,.app-root :is(.page-container,.desktop-appbar,.mobile-header),.operator-root :is(.operator-app-content,.operator-app-header)').evaluateAll(nodes=>nodes.filter(el=>el.getClientRects().length).map(el=>({name:el.className,background:getComputedStyle(el).backgroundColor})));
       assert.ok(surfaces.every(surface=>surface.background===canvas),`${route}: Apple workspace canvas ${JSON.stringify(surfaces)}`);
     }
     const navigationToggle=page.locator('.desktop-navigation-toggle').filter({visible:true});
