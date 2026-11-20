@@ -1,18 +1,6 @@
 name: Document discounts
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/document-discounts.yml'
-      - 'components/documents.tsx'
-      - 'lib/money.ts'
-      - 'lib/client/backend.ts'
-      - 'lib/customer-identity.ts'
-      - 'lib/server/document-pdf.ts'
-      - 'app/api/documents/**'
-      - 'app/design-system/documents.css'
-      - 'scripts/document-discount-browser.mjs'
-      - 'scripts/discount-*.mjs'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

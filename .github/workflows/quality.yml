@@ -1,11 +1,6 @@
 name: Quality
 run-name: "Quality • ${{ github.event_name }} • ${{ inputs.level || 'standard' }}${{ inputs.release_profile == 'development' && ' • development' || '' }}"
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
     inputs:
       level:
@@ -24,8 +19,6 @@ on:
         default: ''
   schedule:
     - cron: '23 1 * * *'
-  release:
-    types: [published]
 concurrency:
   group: quality-${{ github.event.pull_request.number || github.ref }}-${{ inputs.release_profile || 'production' }}
   # PR updates supersede stale checks. Main/manual runs serialize per ref/profile,

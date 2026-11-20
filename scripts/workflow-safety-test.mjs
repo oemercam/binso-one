@@ -50,6 +50,10 @@ assert(watch.jobs['readiness-and-maintenance'].steps.some(step=>step.run?.includ
 assert.equal(graph.on.workflow_dispatch.inputs.send_self_test.default,false);
 const deploy=workflows['deploy-azure.yml'].jobs.deploy;
 const appRelease=workflows['deploy-production.yml'];
+for(const [file,workflow] of Object.entries(workflows)){
+ if(file==='deploy-production.yml')continue;
+ assert(!workflow.on.push&&!workflow.on.pull_request,'Separate checks do not run on code changes: '+file);
+}
 assert.deepEqual(appRelease.on.push.branches,['main'],'Only main pushes trigger customer releases');
 assert.ok(appRelease.on.workflow_dispatch,'Manual retry remains available');
 assert.equal(appRelease.on.workflow_dispatch.inputs.deploy,undefined,'Customer releases do not require a manual approval input');

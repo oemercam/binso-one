@@ -1,10 +1,5 @@
 name: Azure Architecture Audit
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/azure-architecture-audit.yml
   workflow_dispatch:
 
 permissions:

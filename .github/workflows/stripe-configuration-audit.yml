@@ -1,12 +1,5 @@
 name: Stripe Billing Configuration
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/stripe-configuration-audit.yml
-      - scripts/stripe-configuration-audit.mjs
-      - lib/server/stripe.ts
-      - lib/server/env.ts
   workflow_dispatch:
 permissions:
   contents: read

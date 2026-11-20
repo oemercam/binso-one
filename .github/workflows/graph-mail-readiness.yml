@@ -7,12 +7,6 @@ on:
         description: Explicitly send one production self-test email
         type: boolean
         default: false
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/graph-mail-readiness.yml
-      - lib/server/email.ts
-      - lib/server/env.ts
 
 permissions:
   contents: read

@@ -10,6 +10,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # BINso One — binding product and UI rules
 
+## Direct production delivery
+
+The current user instruction supersedes historical release-approval notes below.
+Application and migration changes on `main` deploy directly to the customer
+production app. Pushes and pull requests do not start separate test, staging or
+integration workflows. Manual and scheduled diagnostics remain available and
+are independent of deployments. Keep the production build, migration execution,
+live readiness and rollback in the release workflow. Infrastructure-only changes
+use their dedicated operational path.
+
 ## Production release approval (17 November 2026)
 
 One explicit owner approval of a named release or reviewed pull request covers

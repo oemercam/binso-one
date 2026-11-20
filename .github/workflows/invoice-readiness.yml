@@ -1,19 +1,6 @@
 name: Invoice readiness
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/invoice-readiness.yml'
-      - 'scripts/business-readiness-*.mjs'
-      - 'lib/server/business-readiness.ts'
-      - 'lib/action-readiness.ts'
-      - 'components/use-setup-field.ts'
-      - 'components/documents.tsx'
-      - 'components/document-settings.tsx'
-      - 'components/pages/settings.tsx'
-      - 'lib/qr-bill.ts'
-      - 'lib/server/document-process.ts'
-      - 'app/api/settings/readiness/route.ts'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
