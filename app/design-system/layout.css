@@ -565,7 +565,7 @@
 .app-root{--control-h:48px;--control-font:var(--type-control)}
 .app-root[data-pilot]{--app-control-radius:var(--shape-group);--button-radius:var(--app-control-radius)}
 .app-header-leading{min-width:0}
-.mobile-header-detail .mobile-header-title{max-width:none;width:auto;flex:1;font-size:var(--type-subheading)}
+.mobile-header-detail .mobile-header-title{max-width:none;width:auto;flex:1;font-size:var(--type-navigation-title)}
 }
 
 /* App startup has one owner, including responsive and motion states. */
