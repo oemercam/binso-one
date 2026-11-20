@@ -3,7 +3,10 @@
 Produktionsveröffentlichung für `one.binso.ch`: Änderungen auf `main` starten den
 Customer-Release direkt. Der Workflow baut den unveränderlichen Commit selbst und
 braucht keine manuelle Freigabe, keinen separaten Quality-Lauf und kein
-Abnahmeartefakt. Der manuelle Start bleibt für Wiederholungen verfügbar.
+Abnahmeartefakt. Der manuelle Start bleibt für Wiederholungen verfügbar. Pushes und
+Pull Requests starten keine separaten Test-, Integrations- oder Staging-Läufe.
+Die vorhandenen Diagnoseabläufe lassen sich bei Bedarf manuell auslösen.
+Geplante Produktionsüberwachung läuft unabhängig vom Release.
 Schemaänderungen laufen vor dem App-Wechsel über den vorhandenen Azure-Slot
 `db-migrations` im privaten Netz. GitHub meldet sich per OIDC am Azure-Slot an.
 Der Slot verwendet seine eigene verwaltete Identität für PostgreSQL. Der

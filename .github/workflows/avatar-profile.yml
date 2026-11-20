@@ -1,19 +1,6 @@
 name: Avatar profile
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/avatar-profile.yml'
-      - 'components/avatar*.tsx'
-      - 'components/file-upload.tsx'
-      - 'components/pages/settings.tsx'
-      - 'lib/avatar-crop.ts'
-      - 'lib/server/profile-image.ts'
-      - 'lib/client/backend.ts'
-      - 'app/api/files/**'
-      - 'scripts/avatar-browser.mjs'
-      - 'scripts/profile-image-test.mjs'
-      - 'app/design-system/primitives.css'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

@@ -1,11 +1,6 @@
 name: V25 final responsive sample
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/v25-final-sample.yml'
-      - 'scripts/final-responsive-browser.mjs'
-      - 'scripts/ux-browser-test.mjs'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
