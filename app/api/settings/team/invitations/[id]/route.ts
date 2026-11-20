@@ -14,7 +14,7 @@ export async function POST(request:NextRequest,{params}:{params:Promise<{id:stri
 export async function DELETE(request:NextRequest,{params}:{params:Promise<{id:string}>}){try{
  assertSameOrigin(request);const s=await requireSession();authorize(s,'users:manage');await requireFreshAuthentication(s);const {id}=await params;
  const item=await withTenant(s.organizationId,s.userId,async c=>{
-  const updated=await c.query("update organization_invitations set status='revoked' where organization_id=$1 and id::text=$2 and status='pending' returning id",[s.organizationId,id]);
+  const updated=await c.query("update organization_invitations set status='revoked' where organization_id=$1 and id::text=$2 and status='pending' and (role<>'admin' or exists (select 1 from organization_memberships where organization_id=$1 and user_id=$3 and role='owner' and status='active')) returning id",[s.organizationId,id,s.userId]);
   if(updated.rows[0])await c.query("update auth_tokens set consumed_at=coalesce(consumed_at,now()) where organization_id=$1 and token_type='invitation' and metadata->>'invitation_id'=$2",[s.organizationId,id]);
   if(updated.rows[0])await c.query("update mail_outbox set status='cancelled',updated_at=now() where organization_id=$1 and kind='invitation' and entity_id=$2 and status in ('queued','failed')",[s.organizationId,id]);
   if(updated.rows[0])await audit(c,{organizationId:s.organizationId,userId:s.userId,action:'invitation.revoked',entityType:'organization_invitations',entityId:id});return updated.rows[0];

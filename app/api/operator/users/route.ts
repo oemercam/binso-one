@@ -13,13 +13,13 @@ export async function GET(){
       `select user_id,email,coalesce(display_name,email) as display_name,role,(status='active') as active,
               auth_source,entra_object_id,entra_tenant_id,last_entra_sync_at,created_at
          from platform_operator_assignments
-        where auth_source='entra'
+        where auth_source in ('entra','email_code')
         order by lower(coalesce(display_name,email))`
     );
-    return json({items:result.rows,source:"Microsoft Entra ID"});
+    return json({items:result.rows,source:"platform_operator_assignments"});
   }catch(error){return apiError(error);}
 }
 
 export async function POST(){
-  return json({error:"entra_managed",message:"Interne Binso-Benutzer und Rollen werden in Microsoft Entra ID verwaltet."},405);
+  return json({error:"operator_provisioning_required",message:"Benutzer können hier nicht angelegt werden."},405);
 }

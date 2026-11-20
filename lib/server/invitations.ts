@@ -23,6 +23,9 @@ export async function inviteUser(s:SessionUser,email:string,role:string,key:stri
   await c.query("select set_config('app.user_id',$1,true)",[s.userId]);
   return idempotentBusiness(c,{organizationId:s.organizationId,userId:s.userId,operation:replaceInvitationId?'invitation.resend':'invitation.create',key,body:{email,role,moduleProfile,...(replaceInvitationId?{replaceInvitationId}:{})}},async()=>{
    await c.query('select id from organizations where id=$1 for update',[s.organizationId]);
+   const actor=(await c.query("select role from organization_memberships where organization_id=$1 and user_id=$2 and status='active' for share",[s.organizationId,s.userId])).rows[0];
+   if(!actor||!['owner','admin'].includes(actor.role))throw new ApiError(403,'forbidden','Keine Berechtigung.');
+   if(role==='admin'&&actor.role!=='owner')throw new ApiError(403,'owner_required','Nur Firmeninhaber können Firmenadmins verwalten.');
    if(replaceInvitationId){
     const previous=(await c.query("select id,email,role,module_profile,status from organization_invitations where organization_id=$1 and id::text=$2 for update",[s.organizationId,replaceInvitationId])).rows[0];
     if(!previous||previous.status!=='pending'||previous.email.toLowerCase()!==email.toLowerCase()||previous.role!==role||(previous.module_profile??'standard')!==moduleProfile)throw new ApiError(409,'invitation_changed','Diese Einladung wurde geändert oder ist nicht mehr offen.');
@@ -43,7 +46,9 @@ export async function inviteUser(s:SessionUser,email:string,role:string,key:stri
    if(existing&&(await c.query("select 1 from organization_memberships where user_id=$1 and organization_id<>$2 limit 1",[userId,s.organizationId])).rowCount)throw new ApiError(409,'identity_unavailable','Diese Adresse kann für diese Einladung nicht verwendet werden. Bitte ein separates Konto mit eigener E-Mail verwenden.');
    await c.query("select set_config('app.user_id',$1,true)",[s.userId]);
    if(!existing)await c.query("insert into app_users(id,email,display_name,status,password_hash) values($1,$2,$2,'invited',$3)",[userId,email,await hashPassword(randomBytes(48).toString('base64url'))]);
-   const member=(await c.query('select status from organization_memberships where organization_id=$1 and user_id=$2 for update',[s.organizationId,userId])).rows[0];
+   const member=(await c.query('select status,role from organization_memberships where organization_id=$1 and user_id=$2 for update',[s.organizationId,userId])).rows[0];
+   if((member?.role==='owner'||member?.role==='admin')&&actor.role!=='owner')throw new ApiError(403,'owner_required','Nur Firmeninhaber können Firmenadmins verwalten.');
+   if(member?.role==='owner')throw new ApiError(409,'owner_locked','Die Inhaberrolle kann hier nicht geändert werden.');
    if(member?.status==='active')throw new ApiError(409,'already_member','Diese Person ist bereits im Team.');
    const id=randomUUID(),token=randomBytes(32).toString('base64url');
    await c.query("insert into organization_invitations(id,organization_id,email,role,status,expires_at,created_by_user_id,module_profile) values($1,$2,$3,$4,'pending',now()+interval '7 days',$5,$6)",[id,s.organizationId,email,role,s.userId,moduleProfile]);

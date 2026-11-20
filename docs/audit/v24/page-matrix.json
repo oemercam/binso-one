@@ -10679,7 +10679,17 @@
         "components/ui.tsx#Icon",
         "components/ui.tsx#dismissActionLabels",
         "components/ui.tsx#actionSourceText",
-        "components/privacy-settings-button.tsx#PrivacySettingsButton"
+        "components/privacy-settings-button.tsx#PrivacySettingsButton",
+        "components/ui.tsx#Field",
+        "components/ui.tsx#Input",
+        "components/ui.tsx#Select",
+        "components/ui.tsx#Textarea",
+        "components/ui.tsx#Checkbox",
+        "components/ui.tsx#DateInput",
+        "components/ui.tsx#TimeInput",
+        "components/ui.tsx#CurrencyInput",
+        "components/ui.tsx#FormLabel",
+        "components/ui.tsx#FormError"
       ],
       "layouts": [
         "app/layout.tsx",

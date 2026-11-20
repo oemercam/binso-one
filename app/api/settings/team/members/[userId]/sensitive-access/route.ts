@@ -24,6 +24,7 @@ export async function PATCH(request:NextRequest,{params}:{params:Promise<{userId
    const previous=(await c.query('select role,status,module_profile,sensitive_grants,sensitive_grants_version from organization_memberships where organization_id=$1 and user_id=$2 for update',[s.organizationId,userId])).rows[0];
    if(!previous)throw new ApiError(404,'not_found','Teammitglied wurde nicht gefunden.');
    if(previous.role==='owner'&&s.role!=='owner')throw new ApiError(403,'owner_protected','Nur der Inhaber kann diese Inhaberrechte verwalten.');
+   if(previous.role==='admin'&&s.role!=='owner')throw new ApiError(403,'owner_required','Nur Firmeninhaber können Firmenadmins verwalten.');
    if(previous.status!=='active'||previous.module_profile!=='standard')throw new ApiError(409,'membership_changed','Die Teamzuordnung hat sich geändert.');
    if(previous.sensitive_grants_version!==body.expectedRevision)throw new ApiError(409,'sensitive_grants_changed','Die Fachrechte wurden geändert. Bitte den aktuellen Stand prüfen.');
    const issue=sensitiveGrantIssue(previous.role,body.grants);if(issue)throw new ApiError(400,'sensitive_grants_invalid',issue);

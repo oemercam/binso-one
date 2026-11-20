@@ -32,3 +32,25 @@ Die standardmässig erlaubte E-Mail-Domain ist `binso.ch`. `OPERATOR_ENTRA_TENAN
 Nach erfolgreicher Microsoft-Authentifizierung setzt Azure den validierten Header `X-MS-CLIENT-PRINCIPAL`. Die Anwendung vertraut weder einer vom Browser gelieferten E-Mail-Adresse noch einer vom Browser gelieferten Rolle.
 
 Der Architecture-Audit gibt nur nicht geheime Easy-Auth-Einstellungen aus, damit die Produktionskonfiguration ohne Offenlegung von Zugangsdaten geprüft werden kann.
+
+## E-Mail-Code für Plattform-Admins
+
+Der alternative Login benötigt Migration 0117 und einen funktionierenden E-Mail-Versand.
+Das Betriebsteam hinterlegt für jedes freigegebene Konto ein separates Passwort mit
+`node scripts/provision-operator-email.mjs <adresse> "<name>"`. Das Passwort wird
+über die Pipeline (stdin) an das Skript übergeben. Es gehört weder in die
+Befehlsargumente noch in eine Datei. Das Skript benötigt einen berechtigten
+PostgreSQL-Zugang über `DATABASE_URL`, schreibt ein Audit-Ereignis und beendet
+vorhandene Sitzungen des betroffenen Kontos.
+
+`OPERATOR_EMAIL_LOGIN_ENABLED=true` schaltet den Login im Adminportal frei.
+Der sechsstellige Code gilt zehn Minuten und ist an den Browser gebunden. Ein
+bereits umgestelltes Konto verwendet den E-Mail-Code-Login. Andere Entra-Konten
+können sich weiterhin über Microsoft anmelden. Die Plattformmitgliedschaft
+muss aktiv sein. Ein Rollenwechsel, eine Sperrung oder das Deaktivieren der
+Option entzieht umgestellten Konten den Zugriff.
+
+Vor der Umstellung eines bestehenden Entra-Kontos den E-Mail-Versand und den
+neuen Ablauf mit einem separaten Testkonto prüfen. Um die Umstellung rückgängig
+zu machen, vorhandene Sitzungen und die lokalen Zugangsdaten des Kontos entfernen
+und die Authentifizierungsquelle auf Entra zurücksetzen.
