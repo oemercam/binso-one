@@ -6,7 +6,10 @@ braucht keine manuelle Freigabe, keinen separaten Quality-Lauf und kein
 Abnahmeartefakt. Der manuelle Start bleibt für Wiederholungen verfügbar.
 Schemaänderungen laufen vor dem App-Wechsel über den vorhandenen Azure-Slot
 `db-migrations` im privaten Netz. GitHub meldet sich per OIDC am Azure-Slot an.
-Der Slot verwendet seine eigene verwaltete Identität für PostgreSQL.
+Der Slot verwendet seine eigene verwaltete Identität für PostgreSQL. Der
+Nur-Lese-Probeauftrag verifiziert den Zugriff auf die Migrationshistorie.
+Produktive Schemaänderungen setzen passende PostgreSQL-Rechte auf den
+betroffenen Objekten voraus.
 Infrastrukturänderungen folgen dem separaten Azure-Pfad. Nach dem App-Wechsel
 prüfen die öffentlichen Health-Endpunkte die veröffentlichte Version.
 
