@@ -1,5 +1,13 @@
 # Aktueller Einstieg und Regelrangfolge
 
+Produktionsveröffentlichung für `one.binso.ch`: Änderungen auf `main` starten den
+Customer-Release direkt. Der Workflow baut den unveränderlichen Commit selbst und
+braucht keine manuelle Freigabe, keinen separaten Quality-Lauf und kein
+Abnahmeartefakt. Der manuelle Start bleibt für Wiederholungen verfügbar.
+Schema- und Infrastrukturänderungen laufen über den separaten Azure-Pfad
+mit privatem Datenbankzugang. Die veröffentlichte Version wird über die
+öffentlichen Health-Endpunkte geprüft und bei einem Startfehler zurückgesetzt.
+
 Neuer Cloud-Auftrag vom 29. Oktober: [globaler Modul-/Workflow-Abgleich](architecture/global-workflow-20261029/matrix.md), [Originalquelle](architecture/global-workflow-20261029/source.md) und [Prüfgrenzen](architecture/global-workflow-20261029/validation.md). Grundlage ist verifizierter Main/Live `c357eb59`; isolierter Implementierungsbranch, keine neue Produktionsfreigabe. Frühere lokale Lieferberichte unten bleiben historische Nachweise.
 
 Neuester lokaler Auftrag: [Master V8 – vollständige Quelle](architecture/v8-global-simple-workflow/source-full.md),
