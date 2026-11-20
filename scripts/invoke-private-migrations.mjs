@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {setTimeout as sleep} from 'node:timers/promises';
 
 const [input, ...extra] = process.argv.slice(2);
-if (!input || extra.length) throw new Error('Provide one migration archive or --probe');
+if (!input || extra.length) throw new Error('Provide one migration archive');
 
 const slotScm = 'https://binso-admin-prod-db-migrations-fka9gjcycqezgffv.scm.switzerlandnorth-01.azurewebsites.net';
 const args = ['account', 'get-access-token', '--resource-type', 'arm', '--query', 'accessToken', '-o', 'tsv', '--only-show-errors'];
@@ -33,17 +33,13 @@ async function put(suffix, body, type) {
   await response.body?.cancel();
 }
 
-const probe = input === '--probe';
-let digest = null;
-if (!probe) {
-  const bundle = await readFile(input);
-  digest = createHash('sha256').update(bundle).digest('hex');
-  await put('.tar.gz', bundle, 'application/gzip');
-}
+const bundle = await readFile(input);
+const digest = createHash('sha256').update(bundle).digest('hex');
+await put('.tar.gz', bundle, 'application/gzip');
 console.log('Private migration job ' + id);
 
 try {
-  await put('.json', JSON.stringify({probe, digest}), 'application/json');
+  await put('.json', JSON.stringify({digest}), 'application/json');
 } catch (error) {
   if (error.name !== 'TimeoutError') throw error;
   // An accepted request may outlive the response. Poll the same ID without re-submitting.
@@ -65,7 +61,7 @@ while (Date.now() < deadline) {
   }
   if (!response.ok) throw new Error('Migration result lookup returned HTTP ' + response.status);
   const result = await response.json();
-  if (result.status !== 'success' || result.stage !== (probe ? 'managed_identity' : 'migration')) {
+  if (result.status !== 'success' || result.stage !== 'migration') {
     const stage = /^[a-z_]+$/.test(String(result.stage)) ? result.stage : 'unknown';
     throw new Error('Private migration job ' + id + ' failed at ' + stage);
   }
@@ -77,7 +73,7 @@ while (Date.now() < deadline) {
   } catch {
     console.warn('Migration result receipt was retained');
   }
-  console.log(probe ? 'Private network and managed identity verified' : 'Private PostgreSQL migrations completed');
+  console.log('Private PostgreSQL job completed');
   process.exit(0);
 }
 

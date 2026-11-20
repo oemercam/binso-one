@@ -116,7 +116,7 @@ jobs:
           echo "previous=$previous" >> "$GITHUB_OUTPUT"
       - name: Probe the private PostgreSQL migration slot
         if: inputs.probe_migrations == true
-        run: node scripts/invoke-private-migrations.mjs --probe
+        run: node scripts/invoke-private-migrations.mjs deploy/private-migration-probe.tar.gz
       - name: Apply migrations through the private Azure slot
         if: inputs.probe_migrations != true && steps.package.outputs.migrate == 'true'
         run: |
