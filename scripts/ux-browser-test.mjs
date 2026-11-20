@@ -1262,7 +1262,7 @@ try{
    await settingsNavigation.getByRole('link',{name:'Abonnement',exact:true}).waitFor();
    assert.equal(await guidePreference.isChecked(),guideChecked,'Searching destinations preserves the separate setup preference');
    const groupSurface=await settingsNavigation.locator('.bo-settings-group-body').evaluate(el=>({border:getComputedStyle(el).borderTopWidth,radius:getComputedStyle(el).borderTopLeftRadius,background:getComputedStyle(el).backgroundColor}));
-   assert.equal(groupSurface.border,'1px');assert.equal(groupSurface.radius,'16px');assert.notEqual(groupSurface.background,'rgba(0, 0, 0, 0)','Grouped settings use the approved customer-detail card');
+   assert.equal(groupSurface.border,'1px');assert.equal(groupSurface.radius,'22px');assert.notEqual(groupSurface.background,'rgba(0, 0, 0, 0)','Grouped settings use the approved customer-detail card');
    await settingsNavigation.getByLabel('Einstellungen suchen',{exact:true}).fill('no-such-setting');await settingsNavigation.getByText('Keine passenden Einstellungen',{exact:true}).waitFor();
    assert.equal(await settingsNavigation.locator('.bo-settings-group').count(),0,'A search without matches leaves no empty navigation groups');assert.equal(await guidePreference.isChecked(),guideChecked,'An empty search cannot change setup preferences');
    await settingsNavigation.getByLabel('Einstellungen suchen',{exact:true}).fill('');assert.ok(await settingsNavigation.locator('.bo-settings-group').count()>=2,'Clearing search restores the groups');
