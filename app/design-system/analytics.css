@@ -7,7 +7,7 @@
  .bo-dashboard-overview>.bo-workspace-section{min-width:0}
  .bo-dashboard-overview .bo-cash-trend{min-width:0}
  .bo-dashboard-overview .section-title{margin:0 0 10px;min-height:0}
- .bo-dashboard-overview .section-title h2{font-size:var(--type-body);line-height:1.4}
+ .bo-dashboard-overview .section-title h2{font-size:1rem;line-height:1.4}
  .bo-dashboard-overview .bo-cash-overview>.metrics-grid{grid-auto-rows:1fr;gap:10px;margin:0 0 12px;align-items:stretch}
  .bo-dashboard-overview .bo-metric-tiles .metric{border:1px solid var(--color-line);border-radius:var(--shape-panel);padding:14px;min-height:116px;background:var(--color-bg)}
  .bo-dashboard-overview .metric-top{align-items:flex-start;gap:6px;font-size:var(--type-label);overflow-wrap:anywhere}
@@ -169,8 +169,17 @@
  .bo-dashboard-overview .bo-overview-bar-track{height:88px}
 }
 
-.bo-dashboard-overview .document-summary-row.is-information{height:auto;min-height:var(--navigation-row-height);padding-block:0;gap:12px}
-.bo-dashboard-overview .document-summary-row.is-information b{font-weight:400}
+.app-root .bo-dashboard-overview .bo-workspace-section{
+ border:0;
+ background:var(--app-surface);
+}
+.bo-dashboard-overview .document-summary-row.is-information{
+ height:auto;
+ min-height:var(--navigation-row-height);
+ padding-block:var(--space-8);
+ gap:var(--space-12);
+}
+.bo-dashboard-overview .document-summary-row.is-information b{font-size:1rem;font-weight:400}
 
 @media(min-width:761px){
  .bo-dashboard-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;min-width:0}

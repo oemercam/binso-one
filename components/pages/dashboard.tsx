@@ -25,6 +25,7 @@ export function DashboardPage(){
 export function DashboardOverview({data}:{data:DashboardData|undefined}){
  const translate=useTranslation(),access=usePageAccess();
  const attention=(data?.attention??[]).filter(item=>financialStatus(item)==='overdue');
+ const hasOverview=data?.setup||data?.work||data?.stats||data?.cash||attention.length||data?.recent?.length||data?.invoices?.length;
  const recent=(data?.recent??data?.invoices??[]).slice(0,3);
  const work=data?.work,snapshot=data?.canFinance?data.cash?.financial?.snapshot:undefined;
  const pilotRows=pilotEnabled?[
@@ -45,6 +46,7 @@ export function DashboardOverview({data}:{data:DashboardData|undefined}){
  </div>;
  return <div className="bo-dashboard-overview">
   {data?.setup&&<SetupGuideView item={data.setup}/>}
+  {!hasOverview&&<section className="bo-workspace-section"><EmptyState title="Noch keine Geschäftsvorgänge vorhanden."/></section>}
   {!pilotEnabled&&data?.canFinance&&data.cash?<CashOverview data={data.cash} dashboard afterMetrics={tasks}/>:tasks}
   <div className="bo-overview-secondary">
    {(data?.stats?.customer_count!=null||data?.stats?.project_count!=null||data?.stats?.employee_count!=null)&&<section className="bo-workspace-section"><SectionTitle title="Unternehmen"/>{data.stats.customer_count!=null&&<ListRow information href="/kunden" title="Kunden" meta="Sichtbarer Kundenbestand" value={String(data.stats.customer_count)}/ >}{data.stats.employee_count!=null&&<ListRow information href="/mitarbeiter" title="Mitarbeiter" meta="Aktive Mitarbeiter" value={String(data.stats.employee_count)}/ >}{!pilotEnabled&&data.stats.project_count!=null&&<ListRow information href="/projekte?status=Aktiv" title="Aufträge" meta="Aktive, berechtigte Aufträge" value={String(data.stats.project_count)}/>}</section>}
