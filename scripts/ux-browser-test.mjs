@@ -426,10 +426,11 @@ try{
       await verifyMobileLoginGeometry(page,{captureCode:process.env.BINSO_UX_CAPTURE_ALL==='1'?()=>capture(page,{animations:'disabled',path:path.join(output,`${theme}-${width}-auth-email-code.png`),fullPage:true}):undefined});
     }
     if(process.env.BINSO_UX_COMPLIANCE==='1')await measureCompliance(page,{output:path.join(output,'compliance'),route,theme,width,state:process.env.BINSO_UX_FIXTURE_CASE??'normal',engine:process.env.BINSO_UX_BROWSER??'chromium'});
-    // Explicit 15 October white-workspace contract; no screenshot baseline is rewritten.
-    if(!process.env.BINSO_UX_BASELINE&&theme==='light'){
+    // Apple workspace canvas and grouped surfaces are independent roles.
+    if(!process.env.BINSO_UX_BASELINE){
+      const canvas=theme==='light'?'rgb(242, 242, 247)':'rgb(0, 0, 0)';
       const surfaces=await page.locator('.app-root,.operator-root,.page-container,.operator-app-content,.desktop-appbar,.mobile-header,.operator-app-header').evaluateAll(nodes=>nodes.filter(el=>el.getClientRects().length).map(el=>({name:el.className,background:getComputedStyle(el).backgroundColor})));
-      assert.ok(surfaces.every(surface=>surface.background==='rgb(255, 255, 255)'),`${route}: white workspace surfaces ${JSON.stringify(surfaces)}`);
+      assert.ok(surfaces.every(surface=>surface.background===canvas),`${route}: Apple workspace canvas ${JSON.stringify(surfaces)}`);
     }
     const navigationToggle=page.locator('.desktop-navigation-toggle').filter({visible:true});
     const modal=page.locator('[aria-modal="true"]').filter({visible:true});
@@ -636,7 +637,7 @@ try{
     await create.evaluate(el=>{window.__creationTrigger=el;window.__creationFocus=[];document.addEventListener('focusin',event=>window.__creationFocus.push({tag:event.target.tagName,label:event.target.getAttribute('aria-label'),className:event.target.className}),true)});
     if(width<=760){
      const geometry=await page.evaluate(()=>{const rect=selector=>document.querySelector(selector).getBoundingClientRect().toJSON(),css=selector=>getComputedStyle(document.querySelector(selector));return {nav:rect('.bottom-nav'),plus:rect('.workspace-command-bar .bo-create-action,.app-section-dashboard .page-actions .bo-create-action'),capsule:css('.mobile-header-actions').backgroundColor,material:css('.bottom-nav').backgroundColor,header:css('.mobile-header').backgroundColor,page:css('.page-container').backgroundColor,blur:css('.mobile-header').backdropFilter,navBlur:css('.bottom-nav').backdropFilter,targets:[...document.querySelector('.bottom-nav').children].map(el=>el.getBoundingClientRect().toJSON())}});
-     assert.equal(geometry.header,geometry.page,'Header and page share one opaque canvas');assert.equal(geometry.blur,'none');assert.ok([geometry.page,'rgba(0, 0, 0, 0)'].includes(geometry.capsule),'Header actions use the shared canvas or a transparent surface');assert.equal(geometry.material,theme==='light'?'rgb(255, 255, 255)':'rgb(0, 0, 0)','Flat navigation shares the opaque theme canvas');assert.equal(geometry.navBlur,'none','Flat navigation never restores the old glass blur');await assertFlatMobileNavigation(page);
+     assert.equal(geometry.header,geometry.page,'Header and page share one opaque canvas');assert.equal(geometry.blur,'none');assert.ok([geometry.page,'rgba(0, 0, 0, 0)'].includes(geometry.capsule),'Header actions use the shared canvas or a transparent surface');assert.equal(geometry.material,theme==='light'?'rgb(242, 242, 247)':'rgb(0, 0, 0)','Flat navigation shares the opaque theme canvas');assert.equal(geometry.navBlur,'none','Flat navigation never restores the old glass blur');await assertFlatMobileNavigation(page);
      assert.ok(geometry.targets.every(t=>t.width>=44&&t.height>=44),'Destinations keep minimum touch targets');
      assert.ok(geometry.plus.bottom<=geometry.nav.top,'Creation belongs to the page above navigation');
      assert.equal(await page.locator('.mobile-dock .bo-create-action,.dock-create-action').count(),0,'Navigation has no attached creation action');
