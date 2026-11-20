@@ -60,7 +60,11 @@ const artifactCheck=appRelease.jobs.release.steps.find(step=>step.id==='package'
 for(const guard of ['node scripts/release-artifact.mjs verify','git merge-base --is-ancestor','git diff --quiet'])
  assert(artifactCheck.includes(guard),'App release guard: '+guard);
 assert.doesNotMatch(artifactCheck,/workflows\/quality|gh run download/,'Customer deploy builds in the same workflow');
-assert.equal(appRelease.jobs.release.steps.find(step=>step.id==='release').if,undefined);
+const appSteps=appRelease.jobs.release.steps;
+const applyMigration=appSteps.find(step=>step.name==='Apply migrations through the private Azure slot');
+assert.ok(applyMigration.if.includes("steps.package.outputs.migrate == 'true'"));
+assert.ok(appSteps.indexOf(applyMigration)<appSteps.findIndex(step=>step.id==='release'));
+assert.equal(appSteps.find(step=>step.id==='release').if,'inputs.probe_migrations != true');
 const attestation=workflows['legacy-checksum-attestation.yml'];
 assert.deepEqual(Object.keys(attestation.on),['workflow_dispatch'],'Legacy metadata correction is manual only');
 assert.equal(attestation.on.workflow_dispatch.inputs.apply.default,false,'Read-only plan is the default');
