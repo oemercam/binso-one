@@ -1,4 +1,10 @@
 {
+  "Deine Adminrolle erlaubt diesen Zugriff nicht. Wende dich für eine passende Rolle an die Administration.": ["Your admin role does not allow this access. Contact the administrators for the appropriate role.", "Ton rôle administrateur ne permet pas cet accès. Contacte l’administration pour obtenir le rôle approprié.", "Il tuo ruolo amministrativo non consente questo accesso. Contatta l’amministrazione per ottenere il ruolo appropriato.", "Yönetici rolün bu erişime izin vermiyor. Uygun rol için yönetime başvur."],
+  "Einrichtungscode": ["Setup code", "Code de configuration", "Codice di configurazione", "Kurulum kodu"],
+  "Passkey bestätigen": ["Confirm passkey", "Confirmer la clé d’accès", "Conferma passkey", "Geçiş anahtarını onayla"],
+  "Interne Zugriffe, Rollen und Berechtigungen.": ["Internal access, roles and permissions.", "Accès internes, rôles et autorisations.", "Accessi interni, ruoli e autorizzazioni.", "Dahili erişim, roller ve izinler."],
+  "Für den ersten Passkey benötigst du einen gültigen Einrichtungscode.": ["You need a valid setup code to register your first passkey.", "Tu as besoin d’un code de configuration valide pour enregistrer ta première clé d’accès.", "Per registrare la tua prima passkey serve un codice di configurazione valido.", "İlk geçiş anahtarını kaydetmek için geçerli bir kurulum kodu gerekir."],
+  "Nicht verfügbar.": ["Unavailable.", "Indisponible.", "Non disponibile.", "Kullanılamıyor."],
   "Produkt übernehmen": ["Use product", "Reprendre un produit", "Usa prodotto", "Ürün kullan"],
   "Ausgabe": ["Expense", "Dépense", "Spesa", "Gider"],
   "Bitte Datum und Dauer prüfen.": ["Please check the date and duration.","Veuillez vérifier la date et la durée.","Controlla la data e la durata.","Lütfen tarih ve süreyi kontrol et."],
