@@ -659,7 +659,7 @@ a{-webkit-tap-highlight-color:transparent}
 .mobile-back{min-width:44px;min-height:44px;
   }
 .mobile-detail-actions{display:flex;align-items:center;gap:2px;margin-left:auto}
-.mobile-back{width:40px;height:40px;display:grid;place-items:center;margin-left:-8px}
+.mobile-back{width:44px;height:44px;display:grid;place-items:center;margin-left:-8px;border-radius:50%;background:var(--color-subtle);color:var(--color-fg)}
 .header-search-scopes{display:flex;margin-bottom:12px}
 .header-search-cancel{display:block;flex:none;padding:0;border:0;background:transparent;color:var(--color-fg);font:inherit;font-size:var(--type-body)}
 .header-search-controls{padding-block:8px 12px}
