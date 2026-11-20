@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      probe_migrations:
+        description: Verify the private database migration path without deploying
+        type: boolean
+        default: false
       pilot:
         description: Activate customer pilot mode with the promoted package
         type: boolean
@@ -31,6 +35,7 @@ jobs:
       - run: pnpm build
       - run: bash scripts/package-production.sh
       - run: node scripts/release-artifact.mjs create deploy "$GITHUB_SHA"
+      - run: bash scripts/package-private-migrations.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: binso-release-${{ github.sha }}
@@ -43,7 +48,7 @@ jobs:
     needs: package
     if: github.repository_id == '1379293391' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 40
     environment: production-app
     permissions:
       contents: read
@@ -77,12 +82,17 @@ jobs:
           node scripts/release-artifact.mjs verify deploy "$GITHUB_SHA"
           live="$(curl -fsS --max-time 15 "$BASE/api/health" | jq -er '.sha | select(test("^[a-f0-9]{40}$"))')"
           git merge-base --is-ancestor "$live" "$GITHUB_SHA"
-          if ! git diff --quiet "$live" "$GITHUB_SHA" -- database config infrastructure lib/server/env.ts .github/workflows/deploy-azure.yml ':(exclude)config/create-actions.ts' ':(exclude)config/plan-access.ts' ':(exclude)config/workspace-navigation.ts'; then
-            echo '::error::This release changes the database or runtime configuration. Use Deploy Azure App Service with private network access.'
+          if ! git diff --quiet "$live" "$GITHUB_SHA" -- database config infrastructure lib/server/env.ts .github/workflows/deploy-azure.yml ':(exclude)config/create-actions.ts' ':(exclude)config/plan-access.ts' ':(exclude)config/workspace-navigation.ts' ':(exclude)database/migrations' ':(exclude)database/schema-contract.json' ':(exclude)config/legal.ts'; then
+            echo '::error::This release changes infrastructure or runtime settings outside the application migration path.'
             exit 1
           fi
           curl -fsS --max-time 15 "$BASE/api/health/ready" | jq -e '.status == "ready"'
           echo "live=$live" >> "$GITHUB_OUTPUT"
+          if git diff --quiet "$live" "$GITHUB_SHA" -- database/migrations database/schema-contract.json; then
+            echo "migrate=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "migrate=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
@@ -90,6 +100,7 @@ jobs:
           subscription-id: ${{ vars.AZURE_DEPLOY_SUBSCRIPTION_ID }}
       - name: Verify the live rollback package through Azure
         id: rollback
+        if: inputs.probe_migrations != true
         env:
           LIVE: ${{ steps.package.outputs.live }}
         run: |
@@ -103,8 +114,18 @@ jobs:
           [[ -z "$prior_pilot" || "$prior_pilot" =~ ^[01]$ ]]
           echo "pilot=${prior_pilot:-0}" >> "$GITHUB_OUTPUT"
           echo "previous=$previous" >> "$GITHUB_OUTPUT"
+      - name: Probe the private PostgreSQL migration slot
+        if: inputs.probe_migrations == true
+        run: node scripts/invoke-private-migrations.mjs --probe
+      - name: Apply migrations through the private Azure slot
+        if: inputs.probe_migrations != true && steps.package.outputs.migrate == 'true'
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          node scripts/invoke-private-migrations.mjs deploy/private-migrations.tar.gz
       - name: Deploy package to production
         id: release
+        if: inputs.probe_migrations != true
         env:
           LIVE: ${{ steps.package.outputs.live }}
           PREVIOUS: ${{ steps.rollback.outputs.previous }}
@@ -127,6 +148,7 @@ jobs:
           echo "pilot=$pilot" >> "$GITHUB_OUTPUT"
           az webapp config appsettings set -g "$GROUP" -n "$APP" --settings "WEBSITE_RUN_FROM_PACKAGE=$origin$blob" "BINSO_PILOT=$pilot"
       - name: Verify live deployment
+        if: inputs.probe_migrations != true
         env:
           PILOT: ${{ steps.release.outputs.pilot }}
         run: |
