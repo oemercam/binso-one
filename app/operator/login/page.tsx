@@ -18,13 +18,11 @@ export default function OperatorLogin(){
   };
 
 
-  return <AuthWorkspace showLocaleSwitcher={false}><section className="auth-card operator-login-card">
-    <span className="eyebrow"><LocalizedText>{"ONE ADMIN"}</LocalizedText></span>
-    <h1><LocalizedText>{"Admin Portal"}</LocalizedText></h1>
+  return <AuthWorkspace showLocaleSwitcher={false} variant="login"><section className="auth-card operator-login-card" aria-labelledby="login-heading">
+    <h1 id="login-heading"><LocalizedText>{"Admin Portal"}</LocalizedText></h1>
     <p><LocalizedText>{"Interner Zugang für Binso-Mitarbeitende über Microsoft Entra ID."}</LocalizedText></p>
-    <Button onClick={startMicrosoft}><LocalizedText>{"Mit Microsoft anmelden"}</LocalizedText></Button>
-    <p className="operator-login-note"><LocalizedText>{"Microsoft verwaltet Anmeldung, Microsoft Authenticator/MFA und Kontosicherheit. Zugriff erhalten nur im Binso-Entra-Tenant autorisierte Personen mit einer zugewiesenen Binso-One-App-Rolle."}</LocalizedText></p>
     {denied&&<ErrorState className="auth-error"><LocalizedText>{"Microsoft-Anmeldung erfolgreich, aber deinem Konto ist keine gültige Binso-One-Adminrolle zugewiesen."}</LocalizedText></ErrorState>}
+    <Button onClick={startMicrosoft}><LocalizedText>{"Mit Microsoft anmelden"}</LocalizedText></Button>
     <p className="auth-bottom"><Link href="/"><LocalizedText>{"Zurück zu Binso One"}</LocalizedText></Link></p>
   </section></AuthWorkspace>;
 }

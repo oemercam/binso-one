@@ -28,7 +28,8 @@ export default function Login(){
     queueMicrotask(()=>{
       if(!active)return;
       try{
-        if(new URLSearchParams(window.location.search).get("signedOut")==="1"&&window.sessionStorage.getItem("binso.logout-confirmed")==="1"){          setSignedOut(true);
+        if(new URLSearchParams(window.location.search).get("signedOut")==="1"&&window.sessionStorage.getItem("binso.logout-confirmed")==="1"){
+          setSignedOut(true);
         }
       }catch{}
     });
@@ -88,28 +89,31 @@ export default function Login(){
     finally{pending.current=false;setLoading(false);}
   };
 
-  if(stage!=="credentials")return <AuthWorkspace><section className="auth-card">
-    <h1><LocalizedText>{"E-Mail bestätigen"}</LocalizedText></h1>
+  if(stage!=="credentials")return <AuthWorkspace variant="login"><section className="auth-card" aria-labelledby="login-heading">
+    <h1 id="login-heading"><LocalizedText>{"E-Mail bestätigen"}</LocalizedText></h1>
     <p><LocalizedText>{`Wir haben einen 6-stelligen Code an ${email} gesendet.`}</LocalizedText></p>
     <form onSubmit={submitCode}>
       <Field label={"6-stelliger Code"}><Input required autoFocus value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode={"numeric"} autoComplete="one-time-code" placeholder={"000000"}/></Field>
       {error&&<ErrorState className="auth-error"><LocalizedText>{error}</LocalizedText></ErrorState>}
       <Button type="submit" disabled={loading||!code.trim()}><LocalizedText>{loading?"Wird geprüft…":"Anmeldung abschliessen"}</LocalizedText></Button>
     </form>
-    <button type="button" className="auth-inline-action" disabled={loading} onClick={()=>void resend()}><LocalizedText>{"Code erneut senden"}</LocalizedText></button>
-    <button type="button" className="auth-inline-action" onClick={()=>{setStage("credentials");setCode("");setError("");}}><LocalizedText>{"Zurück"}</LocalizedText></button>
+    <div className="auth-login-links">
+      <button type="button" className="auth-inline-action" disabled={loading} onClick={()=>void resend()}><LocalizedText>{"Code erneut senden"}</LocalizedText></button>
+      <button type="button" className="auth-inline-action" disabled={loading} onClick={()=>{setStage("credentials");setCode("");setError("");}}><LocalizedText>{"Zurück"}</LocalizedText></button>
+    </div>
   </section></AuthWorkspace>;
 
-  return <AuthWorkspace><section className="auth-card">
-    <h1><LocalizedText>Anmelden</LocalizedText></h1><p><LocalizedText>{"Melde dich sicher in deinem Binso One Konto an."}</LocalizedText></p>
+  return <AuthWorkspace variant="login"><section className="auth-card" aria-labelledby="login-heading">
+    <h1 id="login-heading"><LocalizedText>Anmelden</LocalizedText></h1>
     {signedOut&&<Toast title="Sitzung abgemeldet." inline/>}
     <form onSubmit={submitCredentials}>
       <Field label="E-Mail"><Input name="username" autoCapitalize="none" spellCheck={false} required value={email} onChange={e=>setEmail(e.target.value)} type="email" inputMode="email" autoComplete="username" placeholder="name@firma.ch"/></Field>
-      <Field label="Passwort"><PasswordInput name="password" required value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" placeholder="••••••••"/></Field>
-      <div className="auth-options"><label><Input type="checkbox" checked={rememberMe} onChange={event=>setRememberMe(event.target.checked)}/><LocalizedText>{"Angemeldet bleiben"}</LocalizedText></label><div className="form-link"><Link href="/passwort-vergessen"><LocalizedText>{"Passwort vergessen?"}</LocalizedText></Link></div></div>
+      <Field label="Passwort"><PasswordInput name="password" required value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password"/></Field>
+      <div className="auth-options"><label><Input type="checkbox" checked={rememberMe} onChange={event=>setRememberMe(event.target.checked)}/><LocalizedText>{"Angemeldet bleiben"}</LocalizedText></label></div>
       {error&&<ErrorState className="auth-error"><LocalizedText>{error}</LocalizedText></ErrorState>}
       <Button type="submit" disabled={loading}><LocalizedText>{loading?"Anmeldung läuft…":"Anmelden"}</LocalizedText></Button>
     </form>
+    <div className="auth-login-links"><Link href="/passwort-vergessen"><LocalizedText>{"Passwort vergessen?"}</LocalizedText></Link></div>
     <p className="auth-bottom"><LocalizedText>{"Noch kein Konto? "}</LocalizedText><Link href="/registrieren"><LocalizedText>{"Konto erstellen"}</LocalizedText></Link></p>
   </section></AuthWorkspace>;
 }
