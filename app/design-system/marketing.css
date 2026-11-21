@@ -1,5 +1,5 @@
 /* BINso One / marketing — one owner for base, states and responsive behavior. */
-body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
+body:has(.marketing-header){--marketing-page-inset:28px;background:var(--app-canvas);color:var(--app-text)}
 .marketing-header{
   position:sticky;
   top:0;
@@ -17,7 +17,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   max-width:var(--marketing-max);
   height:100%;
   margin:auto;
-  padding:0 28px;
+  padding:0 var(--marketing-page-inset);
   display:flex;
   align-items:center;
   gap:38px;
@@ -43,7 +43,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   width:100%;
   max-width:var(--marketing-max);
   margin:auto;
-  padding:var(--marketing-page-start) 28px 74px;
+  padding:var(--marketing-page-start) var(--marketing-page-inset) 74px;
 }
 .subhero-copy{max-width:560px}
 .workflow-list,
@@ -139,7 +139,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   width:100%;
   max-width:var(--marketing-max);
   margin-inline:auto;
-  padding:74px 28px;
+  padding:74px var(--marketing-page-inset);
   display:flex;
   flex-wrap:wrap;
   align-items:center;
@@ -154,7 +154,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   width:100%;
   max-width:var(--marketing-max);
   margin:auto;
-  padding:var(--space-32) 28px;
+  padding:var(--space-32) var(--marketing-page-inset);
   display:grid;
   gap:var(--space-24);
   border-top:1px solid var(--color-line);
@@ -283,7 +283,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
 .marketing-mobile-menu{
   animation:marketing-menu-enter var(--motion-base) var(--motion-ease) both;
 }
-.legal-page{width:100%;max-width:980px;margin:auto;padding:var(--marketing-page-start) 28px 84px;overflow-wrap:anywhere}
+.legal-page{width:100%;max-width:var(--marketing-max);margin:auto;padding:var(--marketing-page-start) var(--marketing-page-inset) 84px;overflow-wrap:anywhere}
 .legal-hero{max-width:760px;margin-bottom:44px}
 .legal-hero h1{margin:0 0 14px;font-size:var(--type-scale-46);line-height:1;letter-spacing:-.045em}
 .legal-hero p{margin:0;color:var(--color-muted);font-size:var(--type-body);line-height:1.6}
@@ -530,7 +530,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   display:grid;
   grid-template-columns:1fr 1.15fr;
   gap:35px;
-  padding:var(--marketing-page-start) 40px 65px;
+  padding:var(--marketing-page-start) var(--marketing-page-inset) 65px;
   align-items:center;
 }
 .reference-hero h1{
@@ -565,7 +565,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   margin-top:27px;
 }
 .reference-section{
-  padding:50px 40px;
+  padding:50px var(--marketing-page-inset);
 }
 .reference-landing h2{
   font-size:var(--type-display-small);
@@ -638,10 +638,10 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   font-weight:500;
 }
 .reference-closing{
-  padding:55px 40px;
+  padding:55px var(--marketing-page-inset);
   text-align:center;
 }
-.reference-capabilities{width:100%;max-width:var(--marketing-max);margin-inline:auto;padding:22px 40px;border-block:1px solid var(--color-line);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--color-muted);font-size:var(--type-secondary)}
+.reference-capabilities{width:100%;max-width:var(--marketing-max);margin-inline:auto;padding:22px var(--marketing-page-inset);border-block:1px solid var(--color-line);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--color-muted);font-size:var(--type-secondary)}
 .reference-closing .reference-actions{
   justify-content:center;
 }

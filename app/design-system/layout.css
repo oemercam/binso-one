@@ -466,7 +466,7 @@
     height:auto;
     min-height:calc(var(--mobile-header-h) + var(--safe-top));
   }
-.mobile-header-detail .mobile-back{margin-left:-10px}
+
 .mobile-header .mobile-notification-button,
   .mobile-header .avatar-button{
     width:var(--touch);height:var(--touch);min-width:var(--touch);min-height:var(--touch);
@@ -475,7 +475,7 @@
     padding:0 4px;
   }
 .mobile-header-detail .mobile-back{
-    margin:0 0 0 -8px;
+    margin:0;
   }
 .mobile-header{
     width:100%;
@@ -648,8 +648,12 @@ html[data-theme="dark"] .app-start-icon{filter:invert(1)}
 }
 
 /* Page grid follows Master V3 without changing the protected navigation/FAB inset. */
-.app-root[data-ux="master-v3"] .page-container{padding-inline:var(--ux-page-inset);font-size:var(--body-font-size);line-height:var(--body-line-height)}
-.app-root[data-ux="master-v3"] .desktop-appbar{padding-inline:var(--ux-page-inset)}
+.app-root[data-ux="master-v3"] .page-container{padding-inline:max(var(--ux-page-inset),var(--safe-left)) max(var(--ux-page-inset),var(--safe-right));font-size:var(--body-font-size);line-height:var(--body-line-height)}
+.app-root[data-ux="master-v3"] .desktop-appbar{
+  --header-center-offset:max(0px,calc((100% - var(--content-max)) / 2));
+  padding-inline:calc(var(--header-center-offset) + max(var(--ux-page-inset),var(--safe-left)))
+                 calc(var(--header-center-offset) + max(var(--ux-page-inset),var(--safe-right)));
+}
 .app-root[data-ux="master-v3"] .page-head .bo-page-heading h1{font-size:var(--ux-page-title);line-height:var(--app-title-line-height);font-weight:600}
 .app-root[data-ux="master-v3"] .section-title h2{font-size:var(--ux-card-title);line-height:var(--section-title-line-height)}
 .app-root[data-ux="master-v3"] .page-container[data-section="dashboard"] .bo-page-heading>p{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--type-label)}
@@ -659,7 +663,7 @@ html[data-theme="dark"] .app-start-icon{filter:invert(1)}
 .app-root[data-ux="master-v3"] .bo-overview-task-grid:empty,.app-root[data-ux="master-v3"] .bo-overview-secondary:empty{display:none}
 .app-root[data-ux="master-v3"] .bo-overview-task-grid>.bo-workspace-section:only-child,.app-root[data-ux="master-v3"] .bo-overview-secondary>.bo-workspace-section:only-child{grid-column:1/-1}
 @media(max-width:760px){
- .app-root[data-ux="master-v3"] .mobile-header{padding-inline:var(--ux-page-inset)}
+ .app-root[data-ux="master-v3"] .mobile-header{padding-inline:max(var(--ux-page-inset),var(--safe-left)) max(var(--ux-page-inset),var(--safe-right))}
  .app-root[data-ux="master-v3"] .bo-overview-task-grid,.app-root[data-ux="master-v3"] .bo-overview-secondary{grid-template-columns:minmax(0,1fr);gap:12px;margin-block:12px}
 }
 @media(max-width:760px){
