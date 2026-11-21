@@ -246,6 +246,7 @@
 .document-header-icons{display:flex;align-items:center;gap:4px}
 .document-meta-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .document-meta-grid>*{min-width:0}
+.document-entry-page .invoice-form{border-color:transparent;background:transparent}
 .document-customer-grid{grid-template-columns:minmax(0,1fr)}
 @media(max-width:760px){
  .document-entry-page :is(.document-meta-grid,.document-customer-grid) .form-field:not(.form-check){grid-template-columns:minmax(0,38%) minmax(0,1fr);align-items:center}

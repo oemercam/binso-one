@@ -694,10 +694,9 @@ function DocumentEditor({ type, draft, onChange, directory, step,lockedCustomer=
     <section className={`invoice-form ${type==="Angebot"?"offer-form":""}`}>
       <div hidden={step!==undefined&&step!==0} className="form-section customer-form-section">
         <div className="form-grid document-customer-grid">
-        <span className="compact-section-label"><LocalizedText>{"Kunde"}</LocalizedText></span>
-        {!lockedCustomer&&!sourceLinked&&onCreateCustomer&&<Button variant="secondary" onClick={onCreateCustomer}><LocalizedText>Kunde erstellen</LocalizedText></Button>}
         <Field label="Kunde auswählen"><DirectorySelect label="Kunde auswählen" disabled={lockedCustomer||sourceLinked} required endpoint={"/api/customers"} value={draft.customerId??''} onChange={(value,item)=>{if(item)onChange({...draft,customer:String(item.name??''),customerId:value,...(type==='Rechnung'?{due:documentDefaults(company.raw,{paymentDays:item.paymentDays==null?undefined:Number(item.paymentDays)},'Rechnung',draft.date).due}:{})})}}/></Field>
         </div>
+        {!lockedCustomer&&!sourceLinked&&onCreateCustomer&&<Button variant="secondary" onClick={onCreateCustomer}><LocalizedText>Kunde erstellen</LocalizedText></Button>}
         {!draft.billingScopes?.length&&<BillingTermsEditor positionsOwnRates value={draft.billingTerms} currency={draft.currency==='EUR'?'EUR':'CHF'} disabled={type==='Rechnung'&&!!(draft.sourceOffer||draft.sourceProject||draft.billingAgreementId&&(!draft.billingAgreementOwned||sourceLinked))} onChange={billingTerms=>onChange({...draft,billingTerms,currency:billingTerms.currency,positions:draft.positions.map(l=>({...l,billingPart:billingTerms.model==='mixed'?(draft.billingTerms?.model==='mixed'?l.billingPart:undefined):billingTerms.model==='time'?'time':billingTerms.model==='quantity'?'quantity':'fixed',...(billingTerms.model==='time'||billingTerms.model==='mixed'&&l.billingPart==='time'?{unit:'Stunden',...('hourlyRate' in billingTerms&&billingTerms.hourlyRate!=null?{price:billingTerms.hourlyRate}:{})}:{})}))})}/>}<BillingContextFields draft={draft} onChange={onChange} type={type}/>
         {type==='Rechnung'&&<InvoiceBillingAssociations draft={draft} onChange={onChange}/>}
 
