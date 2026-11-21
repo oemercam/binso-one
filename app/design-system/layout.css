@@ -110,7 +110,7 @@
 }
 .page-head h1{margin:0;font-size:var(--page-heading-size);line-height:var(--page-heading-line-height);letter-spacing:var(--page-heading-letter-spacing);font-weight:var(--workspace-title-weight)}
 @media(max-width:760px){
- .page-container:has(.bo-dashboard-overview){--page-heading-size:var(--workspace-title-size);--page-heading-letter-spacing:-.3px}
+ .page-container:has(.bo-dashboard-overview){--page-heading-size:var(--dashboard-title-size);--page-heading-letter-spacing:-.025em}
  .page-container:has(.bo-dashboard-overview) .page-head{margin-bottom:16px}
  .page-container:has(.bo-dashboard-overview) .page-head p{font-size:var(--type-label);line-height:1.5;margin-top:4px}
 }
@@ -636,12 +636,12 @@ html[data-theme="dark"] .app-start-icon{filter:invert(1)}
 
 }
 
-@media(max-width:760px){.page-container:has(.bo-dashboard-overview)>.bo-page-heading{margin-bottom:16px}.page-container:has(.bo-dashboard-overview)>.bo-page-heading h1{font-size:var(--workspace-title-size)}.page-container:has(.bo-dashboard-overview)>.bo-page-heading p{font-size:var(--type-label)}}
+@media(max-width:760px){.page-container:has(.bo-dashboard-overview)>.bo-page-heading{margin-bottom:16px}.page-container:has(.bo-dashboard-overview)>.bo-page-heading h1{font-size:var(--dashboard-title-size)}.page-container:has(.bo-dashboard-overview)>.bo-page-heading p{font-size:var(--type-label)}}
 
 /* Dashboard reference keeps personal headings and information compact. */
 .page-container:has(.bo-dashboard-overview) .bo-page-heading-main{min-width:0}
-.page-container:has(.bo-dashboard-overview) .bo-page-heading h1{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.page-container:has(.bo-dashboard-overview) .bo-page-heading>p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;font-size:var(--type-label)}
+.page-container:has(.bo-dashboard-overview) .bo-page-heading h1{min-width:0;max-width:100%;overflow-wrap:anywhere;line-height:1.2;white-space:normal}
+.page-container:has(.bo-dashboard-overview) .bo-page-heading>p{margin:0;font-size:var(--type-body)}
 
 @media(max-width:760px){
  .page-container:is([data-section="kunden"],[data-section="finanzen"],[data-section="zeit"])>.page-head:not(.page-head-detail){display:none}

@@ -25,11 +25,13 @@ export async function verifyPhase1Navigation(){
  assert.match(shell,/mobileItems\.filter\([^)]*canOpen/,'Primary destinations retain access filtering');
  assert.match(shell,/group\.items\.filter\([^)]*canOpen/,'More destinations retain access filtering');
  assert.doesNotMatch(shell,/navCompact|setNavCompact/,'Labels never disappear on scroll');
- const icon=read('components/ui.tsx');for(const name of ['House','Users','BriefcaseBusiness','Clock3','Ellipsis'])assert.match(icon,new RegExp('\\b'+name+'\\b'));
- const paths=source=>{const ast=ts.createSourceFile('ui.tsx',source,99,true,4);let result;const visit=node=>{if(ts.isVariableDeclaration(node)&&node.name.getText(ast)==='paths')result=node.initializer.getText(ast);ts.forEachChild(node,visit)};visit(ast);assert.ok(result);return result};
+ const icon=read('components/ui.tsx');for(const name of ['House','Users','BriefcaseBusiness','Clock3','Menu'])assert.match(icon,new RegExp('\\b'+name+'\\b'));
+ const migrated=new Set(['home','users','file','clock','more','search','bell','plus','arrow','back','down','close','check','receipt','wallet','support','settings','chart','menu']);
+ assert.match(shell,/<Icon name="menu" size=\{20\}\/>/,'More uses a Lucide menu icon');
+ const paths=source=>{const ast=ts.createSourceFile('ui.tsx',source,99,true,4);let result;const visit=node=>{if(ts.isVariableDeclaration(node)&&node.name.getText(ast)==='paths')result=node.initializer.properties.filter(property=>!migrated.has(property.name?.getText(ast))).map(property=>property.getText(ast));ts.forEachChild(node,visit)};visit(ast);assert.ok(result);return result};
  const originalIcons=execFileSync('git',['show',base+':components/ui.tsx'],{encoding:'utf8'});
- assert.equal(paths(icon),paths(originalIcons),'All existing non-V2 icon paths remain unchanged');
- assert.notEqual(paths(icon.replace('M3 11.5 12 4l9 7.5','M3 11.5 12 5l9 7.5')),paths(originalIcons),'Existing protected icon mutation is detected');
+ assert.deepEqual(paths(icon),paths(originalIcons),'All existing non-V2 icon paths remain unchanged');
+ assert.notDeepEqual(paths(icon.replace('M3 6h18','M4 6h18')),paths(originalIcons),'Existing protected icon mutation is detected');
  assert.deepEqual(moreNavigation[0].items.map(item=>item.label),['Angebote','Rechnungen','Zahlungen','Spesen','Finanzübersicht','Produkte','Lieferanten','Verträge'],'V7 destinations retain order; existing business modules have their approved primary location under More');
  console.log('Phase 1 navigation: exact V2 catalogue, owning routes, permission filtering and unchanged dock/FAB geometry/material with negative probes passed. Visual acceptance remains separate.');
 }

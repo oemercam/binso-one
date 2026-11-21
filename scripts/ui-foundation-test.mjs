@@ -36,7 +36,9 @@ assert.doesNotThrow(()=>assertRuntimeImports(postcss.parse(cssImports),['theme.c
 assert.throws(()=>assertRuntimeImports(postcss.parse(cssImports),['primitives.css','theme.css']),/cascade order/);
 assert.throws(()=>assertRuntimeImports(postcss.parse(cssImports+cssImports),['theme.css','primitives.css']),/cascade order/);
 const source=fs.readFileSync('components/ui.tsx','utf8'),ast=ts.createSourceFile('ui.tsx',source,99,true,4);
-const body="const {House,Users,BriefcaseBusiness,Clock3,Ellipsis,HelpCircle}=require('lucide-react');\n"+ast.statements.filter(n=>!ts.isImportDeclaration(n)).map(n=>n.getText(ast)).join('\n');
+const lucideImport=ast.statements.find(node=>ts.isImportDeclaration(node)&&node.moduleSpecifier.text==='lucide-react');
+const lucideBindings=lucideImport.importClause.namedBindings.elements.map(binding=>binding.name.text);
+const body="const {"+lucideBindings.join(',')+"}=require('lucide-react');\n"+ast.statements.filter(n=>!ts.isImportDeclaration(n)).map(n=>n.getText(ast)).join('\n');
 const compiled=ts.transpileModule(body,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
 const {fieldInputHint}=await import(moduleUrl(fs.readFileSync('lib/form-input-hints.ts','utf8')));
 let write=true;const ui={};Function('require','exports','Children','cloneElement','isValidElement','useId','useState','useSyncExternalStore','createPortal','fieldInputHint','usePageAccess','Link',compiled)(require,ui,React.Children,React.cloneElement,React.isValidElement,React.useId,React.useState,React.useSyncExternalStore,require('react-dom').createPortal,fieldInputHint,()=>({write,canOpen:()=>true}),({children,...props})=>React.createElement('a',props,children));

@@ -95,8 +95,8 @@ export async function measureCompliance(page,{output,route,theme,width,state='no
    const valid=periods.length===4&&periods.every((n,i)=>n===[1,3,6,12][i])&&active.length===1&&!!calendar&&!!mobile&&mobile.getAttribute('aria-haspopup')==='dialog'&&!!mobile.textContent.trim()&&(mode==='mobile'?visible(mobile)&&!visible(segments):visible(segments)&&!visible(mobile));
    add('FIN-004',valid?'passed':'failed',{periods,active:active.length,mode,mobileVisible:!!mobile&&visible(mobile),segmentsVisible:!!segments&&visible(segments),calendar:!!calendar},'.bo-period-control');
    const token='--color-bg';
-   const probe=document.createElement('span');probe.style.backgroundColor=`var(${token})`;document.body.append(probe);const expected=getComputedStyle(probe).backgroundColor;probe.remove();const actual=getComputedStyle(el).backgroundColor;
-   add('FIN-010',actual===expected?'passed':'failed',{actual,expected,token,approval:'2026-10-15 ZIP: open workspace at every viewport; Dark uses derived canvas tokens without visual approval'},'.bo-statistics');
+   const probe=document.createElement('span');probe.style.backgroundColor=`var(${token})`;el.append(probe);const expected=getComputedStyle(probe).backgroundColor;probe.remove();const actual=getComputedStyle(el).backgroundColor;
+   add('FIN-010',actual===expected?'passed':'failed',{actual,expected,token,approval:'Statistics share the resolved workspace canvas in Light and Dark'},'.bo-statistics');
   }
   const selectors=['.page-container','.page-head','.section-title','.record-controls','.bo-statistics','.bo-statistics-plot','.bo-statistics-axis','.bottom-nav','.form-wizard','.bottom-sheet','.form-actions'];
   const surfaces=selectors.flatMap(selector=>all(selector).slice(0,12).map(el=>{const c=getComputedStyle(el);return {selector,...item(el),css:{padding:c.padding,margin:c.margin,gap:c.gap,background:c.backgroundColor,border:c.border,overflowX:c.overflowX,fontSize:c.fontSize,position:c.position}}}));

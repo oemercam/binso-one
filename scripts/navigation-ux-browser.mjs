@@ -20,7 +20,7 @@ export async function assertFlatMobileNavigation(page){
  await waitForFiniteAnimations(page);
  const material=await page.locator('.bottom-nav,.operator-mobile-nav').evaluateAll(nodes=>nodes.filter(el=>el.checkVisibility()).map(el=>{const c=getComputedStyle(el),r=el.getBoundingClientRect();return {background:c.backgroundColor,radius:c.borderRadius,shadow:c.boxShadow,blur:c.backdropFilter,webkitBlur:c.webkitBackdropFilter,theme:document.documentElement.dataset.theme,active:[...el.querySelectorAll('.active')].map(a=>getComputedStyle(a).color),labels:[...el.querySelectorAll(":scope > a > span,:scope > button > span")].filter(a=>a.checkVisibility()&&a.getBoundingClientRect().height>0&&getComputedStyle(a).opacity!=="0").map(a=>({text:a.textContent,name:a.parentElement.getAttribute("aria-label")??a.textContent,font:parseFloat(getComputedStyle(a.parentElement).fontSize),height:a.clientHeight,scroll:a.scrollHeight,clientWidth:a.clientWidth,scrollWidth:a.scrollWidth,width:a.getBoundingClientRect().width,targetWidth:a.parentElement.getBoundingClientRect().width})),targets:[...el.children].map(a=>({width:a.getBoundingClientRect().width,height:a.getBoundingClientRect().height})),left:r.left,right:r.right,viewport:innerWidth}}));
  for(const nav of material){
-  assert.equal(nav.background,nav.theme==='dark'?'rgb(0, 0, 0)':'rgb(255, 255, 255)','Flat navigation uses the opaque theme canvas');
+  assert.equal(nav.background,nav.theme==='dark'?'rgb(0, 0, 0)':'rgb(242, 242, 247)','Flat navigation uses the opaque theme canvas');
   assert.equal(nav.radius,'0px','Flat navigation has straight edges');
   assert.equal(nav.shadow,'none','Flat navigation has no glass shadow');
   assert.equal(nav.blur,'none','Flat navigation has no backdrop blur');

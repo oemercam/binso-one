@@ -13,6 +13,7 @@
   --workspace-muted:#63636B;
   --workspace-line:#D1D1D6;
   --workspace-title-size:18px;
+  --dashboard-title-size:2rem;
   --app-title-line-height:24px;
   --section-title-line-height:20px;
   --mobile-title-tracking:-.8px;
@@ -39,7 +40,7 @@
   --sidebar-collapsed-w:68px;
   --app-control-border:#dce5ef;
   --control-secondary-fg:#3e6594;
-  --control-ghost-fg:#2f73c4;
+  --control-ghost-fg:#005bb5;
   --command-text:#475469;
   --app-control-radius:12px;
   --operator-detail-panel-min:420px;
