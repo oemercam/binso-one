@@ -8,7 +8,7 @@ import {fieldInputHint} from "@/lib/form-input-hints";
 import {Children,cloneElement,isValidElement,useId,useState,useSyncExternalStore} from "react";
 import {createPortal} from "react-dom";
 import Link from "next/link";
-import {House,Users,BriefcaseBusiness,Clock3,Ellipsis,HelpCircle,FileText,Search,Bell,Plus,ChevronRight,ChevronLeft,ChevronDown,X,Check,Receipt,Wallet,Settings,ChartNoAxesColumn,Menu} from 'lucide-react';
+import {House,Users,BriefcaseBusiness,Clock3,HelpCircle,FileText,Search,Bell,Plus,ChevronRight,ChevronLeft,ChevronDown,X,Check,Receipt,Wallet,Settings,ChartNoAxesColumn,Menu} from 'lucide-react';
 import {SelectControl} from './select-control';
 
 const lucideIcons = {
@@ -16,13 +16,11 @@ const lucideIcons = {
   "navigation-users": Users,
   "briefcase-business": BriefcaseBusiness,
   clock3: Clock3,
-  ellipsis: Ellipsis,
   help: HelpCircle,
   home: House,
   users: Users,
   file: FileText,
   clock: Clock3,
-  more: Ellipsis,
   search: Search,
   bell: Bell,
   plus: Plus,

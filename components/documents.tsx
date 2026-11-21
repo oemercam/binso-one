@@ -484,7 +484,7 @@ function DocumentPage({kind,existing=false,documentKey}:{kind:DocumentKind;exist
   const presentation=documentPresentation(kind,draft,calculationTotals.total);
   const title=existing?kind:`${kind} erstellen`;
   const headerActions=existing&&!editing
-    ? <div className="document-header-icons"><IconButton label="Weitere Aktionen" icon="more" onClick={()=>setMoreOpen(true)}/></div>
+    ? <div className="document-header-icons"><IconButton label="Weitere Aktionen" icon="menu" onClick={()=>setMoreOpen(true)}/></div>
     : <div className="document-header-icons"><IconButton label="Vorschau" icon="file" onClick={()=>setPreview(true)}/></div>;
   const desktopActions=headerActions;
 
