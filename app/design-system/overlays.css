@@ -10,8 +10,8 @@
 .bottom-sheet[data-wizard] .wizard-progress{position:static;flex:none}
 .bottom-sheet[data-wizard] .form-wizard[data-guided]{height:auto}
 .header-panel-layer{position:fixed;inset:var(--header-panel-top) 0 0;z-index:var(--layer-sheet);display:flex;align-items:flex-start;justify-content:flex-end;padding:8px var(--header-panel-right) 12px 16px;background:var(--palette-rgba-0-0-0-24);overflow:hidden}
-.header-panel{display:flex;flex-direction:column;min-width:0;width:min(420px,100%);max-height:calc(var(--dialog-available-height) - var(--header-panel-top) - 20px);padding:0 16px 16px;background:var(--color-bg);border-radius:var(--shape-group);box-shadow:var(--shadow-modal);overflow:hidden}
-.header-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;min-height:48px;background:var(--color-bg)}
+.header-panel{display:flex;flex-direction:column;min-width:0;width:min(420px,100%);max-height:calc(var(--dialog-available-height) - var(--header-panel-top) - 20px);padding:0 16px 16px;background:var(--app-surface);border-radius:var(--shape-group);box-shadow:var(--shadow-modal);overflow:hidden}
+.header-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;min-height:48px;background:var(--app-surface)}
 .header-panel-heading h2{font-size:var(--type-mobile-detail);margin:0;font-weight:600}
 .header-panel-heading .icon-button{width:40px;height:40px}
 .header-panel>:not(.header-panel-heading){min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain}
@@ -34,8 +34,8 @@
   padding:8px 18px calc(18px + var(--safe-bottom));
   border:1px solid var(--color-line);
   border-bottom:0;
-  border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
-  background:var(--color-bg);
+  border-radius:var(--shape-group) var(--shape-group) 0 0;
+  background:var(--app-surface);
   box-shadow:0 -18px 60px var(--palette-rgba-0-0-0-08);
   max-height:calc(var(--dialog-available-height) - var(--dialog-edge-gap));
   overflow:hidden;
@@ -53,7 +53,7 @@
   gap:var(--heading-content-gap);
   padding:10px 0 var(--heading-content-gap);
   border-bottom:1px solid var(--color-line);
-  background:var(--color-bg);
+  background:var(--app-surface);
 }
 .sheet-header>div,.sheet-header>h2{min-width:0;overflow-wrap:anywhere}
 .sheet-header>:is(button,.button){width:var(--desktop-action-h);min-width:var(--desktop-action-h);height:var(--desktop-action-h);min-height:var(--desktop-action-h);padding:0;justify-self:end}
@@ -154,7 +154,7 @@
   padding:18px;
   border:1px solid var(--color-line);
   border-radius:var(--radius-lg);
-  background:var(--color-bg);
+  background:var(--app-surface);
   color:var(--color-fg);
   box-shadow:var(--shadow-modal);
 }

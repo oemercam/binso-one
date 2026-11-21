@@ -58,7 +58,7 @@ export function CreateAction({ label, href, onClick, disabled = false, requiresW
 export function ContextActions({label="Weitere Aktionen",children,mobile=true}:{label?:string;children:ReactNode;mobile?:boolean}){
  const register=useContext(WorkspaceActionContext),id=useId(),[open,setOpen]=useState(false);
  useLayoutEffect(()=>{register?.(id,children);return()=>register?.(id,null)},[register,id,children]);
- return <>{mobile&&<div className="context-actions-mobile"><Button variant="ghost" icon="more" ariaLabel={label} onClick={()=>setOpen(true)}><LocalizedText>{label}</LocalizedText></Button></div>}{!register&&<div className="context-actions-inline">{children}</div>}{mobile&&<ActionSheet label={label} open={open} onClose={()=>setOpen(false)}><div className="context-actions-menu" onClick={event=>{if(event.target instanceof Element&&event.target.closest('a,button'))setOpen(false)}}>{children}</div></ActionSheet>}</>;
+ return <>{mobile&&<div className="context-actions-mobile"><Button variant="ghost" icon="menu" ariaLabel={label} onClick={()=>setOpen(true)}><LocalizedText>{label}</LocalizedText></Button></div>}{!register&&<div className="context-actions-inline">{children}</div>}{mobile&&<ActionSheet label={label} open={open} onClose={()=>setOpen(false)}><div className="context-actions-menu" onClick={event=>{if(event.target instanceof Element&&event.target.closest('a,button'))setOpen(false)}}>{children}</div></ActionSheet>}</>;
 }
 
 export function QuickCreateAction({section="dashboard",returnTo="/dashboard"}:{section?:string;returnTo?:string}){
@@ -135,7 +135,7 @@ export function ListSearch({ value, onChange, placeholder = "Suchen ...", ariaLa
 }
 
 export function RowActions({ label = "Weitere Aktionen", onClick, disabled = false }: { label?: string; onClick: () => void; disabled?: boolean }) {
-  return <LocalizedElement as="button" className="bo-row-actions" type="button" onClick={event=>{event.currentTarget.focus({preventScroll:true});onClick()}} aria-label={label} title={label} disabled={disabled}><Icon name="more" size={20}/></LocalizedElement>;
+  return <LocalizedElement as="button" className="bo-row-actions" type="button" onClick={event=>{event.currentTarget.focus({preventScroll:true});onClick()}} aria-label={label} title={label} disabled={disabled}><Icon name="menu" size={20}/></LocalizedElement>;
 }
 
 function sheetValues(root:HTMLElement|null){return formControlSnapshot(root);}
