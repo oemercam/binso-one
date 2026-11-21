@@ -7151,7 +7151,6 @@
       "route": "/email-bestaetigen",
       "family": "AuthenticationPage",
       "components": [
-        "components/ui.tsx#Logo",
         "components/ui.tsx#LoadingState",
         "components/ui.tsx#ErrorState",
         "components/ui.tsx#Button",
@@ -7160,6 +7159,7 @@
         "components/ui.tsx#dismissActionLabels",
         "components/ui.tsx#actionSourceText",
         "components/auth-workspace.tsx#AuthWorkspace",
+        "components/ui.tsx#Logo",
         "components/locale-switcher.tsx#LocaleSwitcher",
         "components/select-control.tsx#SelectControl",
         "components/select-control.tsx#SelectSearch",
