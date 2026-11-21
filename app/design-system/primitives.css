@@ -175,6 +175,10 @@ html[data-theme] .form-field select{appearance:none;-webkit-appearance:none;padd
 .form-wizard[data-guided]{height:var(--wizard-height,auto);display:flex;flex-direction:column;min-height:0}
 .form-wizard[data-guided] .wizard-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
 .form-wizard[data-guided] .wizard-progress{position:static;flex:none}
+.wizard-progress[data-segmented]{background:transparent;border-bottom:0}
+.wizard-segments{display:flex;gap:6px;margin-block:var(--space-12) var(--space-8)}
+.wizard-segments>span{flex:1;min-width:0;height:4px;border-radius:var(--shape-scale-99);background:var(--app-divider)}
+.wizard-segments>span[data-reached]{background:var(--app-action-accent)}
 .wizard-progress{position:sticky;top:var(--desktop-header-h);z-index:10;padding:12px 0;background:var(--color-bg);border-bottom:1px solid var(--color-line);font-size:var(--type-label)}
 .form-wizard .wizard-content [hidden]{display:none}
 .wizard-content{min-width:0;padding-top:var(--field-group-gap)}
