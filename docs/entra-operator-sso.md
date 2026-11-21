@@ -1,5 +1,19 @@
 # Binso One – Interner Zugriff mit Microsoft Entra ID
 
+## Wechsel zu E-Mail, Passwort und Passkey
+
+Der neue Admin-Zugang erfordert E-Mail, Passwort und anschliessend einen
+Passkey mit lokaler Nutzerverifikation. Die Admin-Rollen und der Kunden-Login
+sind getrennt. Für die Einführung zuerst die Passkey-Migration anwenden und
+einen bestehenden aktiven Operator mit `scripts/provision-operator-passkey.mjs`
+vorbereiten. Das Passwort wird über stdin übergeben. Der einmalige
+Einrichtungscode gilt 30 Minuten und wird über einen geschützten Kanal
+übergeben. Mit `BINSO_OPERATOR_PASSKEY_LOGIN=true` wechseln Login, Sessionprüfung
+und Abmeldung auf den neuen Weg. Azure muss die Anmeldeseite und deren API ohne
+Microsoft-Anmeldung am Infrastruktur-Eingang erreichen lassen. Nach
+erfolgreicher Einrichtung mit einem zweiten Login den produktiven Einstieg
+verifizieren.
+
 Stand: 5. Oktober 2026
 
 Interne Binso-Mitarbeitende authentifizieren sich für One Admin über Microsoft Entra ID. Die Kunden-Authentifizierung bleibt davon vollständig getrennt.
