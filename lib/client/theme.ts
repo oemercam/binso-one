@@ -1,4 +1,3 @@
-import {useSyncExternalStore} from 'react';
 import {apiGet,apiPatch,isProductionBackendEnabled} from './backend';
 import {initializeTheme,type ThemeMode} from '../theme';
 export type {ThemeMode} from '../theme';
@@ -6,17 +5,6 @@ let preferenceRevision=0;
 let pendingSave:Promise<void>=Promise.resolve();
 let pendingLoad:Promise<ThemeMode|null>|null=null;
 let confirmedMode:ThemeMode|null=null;
-function subscribeTheme(listener:()=>void){
- window.addEventListener('binso-theme',listener);
- return ()=>window.removeEventListener('binso-theme',listener);
-}
-function selectedTheme():ThemeMode{
- const mode=document.documentElement.dataset.themeMode;
- return mode==='light'||mode==='dark'?mode:'system';
-}
-export function useThemePreference(){
- return useSyncExternalStore(subscribeTheme,selectedTheme,()=>'system' as ThemeMode);
-}
 export function applyTheme(mode:ThemeMode){
  const result=initializeTheme(mode);
  window.dispatchEvent(new CustomEvent('binso-theme',{detail:result}));

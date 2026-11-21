@@ -22,7 +22,8 @@ import {FormPage,ActionsMenu,ActionRow,ActionSheet,FormSheet,ListRow,SelectionRo
 
 import Link from "next/link";
 import {Monitor} from "lucide-react";
-import { saveTheme, useThemePreference, type ThemeMode } from "@/lib/client/theme";
+import { saveTheme, type ThemeMode } from "@/lib/client/theme";
+import {useThemePreference} from "@/lib/client/use-theme-preference";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { AppShell } from "../app-shell";

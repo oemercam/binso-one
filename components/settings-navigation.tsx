@@ -7,7 +7,7 @@ import {safeAppPath} from "@/lib/navigation";
 import {usePageAccess} from "@/lib/client/page-access";
 import {LocalizedText,useLocale} from "@/lib/client/locale";
 import {localeNames} from "@/lib/locales/config";
-import {useThemePreference} from "@/lib/client/theme";
+import {useThemePreference} from "@/lib/client/use-theme-preference";
 import {EmptyState} from "./ui";
 import {ActionRow,SettingsGroup,ListSearch} from "./binso-ux";
 
