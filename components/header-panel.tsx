@@ -5,13 +5,11 @@ import {useEffect,useRef,useState,type ReactNode} from "react";
 import {createPortal} from "react-dom";
 import {getDialogInvoker,useDialogFocus} from "./use-dialog-focus";
 import {IconButton} from "./ui";
-import {useBrowserBackGuard} from "./use-browser-back-guard";
 
 export type HeaderPanelKind="search"|"notifications"|"account"|"actions"|"period";
 
 /** Global interactions share full mobile views and anchored desktop panels. */
 export function HeaderPanel({kind,label,onClose,children,headerSelector,backgroundSelector=".page-container,.app-sidebar,.mobile-dock"}:{kind:HeaderPanelKind;label:string;onClose:()=>void;children:ReactNode;headerSelector?:string;backgroundSelector?:string}){
- useBrowserBackGuard(true,onClose,false);
  const [mobile,setMobile]=useState(false);
  const dialog=useDialogFocus(true,onClose,true,mobile?".header-panel":headerSelector);
  const trigger=useRef<HTMLElement|null>(getDialogInvoker()??(typeof document!=="undefined"&&document.activeElement instanceof HTMLElement?document.activeElement:null));
