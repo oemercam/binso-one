@@ -129,11 +129,13 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  border:1px solid var(--color-line);
+  border:1px solid transparent;
   border-radius:var(--radius-md);
   background:transparent;
   color:inherit;
 }
+.timer-project>.form-field+.form-field{border-block-start:1px solid var(--app-divider);padding-block-start:var(--space-12)}
+.timer-project .app-select-trigger:not([aria-invalid="true"]){background:transparent;border-color:transparent}
 .timer-actions{display:flex;justify-content:flex-start;gap:8px}
 .timer-actions>.button{flex:1}
 .time-overview-section>.section-title{display:grid;justify-content:start;gap:14px}
@@ -572,7 +574,7 @@ html,body{width:100%;max-width:100%;min-width:0;overflow-x:clip}
 .mobile-position-remove{justify-self:start}
 .time-filter-toolbar{display:flex;flex-wrap:nowrap;gap:12px}
 .time-project-create{margin-bottom:12px}
-.time-layout{display:block}
+.time-layout{grid-template-columns:minmax(0,1fr)}
 .timer-card{border-left:0;border-right:0;border-radius:0}
 .timer-card{padding-top:12px}
 

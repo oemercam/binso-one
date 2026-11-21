@@ -5,7 +5,7 @@ import {useApiQuery} from '@/lib/client/use-api-query';
 import {apiPost} from '@/lib/client/backend';
 import {ActionRow,ActionsMenu,DetailDisclosure,FormSheet} from './binso-ux';
 import {DocumentModal} from './pdf-preview';
-import {Button,ErrorState,Field,FormActions,SectionTitle,Textarea} from './ui';
+import {Button,EmptyState,ErrorState,Field,FormActions,LoadingState,SectionTitle,Textarea} from './ui';
 import {LocalizedText,useLocale,useTranslation} from '@/lib/client/locale';
 import {formatDateTime} from '@/lib/display-format';
 import {localeTags} from '@/lib/locales/config';
@@ -27,9 +27,9 @@ export function OfferHistory({number,canWrite}:{number:string;canWrite:boolean})
   }catch(reason){setError(reason instanceof Error?reason.message:'Aktion fehlgeschlagen.');}
   finally{pending.current=false;setBusy(false);}
  };
- if(query.loading)return null;
+ if(query.loading)return <LoadingState/>;
  if(query.error)return <ErrorState onRetry={query.refresh}>{query.error}</ErrorState>;
- const data=query.data;if(!data||!data.versions.length&&!data.deliveries.length)return null;
+ const data=query.data;if(!data||!data.versions.length&&!data.deliveries.length&&!data.events.length)return <EmptyState title="Keine Einträge"/>;
  const activePreview=preview===undefined?(Number.isSafeInteger(requested)&&data.versions.some(item=>item.version===requested)?requested:null):preview;
  return <><DetailDisclosure label="Versionen und Verlauf">
   {error&&<ErrorState>{error}</ErrorState>}{notice&&<p role="status"><LocalizedText>{notice}</LocalizedText></p>}

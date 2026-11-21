@@ -608,6 +608,11 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   gap:22px;
   margin-top:30px;
 }
+.reference-workflow>div{
+  padding:var(--space-16);
+  border-radius:var(--shape-group);
+  background:var(--app-surface);
+}
 .reference-workflow>div>span{
   color:var(--app-action-accent);
   font-size:var(--type-label);

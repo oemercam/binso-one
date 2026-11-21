@@ -37,9 +37,9 @@ export function FinancialDocumentsPage({kind}:{kind:"offer"|"invoice"}){
  if(customerScope.customerId)params.set('customer_id','eq.'+customerScope.customerId);
  if(controller.query.trim())params.set('q',controller.query.trim());
  const filter=documentFilterQuery(kind,controller.activeChip);if(filter)params.set(filter.field,filter.value);
- const {data,loading,error}=useApiQuery<{items:DocumentListItem[];total?:number}>(`/api/documents?${params}`);
+ const {data,loading,error,refresh}=useApiQuery<{items:DocumentListItem[];total?:number}>(`/api/documents?${params}`);
  const items=data?.items??[],total=data?.total??items.length;
- return <AppShell title={title} backHref={customerScope.returnTo} subtitle={loading?undefined:`${total} ${title}`} active={route} actions={<RecordsControls scope={customerScope.scope} controller={controller} placeholder={placeholder} chips={chips} columns={columns}><CreateAction href={customerScope.customerId?customerScope.detailHref(`/${route}/neu?customerId=`+encodeURIComponent(customerScope.customerId)):`/${route}/neu`} label={invoice?"Neue Rechnung":"Neues Angebot"}/></RecordsControls>}><DocumentList returnTo={customerScope.listReturn} items={items} kind={kind} loading={loading} error={error} controller={controller} remote toolbarActions={false} showCount={false} pagination={{total,page:controller.page,pageSize,onPage:controller.setPage}}/></AppShell>;
+ return <AppShell title={title} backHref={customerScope.returnTo} subtitle={loading?undefined:`${total} ${title}`} active={route} actions={<RecordsControls scope={customerScope.scope} controller={controller} placeholder={placeholder} chips={chips} columns={columns}><CreateAction href={customerScope.customerId?customerScope.detailHref(`/${route}/neu?customerId=`+encodeURIComponent(customerScope.customerId)):`/${route}/neu`} label={invoice?"Neue Rechnung":"Neues Angebot"}/></RecordsControls>}><DocumentList returnTo={customerScope.listReturn} items={items} kind={kind} loading={loading} error={error} onRetry={refresh} controller={controller} remote toolbarActions={false} showCount={false} pagination={{total,page:controller.page,pageSize,onPage:controller.setPage}}/></AppShell>;
 }
 
 export function OffersPage(){return <FinancialDocumentsPage kind="offer"/>;}

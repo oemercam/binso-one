@@ -8,7 +8,7 @@ import type {SetupGuide} from '@/lib/action-readiness';
 import {LocalizedText,useTranslation} from '@/lib/client/locale';
 import Link from 'next/link';
 import {AppShell} from '../app-shell';
-import {QuickCreateAction,ListRow} from '../binso-ux';
+import {QuickCreateAction,ListRow,ActionRow} from '../binso-ux';
 import {CashOverview} from '../cash-statistics';
 import type {CashStatisticsData} from '@/lib/cash-statistics';
 import {useApiQuery} from '@/lib/client/use-api-query';
@@ -40,14 +40,24 @@ export function DashboardOverview({data}:{data:DashboardData|undefined}){
   ...(Number(work?.timeReviews)>0?[{href:'/zeit?tab=entries&review=1',title:'Zeitfreigaben',value:String(work!.timeReviews)}]:[]),
   ...(Number(work?.expenseReviews)>0?[{href:'/spesen?status=Eingereicht&review=1',title:'Spesenfreigaben',value:String(work!.expenseReviews)}]:[])
  ];
+ const shortcuts=[
+  {href:"/kunden",title:"Kunden",icon:"users"},
+  {href:"/rechnungen",title:"Rechnungen",icon:"receipt"},
+  {href:"/zeit",title:"Zeiterfassung",icon:"clock"},
+  {href:"/support",title:"Support",icon:"help"},
+ ].filter(row=>(row.href!=="/rechnungen"||data?.canInvoices!==false)&&access.canOpen(row.href));
  const tasks=<div className="bo-overview-task-grid">
   {(pilotRows.length>0||work?.timeReviews!=null||work?.expenseReviews!=null||snapshot)&&<section className="bo-workspace-section"><SectionTitle title="Offene Aufgaben"/>{taskRows.length?taskRows.map(row=><ListRow information key={row.title} {...row} meta=""/>):<ListRow information title="Keine offenen Aufgaben" meta=""/>}</section>}
   {attention.length>0&&<section className="bo-workspace-section"><SectionTitle title="Handlungsbedarf"/><div className="recent-invoices">{attention.map(item=><DocumentSummaryRow key={item.id} item={item} customerHeading compact/>)}</div></section>}
  </div>;
+ const quickAccess=shortcuts.length>0&&<section className="bo-workspace-section">
+   <SectionTitle title="Schnellzugriff"/>
+   <div className="action-list">{shortcuts.map(row=><ActionRow key={row.href} {...row}/>)}</div>
+  </section>;
  return <div className="bo-dashboard-overview">
   {data?.setup&&<SetupGuideView item={data.setup}/>}
   {!hasOverview&&<section className="bo-workspace-section"><EmptyState title="Noch keine Geschäftsvorgänge vorhanden."/></section>}
-  {!pilotEnabled&&data?.canFinance&&data.cash?<CashOverview data={data.cash} dashboard afterMetrics={tasks}/>:tasks}
+  {!pilotEnabled&&data?.canFinance&&data.cash?<CashOverview data={data.cash} dashboard afterMetrics={<>{quickAccess}{tasks}</>}/>:<>{quickAccess}{tasks}</>}
   <div className="bo-overview-secondary">
    {(data?.stats?.customer_count!=null||data?.stats?.project_count!=null||data?.stats?.employee_count!=null)&&<section className="bo-workspace-section"><SectionTitle title="Unternehmen"/>{data.stats.customer_count!=null&&<ListRow information href="/kunden" title="Kunden" meta="Sichtbarer Kundenbestand" value={String(data.stats.customer_count)}/ >}{data.stats.employee_count!=null&&<ListRow information href="/mitarbeiter" title="Mitarbeiter" meta="Aktive Mitarbeiter" value={String(data.stats.employee_count)}/ >}{!pilotEnabled&&data.stats.project_count!=null&&<ListRow information href="/projekte?status=Aktiv" title="Aufträge" meta="Aktive, berechtigte Aufträge" value={String(data.stats.project_count)}/>}</section>}
    {work&&[work.hours,work.pending,work.expenses].some(value=>value!==null)&&<section className="bo-workspace-section"><SectionTitle title="Meine Arbeit"/>{work.hours!==null&&<ListRow information href="/zeit" title="Stunden" meta="Dieser Monat" value={formatTimeDuration(Number(work.hours)*60,translate)}/>}{work.pending!==null&&<ListRow information href="/zeit?tab=entries" title="Offene Zeiten" meta="Eigene Einträge" value={String(work.pending)}/>}{work.expenses!==null&&<ListRow information href="/spesen" title="Spesen" meta="Eigene Einträge" value={String(work.expenses)}/>}</section>}

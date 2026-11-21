@@ -33,7 +33,7 @@ import { invoicePaymentRequirements } from "@/lib/qr-bill";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AppShell } from "./app-shell";
-import { ActionRow, ActionSheet, ActionsMenu, FormSheet,DetailDisclosure,MetricTiles,MetricTile } from "./binso-ux";
+import { ActionRow, ActionSheet, ActionsMenu, FormSheet,DetailDisclosure,MetricTile } from "./binso-ux";
 import {DocumentModal} from "./pdf-preview";
 export {DocumentModal} from "./pdf-preview";
 import {Button, EmptyState, Field, Icon, IconButton, Toast, FormActions, Input, Select, Textarea, ErrorState, LoadingState, SectionTitle, Status} from "./ui";
@@ -465,6 +465,7 @@ function DocumentPage({kind,existing=false,documentKey}:{kind:DocumentKind;exist
 
   const canWrite=!documentReadOnly&&tenantCan(documentRole,kind==="Rechnung"?"invoices:write":"sales:write");
   const canEdit=canWrite&&(!existing||draft.status==="draft");
+  const beginEdit=()=>{draftBaseline.current=editableDocumentSnapshot(draft);setMoreOpen(false);setEditing(true)};
   const processAction=async(action:string)=>{if(documentActionPending.current||documentSavePending.current)return;documentActionPending.current=true;setActionBusy(true);setActionError(null);try{setIssueReadiness(null);if(kind==="Rechnung"&&action==="issue"){const number=documentKey??draft.number;const response=await apiGet<{item:InvoiceReadiness}>("/api/settings/readiness?"+new URLSearchParams({action:"issue_invoice",number}));if(response.item.number!==number||typeof response.item.ready!=="boolean")throw new Error("Prüfung konnte nicht bestätigt werden.");if(!response.item.ready){setIssueReadiness(response.item);return;}}await apiPost("/api/documents/"+encodeURIComponent(documentKey??draft.number)+"/status",{action});const payload=await apiGet<{item:Record<string,unknown>}>("/api/documents/"+encodeURIComponent(documentKey??draft.number));setDraft(remoteDraftFromItem(payload.item,kind));setMoreOpen(false);show("Status aktualisiert.")}catch(e){setActionError(e instanceof Error?e.message:"Status konnte nicht geändert werden.")}finally{documentActionPending.current=false;setActionBusy(false)}};
   const discardDraft=async()=>{
     if(documentActionPending.current||documentSavePending.current||!canWrite||kind!=='Rechnung'||draft.status!=='draft'||!draft.updatedAt)return;
@@ -507,7 +508,8 @@ function DocumentPage({kind,existing=false,documentKey}:{kind:DocumentKind;exist
       ? <div className="document-desktop-workspace">
           <div className="document-desktop-detail">
             <DocumentReadView type={kind} draft={draft} directory={directory} canWrite={canWrite} followup={kind==="Angebot"&&canWrite?<OfferFollowup number={draft.number} open={followupOpen} onClose={()=>setFollowupOpen(false)}/>:undefined}/>
-            {draft.id&&<EntityFiles purpose={kind==="Rechnung"?"invoice_attachment":"offer_attachment"} entityId={draft.id} uploadRef={attachmentUpload}/>}
+            {canEdit&&<Button className="document-detail-edit" onClick={beginEdit}><LocalizedText>Bearbeiten</LocalizedText></Button>}
+            {draft.id&&<EntityFiles id="dokument-dateien" purpose={kind==="Rechnung"?"invoice_attachment":"offer_attachment"} entityId={draft.id} uploadRef={attachmentUpload}/>}
           </div>
 
         </div>
@@ -522,7 +524,7 @@ function DocumentPage({kind,existing=false,documentKey}:{kind:DocumentKind;exist
     {preview&&<DocumentModal previewDraft={documentPreviewPayload(kind,draft,existing&&editing?documentKey:undefined)} pdfNumber={existing&&!editing?documentKey??draft.number:undefined} title={kind==="Angebot"?"Angebotsvorschau":"Rechnungsvorschau"} onClose={()=>setPreview(false)}/>}
     <ActionSheet label="Weitere Aktionen" open={moreOpen} busy={actionBusy} onClose={()=>setMoreOpen(false)}><div className="action-list">{canWrite&&draft.id&&<ActionRow requiresWrite icon="upload" title="Datei hinzufügen" onClick={()=>{setMoreOpen(false);attachmentUpload.current?.chooseFile()}}/>}
       {canWrite&&kind==='Rechnung'&&draft.billingAgreementId&&draft.status!=='cancelled'&&draft.status!=='draft'&&draft.billingContext?.procedure!=='final'&&<><ActionRow icon="receipt" title="Teilrechnung erstellen" href={'/rechnungen/neu?'+new URLSearchParams({billingAgreementId:draft.billingAgreementId,customerId:draft.customerId??'',period:String(draft.billingContext?.period??0),procedure:'partial'})}/><ActionRow icon="receipt" title="Schlussrechnung erstellen" href={'/rechnungen/neu?'+new URLSearchParams({billingAgreementId:draft.billingAgreementId,customerId:draft.customerId??'',period:String(draft.billingContext?.period??0),procedure:'final'})}/></>}
-      {canEdit&&<ActionRow icon="edit" title="Bearbeiten" onClick={()=>{draftBaseline.current=editableDocumentSnapshot(draft);setMoreOpen(false);setEditing(true)}} navigation/>}
+      {canEdit&&<ActionRow icon="edit" title="Bearbeiten" onClick={beginEdit} navigation/>}
       <ActionRow icon="copy" title="Nummer kopieren" onClick={()=>{void navigator.clipboard.writeText(draft.number).then(()=>{setMoreOpen(false);show("Nummer kopiert.")}).catch(()=>{setActionError("Nummer konnte nicht kopiert werden.")})}}/>
       {canRecordPayment&&<ActionRow href={"/zahlungen/neu?invoice="+encodeURIComponent(documentKey??draft.number)} icon="wallet" title="Zahlung erfassen"/>}
       {kind==="Angebot"&&draft.status==="accepted"&&tenantCan(documentRole,"projects:write")&&<ActionRow href={draft.projectId?"/projekte/"+encodeURIComponent(draft.projectId):"/projekte/neu?customerId="+encodeURIComponent(draft.customerId??"")+"&sourceOffer="+encodeURIComponent(draft.number)} icon="clock" title={draft.projectId?"Auftrag öffnen":"Auftrag starten"}/>}
@@ -579,13 +581,20 @@ function DocumentReadView({type,draft,directory,canWrite,followup}:{type:Documen
   const document={kind:'invoice',status:draft.status,total:totals.total,paid_amount:draft.paidAmount,credit_amount:draft.creditAmount,refund_amount:draft.refundAmount,due_date:dueDate?dueDate.split('.').reverse().join('-'):null};
   const axes=invoiceStatusAxes(document),creditBalance=customerCredit(document),hasClaim=isInvoice&&axes.document==='issued'&&outstanding>0;
   const {statusLabel,statusTone}=documentPresentation(type,draft,totals.total);
-  return <div className="document-detail-view">
+  return <div className="document-detail-view" data-document-kind={isInvoice?"invoice":"offer"}>
     <section className="document-detail-section">
+      <span className="document-detail-icon"><Icon name={isInvoice?"receipt":"file"} size={24}/></span>
       <div className="document-reference-row"><strong>{draft.number}</strong>{!isInvoice&&draft.offerVersion&&<span><LocalizedText>{"Version"}</LocalizedText> {draft.offerVersion}</span>}</div>
       <div className="document-customer-heading"><h2>{draft.customerId?<Link href={"/kunden/"+encodeURIComponent(draft.customerId)}>{draft.customer}</Link>:draft.customer}</h2></div>
     </section>
-    <section className="document-detail-section"><MetricTiles columns={2}><MetricTile label={hasClaim?"Offener Betrag":"Total"} value={hasClaim?outstanding:totals.total} currency={currency}/><MetricTile label={isInvoice&&axes.payment?'Zahlung':'Status'} value={<Status appearance="pill" tone={isInvoice&&axes.payment?financialStatusTone(document,axes.payment):statusTone}>{isInvoice&&axes.payment?financialStatusText(axes.payment,'invoice'):statusLabel}</Status>}/></MetricTiles></section>
-    <section className="document-facts">
+    <div className="document-detail-index">
+      <div className="document-detail-index-row"><span><LocalizedText>Status</LocalizedText></span><Status appearance="pill" tone={isInvoice&&axes.payment?financialStatusTone(document,axes.payment):statusTone}>{isInvoice&&axes.payment?financialStatusText(axes.payment,"invoice"):statusLabel}</Status></div>
+      {hasClaim&&<a href="#dokument-zahlungen" className="document-detail-index-row"><span><LocalizedText>Offener Betrag</LocalizedText></span><strong>{currency} {money(outstanding,localeTags[locale])}</strong><Icon name="arrow" size={16}/></a>}
+      <a href="#dokument-informationen" className="document-detail-index-row"><span><LocalizedText>Informationen</LocalizedText></span><span>{currency} {money(totals.total,localeTags[locale])}</span><Icon name="arrow" size={16}/></a>
+      {draft.id&&<a href="#dokument-dateien" className="document-detail-index-row"><span><LocalizedText>Dateien</LocalizedText></span><Icon name="arrow" size={16}/></a>}
+      {!isInvoice&&draft.number&&<a href="#angebot-aktivitaeten" className="document-detail-index-row"><span><LocalizedText>Aktivitäten</LocalizedText></span><Icon name="arrow" size={16}/></a>}
+    </div>
+    <section className="document-facts" id="dokument-informationen">
       <div><small><LocalizedText>{type==="Rechnung"?"Rechnungsdatum":"Angebotsdatum"}</LocalizedText></small><b>{isoToSwiss(draft.date)}</b></div>
       {type==="Angebot"
         ? <div><small><LocalizedText>{"Gültig bis"}</LocalizedText></small><b><LocalizedText>{draft.due&&isoToSwiss(draft.due)}</LocalizedText></b></div>
@@ -607,10 +616,10 @@ function DocumentReadView({type,draft,directory,canWrite,followup}:{type:Documen
     </section>
     {isInvoice&&Number(draft.creditAmount??0)>0&&<p><LocalizedText>{"Gutschriften"}</LocalizedText>: {currency} {money(Number(draft.creditAmount),localeTags[locale])}</p>}
     {isInvoice&&creditBalance>0&&<MetricTile label="Kundenguthaben" value={`${currency} ${money(creditBalance,localeTags[locale])}`}/>}
-    {hasClaim&&<LocalizedElement as="section" className="document-payment-facts" aria-label="Zahlungsstand"><SectionTitle title="Zahlungsstand"/>
+    {hasClaim&&<LocalizedElement as="section" id="dokument-zahlungen" className="document-payment-facts" aria-label="Zahlungsstand"><SectionTitle title="Zahlungsstand"/>
       <MetricTile label="Bereits bezahlt" value={`${currency} ${money(Number(draft.paidAmount??0),localeTags[locale])}`}/>
     </LocalizedElement>}
-    {!isInvoice&&draft.number&&<OfferHistory number={draft.number} canWrite={canWrite}/>}{followup}
+    {!isInvoice&&draft.number&&<LocalizedElement as="section" id="angebot-aktivitaeten" className="offer-activity-group" aria-label="Aktivitäten"><SectionTitle title="Aktivitäten"/><OfferHistory number={draft.number} canWrite={canWrite}/></LocalizedElement>}{followup}
     {(Boolean(draft.billingTerms||draft.credits?.length||draft.reminders?.length||draft.refunds?.length||draft.revisesOffer||draft.revisions?.length||draft.sourceOffer||draft.invoiceNumber||draft.note))&&<DetailDisclosure label="Weitere Angaben">
     {isInvoice&&Boolean(draft.credits?.length)&&<section className="document-detail-section"><SectionTitle title="Gutschriften"/>{draft.credits?.map(credit=><p key={credit.number}><b>{credit.number}</b> · {credit.date.split('-').reverse().join('.')} · {currency} {money(Number(credit.amount),localeTags[locale])}<br/>{credit.reason}</p>)}</section>}
     {isInvoice&&Boolean(draft.reminders?.length)&&<section className="document-detail-section"><SectionTitle title="Mahnhistorie"/>{draft.reminders?.map(reminder=><p key={reminder.id}><b><LocalizedText>{reminder.stage===1?'Zahlungserinnerung':reminder.stage===2?'1. Mahnung':'2. Mahnung'}</LocalizedText></b> · <LocalizedText>{deliveryLabel(reminder.status)}</LocalizedText><br/>{reminder.recipient} · {currency} {money(Number(reminder.amount),localeTags[locale])} · <LocalizedText>{"Zahlungsfrist"}</LocalizedText>: {reminder.deadline.split('-').reverse().join('.')}</p>)}</section>}
