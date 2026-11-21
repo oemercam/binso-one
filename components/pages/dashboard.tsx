@@ -45,7 +45,7 @@ export function DashboardOverview({data}:{data:DashboardData|undefined}){
   {href:"/rechnungen",title:"Rechnungen",icon:"receipt"},
   {href:"/zeit",title:"Zeiterfassung",icon:"clock"},
   {href:"/support",title:"Support",icon:"help"},
- ].filter(row=>access.canOpen(row.href));
+ ].filter(row=>(row.href!=="/rechnungen"||data?.canInvoices!==false)&&access.canOpen(row.href));
  const tasks=<div className="bo-overview-task-grid">
   {(pilotRows.length>0||work?.timeReviews!=null||work?.expenseReviews!=null||snapshot)&&<section className="bo-workspace-section"><SectionTitle title="Offene Aufgaben"/>{taskRows.length?taskRows.map(row=><ListRow information key={row.title} {...row} meta=""/>):<ListRow information title="Keine offenen Aufgaben" meta=""/>}</section>}
   {attention.length>0&&<section className="bo-workspace-section"><SectionTitle title="Handlungsbedarf"/><div className="recent-invoices">{attention.map(item=><DocumentSummaryRow key={item.id} item={item} customerHeading compact/>)}</div></section>}
