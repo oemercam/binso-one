@@ -110,8 +110,8 @@ export function WorkspaceSection({children,className=""}:{children:ReactNode;cla
 }
 
 /** Settings groups share one label, surface and row boundary contract. */
-export function SettingsGroup({title,children}:{title:string;children:ReactNode}){
- return <section className="bo-settings-group"><h2><LocalizedText>{title}</LocalizedText></h2><div className="bo-settings-group-body navigation-group">{children}</div></section>;
+export function SettingsGroup({title,children,hideTitle=false}:{title:string;children:ReactNode;hideTitle?:boolean}){
+ return <section className="bo-settings-group"><h2 className={hideTitle?"sr-only":undefined}><LocalizedText>{title}</LocalizedText></h2><div className="bo-settings-group-body navigation-group">{children}</div></section>;
 }
 
 /** Route links and local detail tabs keep their behavior and share one container. */
