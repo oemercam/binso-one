@@ -33,7 +33,21 @@
 .auth-workspace-body{flex:none;display:grid;grid-template-columns:minmax(0,1fr);justify-content:center;align-items:start;gap:0;width:100%;max-width:var(--auth-column-width);margin-inline:auto;padding-block:calc(var(--space-32) + var(--space-16)) calc(2 * var(--space-32))}
 .auth-workspace-body>.auth-card{width:100%;max-width:440px;padding:clamp(var(--space-16),4vw,var(--space-32));background:var(--app-surface);border-radius:var(--shape-group)}
 .auth-workspace[data-layout="message"] .auth-workspace-body>.auth-card{max-width:none;min-height:0}
-.auth-state-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--space-12);width:100%;margin-top:var(--space-8)}
+.auth-state-actions{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));
+  gap:var(--space-12);
+  grid-auto-rows:1fr;
+  margin-top:var(--space-8);
+}
+.auth-state-actions>.button{
+  width:100%;
+  height:auto;
+  min-height:var(--button-height);
+  white-space:normal;
+  overflow-wrap:anywhere;
+  text-align:center;
+}
 .auth-card .auth-feedback{border:1px solid var(--status-success-line);border-radius:var(--control-radius);padding:var(--space-12);color:var(--status-success-fg);background:var(--status-success-bg)}
 .auth-card .auth-feedback[data-tone="info"]{border-color:var(--color-line);color:var(--color-fg);background:var(--color-subtle)}
 .auth-card>.inline-feedback{margin-bottom:var(--space-16)}
