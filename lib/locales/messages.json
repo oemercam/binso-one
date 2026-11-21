@@ -1,4 +1,9 @@
 {
+  "Allgemein": ["General","Général","Generali","Genel"],
+  "App-Informationen": ["App information","Informations sur l’application","Informazioni sull’app","Uygulama bilgileri"],
+  "App-Name": ["App name","Nom de l’application","Nome dell’app","Uygulama adı"],
+  "Herausgeber": ["Publisher","Éditeur","Editore","Yayıncı"],
+  "Informationen": ["About","Informations","Informazioni","Hakkında"],
   "Produkt übernehmen": ["Use product", "Reprendre un produit", "Usa prodotto", "Ürün kullan"],
   "Ausgabe": ["Expense", "Dépense", "Spesa", "Gider"],
   "Bitte Datum und Dauer prüfen.": ["Please check the date and duration.","Veuillez vérifier la date et la durée.","Controlla la data e la durata.","Lütfen tarih ve süreyi kontrol et."],
