@@ -12,6 +12,7 @@ import {ActionRow,SettingsGroup,ListSearch} from "./binso-ux";
 /** One destination catalogue for the settings overview and every settings page. */
 export const settingsGroups:Array<{title:string;rows:Array<readonly [string,string,string]>}>=[
  {title:"Persönlich",rows:[["/einstellungen/konto","user","Profil"],["/einstellungen/sicherheit","lock","Sicherheit"],["/einstellungen/benachrichtigungen","bell","Benachrichtigungen"],["/einstellungen/darstellung","sun","Darstellung"],["/einstellungen/datenschutz","lock","Datenschutz"]]},
+ {title:"Allgemein",rows:[["/einstellungen/allgemein","settings","Allgemein"]]},
  {title:"Unternehmen",rows:[["/einstellungen/firma","users","Firma"],["/einstellungen/team","users","Benutzerkonten"],["/einstellungen/abonnement","card","Abonnement"],["/einstellungen/rechtliches","file","Rechtliches"]]},
  {title:"Geschäftsprozesse",rows:[["/einstellungen/dokumente","receipt","Dokumente"],["/einstellungen/zeiterfassung","clock","Zeiterfassung"],["/einstellungen/abwesenheiten","calendar","Abwesenheiten"]]},
 ];

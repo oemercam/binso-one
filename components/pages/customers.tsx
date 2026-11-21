@@ -149,7 +149,7 @@ export function CustomerDetail({customerId="acme"}:{customerId?:string}) {
   const city=String(customer.city??"");
   const status=String(customer.status??"active");
   const primaryContact=contacts.find(contact=>contact.is_primary===true)??contacts[0];
-  return <AppShell headingPlacement="header" recordLabel={String(customer.customer_no??"")} titleIsUserContent title={name} status={status==="inactive"?"Inaktiv":"Aktiv"} statusTone={status==="inactive"?"neutral":"success"} subtitle={[sector,city].filter(Boolean).join(" · ")} active="kunden" backHref={tab==='overview'?returnTo:hub} backLabel={tab==='overview'?'Kunden':'Zurück'} mobileActions={<Button variant="ghost" icon="more" ariaLabel="Kundenaktionen" onClick={()=>setCustomerActions(true)}/>} actions={<Button variant="ghost" icon="more" ariaLabel="Kundenaktionen" onClick={()=>setCustomerActions(true)}/>} >
+  return <AppShell headingPlacement="header" recordLabel={String(customer.customer_no??"")} titleIsUserContent title={name} status={status==="inactive"?"Inaktiv":"Aktiv"} statusTone={status==="inactive"?"neutral":"success"} subtitle={[sector,city].filter(Boolean).join(" · ")} active="kunden" backHref={tab==='overview'?returnTo:hub} backLabel={tab==='overview'?'Kunden':'Zurück'} mobileActions={<Button variant="ghost" icon="menu" ariaLabel="Kundenaktionen" onClick={()=>setCustomerActions(true)}/>} actions={<Button variant="ghost" icon="menu" ariaLabel="Kundenaktionen" onClick={()=>setCustomerActions(true)}/>} >
     <div className="customer-detail-workspace">
 
       <div className="desktop-detail-main"><div>

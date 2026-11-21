@@ -124,19 +124,19 @@ input[type="file"]:disabled::file-selector-button{opacity:var(--control-disabled
 .form-section[hidden]{display:none}
 .form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--field-group-gap)}
 .form-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
-/* Document editors share one surface for each group of fields. */
-.document-entry-page .form-grid{
+/* Form pages and sheets share one surface for each group of fields. */
+:is(.form-page,[data-sheet-kind="form"],.document-entry-page) .form-grid{
   padding:var(--space-16);
   background:var(--app-surface);
   border-radius:var(--shape-group);
 }
-.document-entry-page .form-grid
+:is(.form-page,[data-sheet-kind="form"],.document-entry-page) .form-grid
   :is(.form-control,.form-textarea,.app-select-trigger):not([aria-invalid="true"]){
   border-color:transparent;
   background-color:transparent;
 }
 @media (max-width:760px){
-  .document-entry-page .form-grid > .form-field + .form-field{
+  :is(.form-page,[data-sheet-kind="form"],.document-entry-page) .form-grid > .form-field + .form-field{
     border-block-start:1px solid var(--app-divider);
     padding-block-start:var(--space-12);
   }
