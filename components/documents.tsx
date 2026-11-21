@@ -33,7 +33,7 @@ import { invoicePaymentRequirements } from "@/lib/qr-bill";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AppShell } from "./app-shell";
-import { ActionRow, ActionSheet, ActionsMenu, FormSheet,DetailDisclosure,MetricTiles,MetricTile } from "./binso-ux";
+import { ActionRow, ActionSheet, ActionsMenu, FormSheet,DetailDisclosure,MetricTile } from "./binso-ux";
 import {DocumentModal} from "./pdf-preview";
 export {DocumentModal} from "./pdf-preview";
 import {Button, EmptyState, Field, Icon, IconButton, Toast, FormActions, Input, Select, Textarea, ErrorState, LoadingState, SectionTitle, Status} from "./ui";
@@ -508,8 +508,8 @@ function DocumentPage({kind,existing=false,documentKey}:{kind:DocumentKind;exist
       ? <div className="document-desktop-workspace">
           <div className="document-desktop-detail">
             <DocumentReadView type={kind} draft={draft} directory={directory} canWrite={canWrite} followup={kind==="Angebot"&&canWrite?<OfferFollowup number={draft.number} open={followupOpen} onClose={()=>setFollowupOpen(false)}/>:undefined}/>
-            {kind==="Angebot"&&canEdit&&<Button className="offer-detail-edit" onClick={beginEdit}><LocalizedText>Bearbeiten</LocalizedText></Button>}
-            {draft.id&&(kind==="Rechnung"?<EntityFiles purpose="invoice_attachment" entityId={draft.id} uploadRef={attachmentUpload}/>:<div id="angebot-dateien"><EntityFiles purpose="offer_attachment" entityId={draft.id} uploadRef={attachmentUpload}/></div>)}
+            {canEdit&&<Button className="document-detail-edit" onClick={beginEdit}><LocalizedText>Bearbeiten</LocalizedText></Button>}
+            {draft.id&&<EntityFiles id="dokument-dateien" purpose={kind==="Rechnung"?"invoice_attachment":"offer_attachment"} entityId={draft.id} uploadRef={attachmentUpload}/>}
           </div>
 
         </div>
@@ -583,18 +583,18 @@ function DocumentReadView({type,draft,directory,canWrite,followup}:{type:Documen
   const {statusLabel,statusTone}=documentPresentation(type,draft,totals.total);
   return <div className="document-detail-view" data-document-kind={isInvoice?"invoice":"offer"}>
     <section className="document-detail-section">
-      {!isInvoice&&<span className="offer-detail-icon"><Icon name="file" size={24}/></span>}
+      <span className="document-detail-icon"><Icon name={isInvoice?"receipt":"file"} size={24}/></span>
       <div className="document-reference-row"><strong>{draft.number}</strong>{!isInvoice&&draft.offerVersion&&<span><LocalizedText>{"Version"}</LocalizedText> {draft.offerVersion}</span>}</div>
       <div className="document-customer-heading"><h2>{draft.customerId?<Link href={"/kunden/"+encodeURIComponent(draft.customerId)}>{draft.customer}</Link>:draft.customer}</h2></div>
     </section>
-    {isInvoice&&<section className="document-detail-section"><MetricTiles columns={2}><MetricTile label={hasClaim?"Offener Betrag":"Total"} value={hasClaim?outstanding:totals.total} currency={currency}/><MetricTile label={isInvoice&&axes.payment?'Zahlung':'Status'} value={<Status appearance="pill" tone={isInvoice&&axes.payment?financialStatusTone(document,axes.payment):statusTone}>{isInvoice&&axes.payment?financialStatusText(axes.payment,'invoice'):statusLabel}</Status>}/></MetricTiles></section>}
-    {!isInvoice&&<div className="offer-detail-index">
-      <div className="offer-detail-index-row"><span><LocalizedText>Status</LocalizedText></span><Status appearance="pill" tone={statusTone}>{statusLabel}</Status></div>
-      <a href="#angebot-informationen" className="offer-detail-index-row"><span><LocalizedText>Informationen</LocalizedText></span><span>{currency} {money(totals.total,localeTags[locale])}</span><Icon name="arrow" size={16}/></a>
-      {draft.id&&<a href="#angebot-dateien" className="offer-detail-index-row"><span><LocalizedText>Dateien</LocalizedText></span><Icon name="arrow" size={16}/></a>}
-      {draft.number&&<a href="#angebot-aktivitaeten" className="offer-detail-index-row"><span><LocalizedText>Aktivitäten</LocalizedText></span><Icon name="arrow" size={16}/></a>}
-    </div>}
-    <section className="document-facts" id={isInvoice?undefined:"angebot-informationen"}>
+    <div className="document-detail-index">
+      <div className="document-detail-index-row"><span><LocalizedText>Status</LocalizedText></span><Status appearance="pill" tone={isInvoice&&axes.payment?financialStatusTone(document,axes.payment):statusTone}>{isInvoice&&axes.payment?financialStatusText(axes.payment,"invoice"):statusLabel}</Status></div>
+      {hasClaim&&<a href="#dokument-zahlungen" className="document-detail-index-row"><span><LocalizedText>Offener Betrag</LocalizedText></span><strong>{currency} {money(outstanding,localeTags[locale])}</strong><Icon name="arrow" size={16}/></a>}
+      <a href="#dokument-informationen" className="document-detail-index-row"><span><LocalizedText>Informationen</LocalizedText></span><span>{currency} {money(totals.total,localeTags[locale])}</span><Icon name="arrow" size={16}/></a>
+      {draft.id&&<a href="#dokument-dateien" className="document-detail-index-row"><span><LocalizedText>Dateien</LocalizedText></span><Icon name="arrow" size={16}/></a>}
+      {!isInvoice&&draft.number&&<a href="#angebot-aktivitaeten" className="document-detail-index-row"><span><LocalizedText>Aktivitäten</LocalizedText></span><Icon name="arrow" size={16}/></a>}
+    </div>
+    <section className="document-facts" id="dokument-informationen">
       <div><small><LocalizedText>{type==="Rechnung"?"Rechnungsdatum":"Angebotsdatum"}</LocalizedText></small><b>{isoToSwiss(draft.date)}</b></div>
       {type==="Angebot"
         ? <div><small><LocalizedText>{"Gültig bis"}</LocalizedText></small><b><LocalizedText>{draft.due&&isoToSwiss(draft.due)}</LocalizedText></b></div>
@@ -616,7 +616,7 @@ function DocumentReadView({type,draft,directory,canWrite,followup}:{type:Documen
     </section>
     {isInvoice&&Number(draft.creditAmount??0)>0&&<p><LocalizedText>{"Gutschriften"}</LocalizedText>: {currency} {money(Number(draft.creditAmount),localeTags[locale])}</p>}
     {isInvoice&&creditBalance>0&&<MetricTile label="Kundenguthaben" value={`${currency} ${money(creditBalance,localeTags[locale])}`}/>}
-    {hasClaim&&<LocalizedElement as="section" className="document-payment-facts" aria-label="Zahlungsstand"><SectionTitle title="Zahlungsstand"/>
+    {hasClaim&&<LocalizedElement as="section" id="dokument-zahlungen" className="document-payment-facts" aria-label="Zahlungsstand"><SectionTitle title="Zahlungsstand"/>
       <MetricTile label="Bereits bezahlt" value={`${currency} ${money(Number(draft.paidAmount??0),localeTags[locale])}`}/>
     </LocalizedElement>}
     {!isInvoice&&draft.number&&<LocalizedElement as="section" id="angebot-aktivitaeten" className="offer-activity-group" aria-label="Aktivitäten"><SectionTitle title="Aktivitäten"/><OfferHistory number={draft.number} canWrite={canWrite}/></LocalizedElement>}{followup}

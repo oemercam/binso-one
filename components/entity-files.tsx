@@ -17,7 +17,7 @@ type Attachment={id:string;createdBy?:string;fileName:string;mimeType?:string;si
 export type EntityFilesHandle={chooseFile:()=>void};
 
 /** Entity association is mandatory; every attachment uses the existing file API. */
-export function EntityFiles({purpose,entityId,readOnly=false,title="Dateien",emptyTitle="Keine Dateien vorhanden",className="",uploadRef}:{purpose:string;entityId:string;readOnly?:boolean;title?:string;emptyTitle?:string;className?:string;uploadRef?:Ref<EntityFilesHandle>}){
+export function EntityFiles({purpose,entityId,id,readOnly=false,title="Dateien",emptyTitle="Keine Dateien vorhanden",className="",uploadRef}:{purpose:string;entityId:string;id?:string;readOnly?:boolean;title?:string;emptyTitle?:string;className?:string;uploadRef?:Ref<EntityFilesHandle>}){
  const {locale}=useLocale();
  const relation=fileRelations[purpose],input=useRef<HTMLInputElement>(null),busy=useRef(false);
  const [uploading,setUploading]=useState(false),[error,setError]=useState<string|null>(null);
@@ -36,7 +36,7 @@ export function EntityFiles({purpose,entityId,readOnly=false,title="Dateien",emp
   finally{busy.current=false;setUploading(false);if(input.current)input.current.value='';}
  };
  if(!relation||!entityId)return null;
- return <section className={["surface","bo-workspace-section",className].filter(Boolean).join(" ")}><SectionTitle title={title} action={allowed&&!uploadRef?<ActionsMenu label="Dateiaktionen" busy={uploading}><ActionRow requiresWrite icon="upload" title="Datei hinzufügen" onClick={()=>input.current?.click()}/></ActionsMenu>:undefined}/>
+ return <section id={id} className={["surface","bo-workspace-section",className].filter(Boolean).join(" ")}><SectionTitle title={title} action={allowed&&!uploadRef?<ActionsMenu label="Dateiaktionen" busy={uploading}><ActionRow requiresWrite icon="upload" title="Datei hinzufügen" onClick={()=>input.current?.click()}/></ActionsMenu>:undefined}/>
   <Input ref={input} hidden type="file" accept="application/pdf,image/png,image/jpeg,image/webp,text/plain,text/csv" aria-label="Anhang auswählen" onChange={e=>{const file=e.target.files?.[0];e.target.value="";void upload(file)}}/>
   {files.loading&&<LoadingState><LocalizedText>{"Anhänge werden geladen …"}</LocalizedText></LoadingState>}
   {(error||files.error)&&<ErrorState onRetry={()=>{setError(null);files.refresh()}} retryLabel="Erneut laden"><LocalizedText>{error||files.error}</LocalizedText></ErrorState>}

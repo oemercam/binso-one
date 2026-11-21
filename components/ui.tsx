@@ -8,7 +8,7 @@ import {fieldInputHint} from "@/lib/form-input-hints";
 import {Children,cloneElement,isValidElement,useId,useState,useSyncExternalStore} from "react";
 import {createPortal} from "react-dom";
 import Link from "next/link";
-import {House,Users,BriefcaseBusiness,Clock3,HelpCircle,FileText,Search,Bell,Plus,ChevronRight,ChevronLeft,ChevronDown,X,Check,Receipt,Wallet,Settings,ChartNoAxesColumn,Menu} from 'lucide-react';
+import {House,Users,BriefcaseBusiness,Clock3,HelpCircle,FileText,Search,Bell,Plus,ChevronRight,ChevronLeft,ChevronDown,X,Check,Receipt,Wallet,Settings,ChartNoAxesColumn,Menu,Building2,CalendarDays,Package,CreditCard,LockKeyhole,LogOut,Filter,ArrowDownUp,Mail,Upload,Download,Pause,Square,Pencil,Eye,EyeOff,Trash2,Phone,User,Copy,Moon,Sun,MessageCircle} from 'lucide-react';
 import {SelectControl} from './select-control';
 
 const lucideIcons = {
@@ -35,49 +35,35 @@ const lucideIcons = {
   settings: Settings,
   chart: ChartNoAxesColumn,
   menu: Menu,
+  building: Building2,
+  calendar: CalendarDays,
+  box: Package,
+  card: CreditCard,
+  lock: LockKeyhole,
+  logout: LogOut,
+  filter: Filter,
+  sort: ArrowDownUp,
+  mail: Mail,
+  upload: Upload,
+  download: Download,
+  pause: Pause,
+  stop: Square,
+  edit: Pencil,
+  eye: Eye,
+  "eye-off": EyeOff,
+  trash: Trash2,
+  phone: Phone,
+  user: User,
+  copy: Copy,
+  moon: Moon,
+  sun: Sun,
+  chat: MessageCircle,
+  time: Clock3,
 };
 
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
-  const LucideIcon = Object.hasOwn(lucideIcons, name) ? lucideIcons[name as keyof typeof lucideIcons] : undefined;
-  if (LucideIcon) return <LucideIcon size={size} aria-hidden="true" strokeWidth={2}/>;
-  const common = {
-    width: size,
-    height: size,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 2,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    vectorEffect: "non-scaling-stroke" as const,
-    shapeRendering: "geometricPrecision" as const,
-    "aria-hidden": true,
-  };
-
-  const paths: Record<string, React.ReactNode> = {
-    trash: <><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></>,
-    phone: <path d="M5 3h4l2 5-3 2a14 14 0 0 0 6 6l2-3 5 2v4a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2Z"/>,
-    user: <><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
-    copy: <><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></>,
-    calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></>,
-    box: <><path d="m4 7 8-4 8 4-8 4z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></>,
-    card: <><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></>,
-    lock: <><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></>,
-    moon: <><path d="M20 15.5A8 8 0 1 1 8.5 4 6.5 6.5 0 0 0 20 15.5Z"/></>,
-    sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></>,
-    logout: <><path d="M10 17l5-5-5-5M15 12H3"/><path d="M14 3h6v18h-6"/></>,
-    filter: <><path d="M4 4h16v3l-6 6v6l-4 2v-8L4 7V4Z"/></>,
-    sort: <><path d="M8 4v16m-4-4 4 4 4-4M16 20V4m-4 4 4-4 4 4"/></>,
-    mail: <><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></>,
-    upload: <><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></>,
-    pause: <><path d="M9 5v14M15 5v14"/></>,
-    stop: <rect x="6" y="6" width="12" height="12" rx="1"/>,
-    edit: <><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/><path d="m14 7 3 3"/></>,
-    eye: <><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></>,
-    "eye-off": <><path d="m3 3 18 18"/><path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-2.1 2.7M6.6 6.6C4 8.3 2.5 12 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 3.4-.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></>,
-  };
-
-  return <svg {...common}><LocalizedText>{paths[name] ?? paths.file}</LocalizedText></svg>;
+  const LucideIcon = Object.hasOwn(lucideIcons, name) ? lucideIcons[name as keyof typeof lucideIcons] : FileText;
+  return <LucideIcon size={size} aria-hidden="true" strokeWidth={2}/>;
 }
 
 export function Logo({ dark = false, compact = false }: { dark?: boolean; compact?: boolean }) {
