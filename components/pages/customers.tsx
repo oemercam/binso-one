@@ -47,9 +47,9 @@ export function CustomersPage() {
   if(controller.query.trim())query.set('q',controller.query.trim());
   if(controller.activeChip==='Mit offenen Beträgen')query.set('outstanding','1');
   if(controller.activeChip==='Aktiv'||controller.activeChip==='Inaktiv')query.set('status',controller.activeChip==='Aktiv'?'active':'inactive');
-  const {rows:customerRows,total,loading,error}=useRemoteRows("customers",query.toString(),controller.restored);
+  const {rows:customerRows,total,loading,error,refresh}=useRemoteRows("customers",query.toString(),controller.restored);
   return <AppShell title="Kunden" active="kunden">
-    <RecordsControls tools={()=><CustomerDataActions tools/>} appearance="line" chips={visibleChips} filterChips={chips} controller={controller} placeholder="Kunden suchen..." columns={customerSortColumns}><CreateAction href="/kunden/neu" label="Neuer Kunde"/></RecordsControls><RecordsView chips={chips} controller={controller} toolbarActions={false} showCount={false} remote pagination={{total,page:controller.page,pageSize:50,onPage:controller.setPage}} loading={loading} error={error} items={customerRows} countLabel="Kunden" placeholder="Kunden suchen..." columns={columns} rowHref={row=>"/kunden/"+encodeURIComponent(row[3])}>{([name,contact,,id,status])=><RecordRow href={"/kunden/"+encodeURIComponent(id)} title={name} status={status} meta={contact&&contact!=="—"?contact:""}/>}</RecordsView>
+    <RecordsControls tools={()=><CustomerDataActions tools/>} appearance="line" chips={visibleChips} filterChips={chips} controller={controller} placeholder="Kunden suchen..." columns={customerSortColumns}><CreateAction href="/kunden/neu" label="Neuer Kunde"/></RecordsControls><RecordsView chips={chips} controller={controller} toolbarActions={false} showCount={false} remote pagination={{total,page:controller.page,pageSize:50,onPage:controller.setPage}} loading={loading} error={error} onRetry={refresh} items={customerRows} countLabel="Kunden" placeholder="Kunden suchen..." columns={columns} rowHref={row=>"/kunden/"+encodeURIComponent(row[3])}>{([name,contact,,id,status])=><RecordRow href={"/kunden/"+encodeURIComponent(id)} title={name} status={status} meta={contact&&contact!=="—"?contact:""}/>}</RecordsView>
   </AppShell>;
 }
 
