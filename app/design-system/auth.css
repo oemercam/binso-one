@@ -148,6 +148,22 @@
 .auth-workspace[data-layout="login"] .auth-card{
   min-width:0;
 }
+.auth-workspace[data-layout="login"] .auth-card form{row-gap:var(--space-8)}
+.auth-workspace[data-layout="login"] .auth-card .form-field:not(.form-check){
+  grid-template-columns:minmax(0,1fr) minmax(0,2fr);
+  align-items:center;
+  column-gap:var(--space-8);
+  padding-block:0;
+}
+.auth-workspace[data-layout="login"] .form-field > :is(small,.form-error){
+  grid-column:1/-1;
+}
+.auth-workspace[data-layout="login"] .form-field .password-field{
+  min-width:0;
+}
+.auth-workspace[data-layout="login"] .form-field .password-field input{
+  padding-inline-end:var(--control-h);
+}
 .auth-workspace[data-layout="login"] .auth-card h1{
   margin:0 0 var(--space-24);
   font-size:clamp(1.875rem,4vw,2.5rem);
