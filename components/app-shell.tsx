@@ -9,7 +9,6 @@ import {isPlanId,moduleForPath,pilotEnabled,planAllowsPath,type PlanId} from "@/
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {loadTheme,saveTheme} from "@/lib/client/theme";
-import {AppStart} from "./app-start";
 import {WorkspaceStartup} from './workspace-startup';
 import {useNavigationScroll} from "./use-navigation-scroll";
 import {TimerResumeNotice} from "./timer-resume-notice";
@@ -486,6 +485,5 @@ export function AppShellLayout({children}:{children:React.ReactNode}){
 }
 /** Root suspense sits inside the persistent frame on an app route. */
 export function RouteLoading(){
- const inShell=useContext(ShellRegistration);
- return inShell?<LoadingState layout="page"/>:<AppStart/>;
+ return <LoadingState layout="page"/>;
 }

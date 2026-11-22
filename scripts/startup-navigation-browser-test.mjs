@@ -24,7 +24,7 @@ try{
   const frames=await page.evaluate(()=>window.__startupFrames);if(width<=760){assert(frames.length>2);const last=frames.at(-1);for(const f of frames)assert(Math.abs(f.y-last.y)<=1&&Math.abs(f.x-last.x)<=1,'Real PWA boot keeps the plus anchored from its first rendered frame')}
   const transitions=[];
   for(const path of ['/kunden','/projekte','/zeit','/einstellungen','/dashboard']){
-   const start=Date.now();let target=page.locator('.app-sidebar a[href="'+path+'"],.bottom-nav a[href="'+path+'"]').filter({visible:true});if(!await target.count()){await page.locator('.bottom-nav>button').click();target=page.locator('[role=dialog] a[href="'+path+'"]').filter({visible:true});}await target.first().click();await page.waitForURL(base+path);await ready(page,path);assert.equal(await page.locator('.app-start').filter({visible:true}).count(),0,'Internal navigation must preserve the shell');transitions.push({path,settledMs:Date.now()-start});
+   const start=Date.now();let target=page.locator('.app-sidebar a[href="'+path+'"],.bottom-nav a[href="'+path+'"]').filter({visible:true});if(!await target.count()){await page.locator('.bottom-nav>button').click();target=page.locator('[role=dialog] a[href="'+path+'"]').filter({visible:true});}await target.first().click();await page.waitForURL(base+path);await ready(page,path);assert.equal(await page.locator('.app-launch-screen').filter({visible:true}).count(),0,'Internal navigation must preserve the shell');transitions.push({path,settledMs:Date.now()-start});
   }
   await ready(page,'/dashboard');
   await page.screenshot({path:(process.env.BINSO_STARTUP_SCREENSHOT_PREFIX??'.qa-phase1/pwa-startup')+'-'+width+'.png'});
