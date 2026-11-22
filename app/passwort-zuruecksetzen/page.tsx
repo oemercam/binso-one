@@ -48,7 +48,7 @@ export default function Page(){
     }finally{pending.current=false;setLoading(false);}
   };
 
-  return <><AuthWorkspace><section className="auth-card">
+  return <><AuthWorkspace variant="access"><section className="auth-card">
 
     {!ready?<><LoadingState/></>:invalid?<><h1><LocalizedText>{"Link nicht gültig"}</LocalizedText></h1><p><LocalizedText>{"Der Link ist abgelaufen oder ungültig. Fordere einen neuen Link an."}</LocalizedText></p><Button href="/passwort-vergessen"><LocalizedText>{"Neuen Link anfordern"}</LocalizedText></Button></>:done?<><h1><LocalizedText>{"Passwort geändert"}</LocalizedText></h1><p className="auth-feedback" role="status"><LocalizedText>{"Du kannst dich jetzt mit deinem neuen Passwort anmelden."}</LocalizedText></p><Button href="/login"><LocalizedText>{"Zur Anmeldung"}</LocalizedText></Button></>:<>
       <h1><LocalizedText>{"Neues Passwort"}</LocalizedText></h1><p><LocalizedText>{"Lege ein neues Passwort für dein Binso One Konto fest."}</LocalizedText></p>

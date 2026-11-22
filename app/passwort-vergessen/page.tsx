@@ -28,7 +28,7 @@ export default function Page() {
     }finally{pending.current=false;setLoading(false);}
   };
 
-  return <AuthWorkspace>
+  return <AuthWorkspace variant="access">
     <section className="auth-card">
 
       <h1><LocalizedText>{"Passwort zurücksetzen"}</LocalizedText></h1>

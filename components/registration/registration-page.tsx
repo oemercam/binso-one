@@ -80,7 +80,7 @@ export function RegistrationPage(){
   finally{saving.current=false;setBusy(false);}
  };
  const planSummary=context&&<><p>{context.plan?.name??t('noPlan')}</p>{context.plan&&<p>{t('futurePrice',{amount:context.billingCycle==='yearly'?context.plan.yearly:context.plan.monthly,interval:t(context.billingCycle)})}</p>}<p>{t('trial',{days:context.trialDays})}</p><p>{t('conditions')}</p></>;
- return <AuthWorkspace lang={locale}><section className="auth-card registration-page" aria-labelledby="registration-title">
+ return <AuthWorkspace variant="access" lang={locale}><section className="auth-card registration-page" aria-labelledby="registration-title">
   <h1 id="registration-title">{t('title')}</h1>
   {!context?(error?<><ErrorState>{t('failure')}</ErrorState><Button onClick={()=>setRetry(retry+1)}>{t('open')}</Button></>:<LoadingState/>):stage==='new'?<form ref={form} onSubmit={submit} noValidate>
    <p className="registration-progress" role="status">{t('stepProgress',{step:step+1,total:3})} · {t(step===0?'email':step===1?'password':'company')}</p>
