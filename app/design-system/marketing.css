@@ -313,18 +313,22 @@ body:has(.marketing-header){--marketing-page-inset:28px;background:var(--app-can
 .billing-legal-consent input{width:18px;height:18px;min-height:0;margin:1px 0 0;padding:0}
 .billing-legal-consent a{text-decoration:underline;text-underline-offset:2px}
 .privacy-consent-layer{
+  --privacy-edge-gap:var(--space-16);
   position:fixed;
   inset:0;
   z-index:1200;
   display:grid;
+  grid-template-rows:minmax(0,1fr);
   align-items:end;
   justify-items:center;
-  padding:20px;
+  padding-block:calc(var(--safe-top) + var(--privacy-edge-gap)) calc(var(--safe-bottom) + var(--privacy-edge-gap));
+  padding-inline:calc(var(--safe-left) + var(--privacy-edge-gap)) calc(var(--safe-right) + var(--privacy-edge-gap));
   pointer-events:none;
 }
 .privacy-consent-card{
   width:min(760px,100%);
-  max-height:calc(100dvh - 40px);
+  min-width:0;
+  max-height:100%;
   overflow-y:auto;
   overscroll-behavior:contain;
   display:grid;
@@ -332,7 +336,7 @@ body:has(.marketing-header){--marketing-page-inset:28px;background:var(--app-can
   padding:22px;
   border:1px solid var(--color-line);
   border-radius:var(--shape-overlay);
-  background:var(--color-bg);
+  background:var(--app-surface);
   box-shadow:0 24px 70px var(--palette-rgba-0-0-0-18);
   pointer-events:auto;
 }
@@ -355,7 +359,7 @@ body:has(.marketing-header){--marketing-page-inset:28px;background:var(--app-can
 .privacy-consent-options strong{font-size:var(--type-secondary)}
 .privacy-consent-options input{width:20px;height:20px;min-height:0}
 .privacy-consent-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
-.privacy-consent-actions .button{min-height:var(--touch)}
+.privacy-consent-actions .button{min-height:var(--touch);height:auto;white-space:normal;overflow-wrap:anywhere;text-align:center}
 .footer-privacy-button{
   padding:0;
   border:0;
@@ -507,8 +511,7 @@ body:has(.marketing-header){--marketing-page-inset:28px;background:var(--app-can
   }
 }
 @media (max-width:640px){
-.privacy-consent-layer{padding:10px}
-.privacy-consent-card{padding:18px;border-radius:var(--shape-panel);max-height:calc(100dvh - 20px)}
+.privacy-consent-card{padding:var(--space-16);border-radius:var(--shape-panel)}
 .privacy-consent-actions{display:grid;grid-template-columns:1fr}
 .privacy-consent-actions .button{width:100%}
 }
