@@ -182,6 +182,9 @@ const sameNumber=[{...partialItems[0],number:'SHARED',kind:'invoice'},{...partia
 console.log('Optional outstanding lists retain scoped filters; the full invoice list retains all main filters.');
 
 assert.throws(()=>qr.createQrBillData({...company.raw,name:'Firma 🚀'},{number:'RE-CHAR',total:100}),/Zeichen/);
+const extendedName='Șerban Țurcan, Œuvre Zürich €';
+const extendedBill=qr.createQrBillData({...company.raw,legal_name:extendedName},{number:'RE-CHAR',total:100});
+assert.equal(extendedBill.creditor.name,extendedName,'SIX 2.4 extended characters are preserved in payment data');
 const debtorData=qr.createQrBillData(company.raw,{number:'RE-QR-QA',total:116.20,currency:'CHF',debtor:{name:'Empfänger AG',street:'Bahnhofstrasse 24',postal_code:'8001',city:'Zürich'}});
 assert.equal(debtorData.amount,116.20);assert.equal(debtorData.debtor.address,'Bahnhofstrasse');assert.equal(debtorData.debtor.buildingNumber,'24');
 assert.equal(qr.createQrBillData(company.raw,{number:'RE-SCOR',total:100,reference:'RF18539007547034'}).reference,'RF18539007547034');

@@ -32,7 +32,25 @@ export type PlanId=(typeof planIds)[number];
 export type BillingCycle=(typeof billingCycles)[number];
 export function addDays(date:Date,days:number){return new Date(date.getTime()+days*milliseconds.day)}
 export function addHours(date:Date,hours:number){return new Date(date.getTime()+hours*milliseconds.hour)}
-export function currentFiscalPeriod(date:Date=new Date()){const month=date.getMonth()+1;const quarter=Math.ceil(month/3);const year=date.getFullYear();return {year,quarter,label:`Q${quarter} ${year}`,monthLabel:new Intl.DateTimeFormat("de-CH",{month:"long",year:"numeric"}).format(date)}}
-export function isoDate(date:Date=new Date()){return date.toISOString().slice(0,10)}
-export function startOfCurrentWeekIso(date:Date=new Date()){const d=new Date(date);const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);d.setHours(0,0,0,0);return isoDate(d)}
-export function dueDateFrom(date:Date=new Date(),days:number=domainConfig.defaultPaymentDays){return isoDate(addDays(date,days))}
+const swissDateFormatter=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Zurich',year:'numeric',month:'2-digit',day:'2-digit'});
+const swissMonthFormatter=new Intl.DateTimeFormat('de-CH',{timeZone:'Europe/Zurich',month:'long',year:'numeric'});
+
+export function isoDate(date:Date=new Date()){return swissDateFormatter.format(date)}
+
+export function currentFiscalPeriod(date:Date=new Date()){
+ const [year,month]=isoDate(date).split('-').map(Number);
+ const quarter=Math.ceil(month/3);
+ return {year,quarter,label:`Q${quarter} ${year}`,monthLabel:swissMonthFormatter.format(date)};
+}
+
+// UTC is only a coordinate for arithmetic on an already resolved Swiss calendar date.
+function swissCalendarDate(date:Date){return new Date(isoDate(date)+'T00:00:00Z')}
+
+export function startOfCurrentWeekIso(date:Date=new Date()){
+ const day=swissCalendarDate(date);
+ return addDays(day,-((day.getUTCDay()+6)%7)).toISOString().slice(0,10);
+}
+
+export function dueDateFrom(date:Date=new Date(),days:number=domainConfig.defaultPaymentDays){
+ return addDays(swissCalendarDate(date),days).toISOString().slice(0,10);
+}
