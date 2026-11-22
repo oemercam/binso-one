@@ -230,7 +230,6 @@
 .operator-insight-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,var(--operator-detail-panel-min)),1fr));gap:20px}
 .operator-app-header{margin-bottom:28px}
 .operator-header-brand{min-width:0}
-.operator-home-link{display:none}
 .operator-payment-insights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .operator-payment-insight{min-width:0;min-height:104px;display:flex;align-items:center;justify-content:space-between;gap:18px}
 .operator-payment-insight>div:first-child{min-width:0;display:grid;gap:6px;overflow-wrap:anywhere}
@@ -361,7 +360,6 @@
 .operator-user .icon-button,.operator-user .avatar-button{width:44px;height:44px;min-width:44px;min-height:44px}
 .operator-user .avatar{width:44px;height:44px}
 .operator-user{flex:0 0 auto}
-.operator-home-link{display:inline-flex}
 .operator-table-card{margin-top:16px}
 .operator-insight-grid{grid-template-columns:1fr;gap:12px}
 .monitoring-panel{margin-inline:0}
