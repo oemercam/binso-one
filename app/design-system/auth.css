@@ -122,6 +122,7 @@
 /* Shared layout for sign-in, account creation and password recovery. */
 .auth-workspace:is([data-layout="login"],[data-layout="access"]){
   --auth-column-width:400px;
+  min-height:100svh;
   gap:var(--space-16);
   padding:calc(var(--space-24) + var(--safe-top))
           max(var(--mobile-page-x,20px),var(--safe-right))
@@ -138,7 +139,7 @@
 .auth-workspace:is([data-layout="login"],[data-layout="access"]) .auth-workspace-body{
   flex:1 0 auto;
   align-content:start;
-  padding-block:clamp(var(--space-16),4dvh,48px);
+  padding-block:clamp(var(--space-16),4svh,48px);
 }
 .auth-workspace:is([data-layout="login"],[data-layout="access"]) .auth-card{
   min-width:0;
