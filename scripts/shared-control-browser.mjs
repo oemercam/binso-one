@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 
 // Owner-approved customer-detail material applies to these existing content owners.
 // Menus, forms, navigation chrome and public output keep their own geometry.
-export const contentGroupSelector=':is(.surface,.bo-workspace-section,.detail-card,.settings-readonly,.security-card,.monitoring-panel,.operator-payment-insight,.bo-statistics,.time-section,.desktop-record-table,.mobile-record-list,.customer-tab-panel,.employee-tab-panel,.project-tab-panel,.navigation-group,.bo-settings-group-body,.settings-form,.invoice-form,.bo-cash-trend,.document-detail-view,.form-page,.announcement-card,.context-block,.detail-list,.action-list,.plan-hero)';
+export const contentGroupSelector=':is(.surface,.bo-workspace-section,.detail-card,.settings-readonly,.security-card,.monitoring-panel,.operator-payment-insight,.bo-statistics,.time-section,.desktop-record-table,.mobile-record-list,.customer-tab-panel,.employee-tab-panel,.project-tab-panel,.navigation-group,.bo-settings-group-body,.settings-form,.invoice-form,.bo-cash-trend,.form-page,.announcement-card,.context-block,.detail-list,.action-list,.plan-hero)';
 
 export async function assertContentGroups(page){
  const groups=await page.evaluate(selector=>[...document.querySelectorAll(':is(.app-root,.operator-root) '+selector)].filter(el=>el.checkVisibility()).map(el=>{
@@ -15,6 +15,14 @@ export async function assertContentGroups(page){
   assert.deepEqual(group.padding,group.nested?['0px','0px','0px','0px']:group.navigation?['0px','16px','0px','16px']:['16px','16px','16px','16px'],'Shared customer-detail card inset: '+JSON.stringify(group));
   assert.equal(group.shadow,'none','Quiet shared card material');
  }
+ const documentCards=await page.locator('.document-detail-view[data-document-kind]').filter({visible:true}).evaluateAll(frames=>frames.flatMap(frame=>{
+  const outer=frame.getBoundingClientRect();
+  return [...frame.querySelectorAll(':scope > :is(.document-detail-section,.document-detail-index,.document-facts)')].map(card=>{
+   const inner=card.getBoundingClientRect();
+   return {left:inner.left-outer.left,right:outer.right-inner.right};
+  });
+ }));
+ for(const gap of documentCards)assert.ok(Math.abs(gap.left)<=1&&Math.abs(gap.right)<=1,'Document cards align with the document workspace: '+JSON.stringify(gap));
  const information=await page.locator('.document-summary-row.is-information[href]').evaluateAll(nodes=>nodes.filter(el=>el.checkVisibility()).map(el=>({label:el.textContent,icon:el.querySelector(':scope>svg')?.getBoundingClientRect().width,height:el.getBoundingClientRect().height,gap:getComputedStyle(el).columnGap,line:getComputedStyle(el,'::after').content==='none'?null:parseFloat(getComputedStyle(el,'::after').left),labelOffset:el.querySelector(':scope>b').getBoundingClientRect().left-el.getBoundingClientRect().left})));
  for(const row of information){
   assert.equal(row.icon,18,'Shared information navigation retains its existing 18px area icon: '+row.label);

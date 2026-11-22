@@ -20,9 +20,11 @@ export function AuthWorkspace({children,lang,showLocaleSwitcher=true,variant='id
     <Link href="/datenschutz"><LocalizedText>Datenschutz</LocalizedText></Link>
     <Link href="/agb"><LocalizedText>AGB</LocalizedText></Link>
     <Link href="/impressum#kontakt"><LocalizedText>Kontakt</LocalizedText></Link>
-    <PrivacySettingsButton/>
    </LocalizedElement>
-   <small>© <LocalizedText>Binso GmbH</LocalizedText></small>
+   <div className="auth-workspace-footer-meta">
+    <PrivacySettingsButton/>
+    <small>© <LocalizedText>Binso GmbH</LocalizedText></small>
+   </div>
   </footer>
  </main>;
 }

@@ -1,5 +1,5 @@
 /* BINso One / marketing — one owner for base, states and responsive behavior. */
-body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
+body:has(.marketing-header){--marketing-page-inset:28px;background:var(--app-canvas);color:var(--app-text)}
 .marketing-header{
   position:sticky;
   top:0;
@@ -17,7 +17,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   max-width:var(--marketing-max);
   height:100%;
   margin:auto;
-  padding:0 28px;
+  padding:0 var(--marketing-page-inset);
   display:flex;
   align-items:center;
   gap:38px;
@@ -43,7 +43,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   width:100%;
   max-width:var(--marketing-max);
   margin:auto;
-  padding:var(--marketing-page-start) 28px 74px;
+  padding:var(--marketing-page-start) var(--marketing-page-inset) 74px;
 }
 .subhero-copy{max-width:560px}
 .workflow-list,
@@ -139,7 +139,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   width:100%;
   max-width:var(--marketing-max);
   margin-inline:auto;
-  padding:74px 28px;
+  padding:74px var(--marketing-page-inset);
   display:flex;
   flex-wrap:wrap;
   align-items:center;
@@ -154,7 +154,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   width:100%;
   max-width:var(--marketing-max);
   margin:auto;
-  padding:var(--space-32) 28px;
+  padding:var(--space-32) var(--marketing-page-inset);
   display:grid;
   gap:var(--space-24);
   border-top:1px solid var(--color-line);
@@ -283,7 +283,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
 .marketing-mobile-menu{
   animation:marketing-menu-enter var(--motion-base) var(--motion-ease) both;
 }
-.legal-page{width:100%;max-width:980px;margin:auto;padding:var(--marketing-page-start) 28px 84px;overflow-wrap:anywhere}
+.legal-page{width:100%;max-width:var(--marketing-max);margin:auto;padding:var(--marketing-page-start) var(--marketing-page-inset) 84px;overflow-wrap:anywhere}
 .legal-hero{max-width:760px;margin-bottom:44px}
 .legal-hero h1{margin:0 0 14px;font-size:var(--type-scale-46);line-height:1;letter-spacing:-.045em}
 .legal-hero p{margin:0;color:var(--color-muted);font-size:var(--type-body);line-height:1.6}
@@ -313,18 +313,22 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
 .billing-legal-consent input{width:18px;height:18px;min-height:0;margin:1px 0 0;padding:0}
 .billing-legal-consent a{text-decoration:underline;text-underline-offset:2px}
 .privacy-consent-layer{
+  --privacy-edge-gap:var(--space-16);
   position:fixed;
   inset:0;
   z-index:1200;
   display:grid;
+  grid-template-rows:minmax(0,1fr);
   align-items:end;
   justify-items:center;
-  padding:20px;
+  padding-block:calc(var(--safe-top) + var(--privacy-edge-gap)) calc(var(--safe-bottom) + var(--privacy-edge-gap));
+  padding-inline:calc(var(--safe-left) + var(--privacy-edge-gap)) calc(var(--safe-right) + var(--privacy-edge-gap));
   pointer-events:none;
 }
 .privacy-consent-card{
   width:min(760px,100%);
-  max-height:calc(100dvh - 40px);
+  min-width:0;
+  max-height:100%;
   overflow-y:auto;
   overscroll-behavior:contain;
   display:grid;
@@ -332,7 +336,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   padding:22px;
   border:1px solid var(--color-line);
   border-radius:var(--shape-overlay);
-  background:var(--color-bg);
+  background:var(--app-surface);
   box-shadow:0 24px 70px var(--palette-rgba-0-0-0-18);
   pointer-events:auto;
 }
@@ -355,7 +359,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
 .privacy-consent-options strong{font-size:var(--type-secondary)}
 .privacy-consent-options input{width:20px;height:20px;min-height:0}
 .privacy-consent-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
-.privacy-consent-actions .button{min-height:var(--touch)}
+.privacy-consent-actions .button{min-height:var(--touch);height:auto;white-space:normal;overflow-wrap:anywhere;text-align:center}
 .footer-privacy-button{
   padding:0;
   border:0;
@@ -369,8 +373,6 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
 .locale-switcher{display:flex;align-items:center;gap:10px;color:var(--app-secondary);font-size:var(--type-label);min-width:0}
 .locale-switcher>.app-select-control{width:auto;max-width:170px}
 .locale-switcher .app-select-trigger{min-height:44px;height:44px;width:auto;max-width:170px;padding:0 8px;gap:6px;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--app-text);font-size:var(--type-label);white-space:nowrap}
-.locale-switcher.is-compact .app-select-trigger>span[aria-hidden="true"]{display:grid;place-items:center;width:var(--space-12);height:var(--space-12);font-size:0;color:inherit}
-.locale-switcher.is-compact .app-select-trigger>span[aria-hidden="true"]::before{content:"";width:var(--space-8);height:var(--space-8);border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:translateY(-25%) rotate(45deg)}
 .locale-switcher.is-compact>span:not(.app-select-control){position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .locale-switcher.is-compact .app-select-trigger{max-width:170px}
 .locale-switcher.is-compact .app-select-trigger:hover{background:transparent;color:var(--app-action-accent)}
@@ -509,8 +511,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   }
 }
 @media (max-width:640px){
-.privacy-consent-layer{padding:10px}
-.privacy-consent-card{padding:18px;border-radius:var(--shape-panel);max-height:calc(100dvh - 20px)}
+.privacy-consent-card{padding:var(--space-16);border-radius:var(--shape-panel)}
 .privacy-consent-actions{display:grid;grid-template-columns:1fr}
 .privacy-consent-actions .button{width:100%}
 }
@@ -530,7 +531,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   display:grid;
   grid-template-columns:1fr 1.15fr;
   gap:35px;
-  padding:var(--marketing-page-start) 40px 65px;
+  padding:var(--marketing-page-start) var(--marketing-page-inset) 65px;
   align-items:center;
 }
 .reference-hero h1{
@@ -565,7 +566,7 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   margin-top:27px;
 }
 .reference-section{
-  padding:50px 40px;
+  padding:50px var(--marketing-page-inset);
 }
 .reference-landing h2{
   font-size:var(--type-display-small);
@@ -638,10 +639,10 @@ body:has(.marketing-header){background:var(--app-canvas);color:var(--app-text)}
   font-weight:500;
 }
 .reference-closing{
-  padding:55px 40px;
+  padding:55px var(--marketing-page-inset);
   text-align:center;
 }
-.reference-capabilities{width:100%;max-width:var(--marketing-max);margin-inline:auto;padding:22px 40px;border-block:1px solid var(--color-line);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--color-muted);font-size:var(--type-secondary)}
+.reference-capabilities{width:100%;max-width:var(--marketing-max);margin-inline:auto;padding:22px var(--marketing-page-inset);border-block:1px solid var(--color-line);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--color-muted);font-size:var(--type-secondary)}
 .reference-closing .reference-actions{
   justify-content:center;
 }
