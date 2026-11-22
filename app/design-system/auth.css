@@ -28,10 +28,6 @@
   border-color:transparent;
   box-shadow:none;
 }
-.auth-card form > .form-field:not(.form-check) .form-control:focus-visible{
-  outline:var(--control-focus-width) solid var(--app-accent);
-  outline-offset:0;
-}
 .registration-progress{margin:0;color:var(--color-muted);font-size:var(--type-label);line-height:var(--body-line-height)}
 .auth-card label:has(>input[type="checkbox"]){display:grid;grid-template-columns:18px minmax(0,1fr);align-items:start;gap:10px;font-weight:400;line-height:1.5}
 .auth-card input[type="checkbox"]{width:18px;height:18px;min-height:0;padding:0;margin:1px 0 0;accent-color:var(--color-fg)}
