@@ -60,7 +60,6 @@ const results=await handler.GET({nextUrl:new URL('https://example.invalid/api/se
 assert.deepEqual(results.items.map(item=>item.href),['/spesen/own']);
 console.log('Search respects member record ownership.');
 // Exercise both expense mutations: module write alone cannot grant approval.
-const domainModuleUrl=moduleUrl(ts.transpileModule(await fs.readFile('config/domain.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText);
 for(const path of ['app/api/expenses/route.ts','app/api/expenses/[id]/route.ts']){
  for(const role of ['member','reader','hr','finance','owner','admin','project_manager']){
   let writes=0;
@@ -68,7 +67,7 @@ for(const path of ['app/api/expenses/route.ts','app/api/expenses/[id]/route.ts']
   const databaseUrl=moduleUrl(`export async function requireTenantFeature(){return {role:globalThis.__expenseRole}} export async function tenantList(){return []} export async function tenantListPage(){return {items:[],total:0}} export async function tenantInsert(){globalThis.__expenseWrites++;return [{id:'expense'}]} export async function tenantUpdate(){globalThis.__expenseWrites++;return [{id:'expense'}]}`);
   const httpUrl=moduleUrl(`export class ApiError extends Error{constructor(status,code,message){super(message);this.status=status;this.code=code}} export const assertSameOrigin=()=>{};export const cleanText=(v)=>typeof v==='string'?v:'';export const readJson=async r=>r.body;export const json=(data,status=200)=>({data,status});export const apiError=e=>({status:e.status??500,data:{error:e.code}});`);
   let expenseSource=await fs.readFile(path,'utf8');
-  expenseSource=expenseSource.replaceAll("'@/config/domain'",JSON.stringify(domainModuleUrl)).replaceAll("'@/lib/expense-payment'",JSON.stringify(expensePaymentModuleUrl)).replaceAll('"@/lib/server/http"',JSON.stringify(httpUrl)).replaceAll('"@/lib/server/database"',JSON.stringify(databaseUrl));
+  expenseSource=expenseSource.replaceAll("'@/lib/financial-status'",JSON.stringify(financialModuleUrl)).replaceAll("'@/lib/expense-payment'",JSON.stringify(expensePaymentModuleUrl)).replaceAll('"@/lib/server/http"',JSON.stringify(httpUrl)).replaceAll('"@/lib/server/database"',JSON.stringify(databaseUrl));
   const expense=await import(moduleUrl(ts.transpileModule(expenseSource,{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText));
   for(const status of ['approved','rejected']){
    globalThis.__expenseWrites=0;

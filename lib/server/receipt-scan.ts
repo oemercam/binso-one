@@ -1,7 +1,7 @@
 import 'server-only';
 import {setTimeout as delay} from 'node:timers/promises';
 import {limitsConfig} from '@/config/limits';
-import {isoDate} from '@/config/domain';
+import {businessDate} from '@/lib/financial-status';
 import {ApiError,readBoundedBody} from './http';
 
 type JsonRecord=Record<string,unknown>;
@@ -41,7 +41,7 @@ function receiptFields(result:JsonRecord,file:File){
  const tax=number(object(taxField.valueCurrency).amount);
  const certainty={merchant:merchant?confidence(merchantField.confidence):0,date:date?confidence(dateField.confidence):0,total:total!==null&&/^[A-Z]{3}$/.test(rawCurrency)?confidence(totalField.confidence):0,tax:tax!==null?confidence(taxField.confidence):0};
  const safeMerchant=(merchant||'Beleg').normalize('NFKD').replace(/[^a-zA-Z0-9äöüÄÖÜ_-]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'Beleg';
- const filename=`${date||isoDate()}_${safeMerchant}_${total!==null?total.toFixed(2):'Betrag'}-${currency}.${extensions[file.type]}`;
+ const filename=`${date||businessDate()}_${safeMerchant}_${total!==null?total.toFixed(2):'Betrag'}-${currency}.${extensions[file.type]}`;
  return {merchant,date,total,currency,tax,confidence:Math.min(certainty.merchant,certainty.date,certainty.total),filename,fields:certainty};
 }
 /** Correctable suggestions only; this owner never creates expenses or bookings. */

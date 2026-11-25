@@ -106,7 +106,7 @@ export async function verifyListFrameMeasurement(page){
 /** Current global UX audit: 48px fields, 14px desktop text and 16px mobile text (iOS focus zoom).
  * Textareas and checkbox/radio controls have their own semantic geometry. */
 export async function assertCanonicalClosedFields(page,route=''){
- const fields=await page.evaluate(()=>[...document.querySelectorAll('.form-field>.form-control:not(textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),.form-field .app-select-trigger')].flatMap(el=>{const css=getComputedStyle(el),box=el.getBoundingClientRect();return box.width>0&&box.height>0&&!['hidden','collapse'].includes(css.visibility)?[{height:box.height,padding:css.paddingLeft,radius:css.borderRadius,font:css.fontSize,mobile:matchMedia('(max-width:760px)').matches,login:!!el.closest('.auth-workspace[data-layout=login]')}]:[]}));
+ const fields=await page.evaluate(()=>[...document.querySelectorAll('.form-field>.form-control:not(textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),.form-field .app-select-trigger')].flatMap(el=>{const css=getComputedStyle(el),box=el.getBoundingClientRect();return box.width>0&&box.height>0&&!['hidden','collapse'].includes(css.visibility)?[{height:box.height,padding:css.paddingLeft,radius:css.borderRadius,font:css.fontSize,mobile:matchMedia('(max-width:760px)').matches,login:!!el.closest('.auth-workspace:is([data-layout=login],[data-layout=access])')}]:[]}));
  for(const geometry of fields){
   assert.equal(geometry.height,geometry.login&&!geometry.mobile?52:48,route+': canonical closed field height');
   assert.equal(geometry.padding,'16px',route+': canonical field inset');
