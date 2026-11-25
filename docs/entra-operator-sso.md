@@ -1,5 +1,28 @@
 # Binso One – Interner Zugriff mit Microsoft Entra ID
 
+## Wechsel zu E-Mail, Passwort und Passkey
+
+Der neue Admin-Zugang erfordert E-Mail, Passwort und einen Passkey mit
+lokaler Nutzerverifikation. Kundenanmeldung und Firmenrollen folgen ihrem
+bestehenden Ablauf.
+
+1. Die Migration über die Produktionspipeline anwenden. Die Anmeldeseite und
+   `/api/operator/login` müssen ohne vorgeschaltete Microsoft-Anmeldung erreichbar
+   sein. Den Microsoft-Login für den Rollback betriebsbereit halten.
+2. Auf dem privaten Datenbankrunner für die aktiven Entra-Administratoren
+   `scripts/provision-operator-passkey.mjs` ausführen. Passwort auf stdin
+   eingeben und den einmaligen Einrichtungscode über einen geschützten Kanal
+   übergeben. Der Code gilt 30 Minuten.
+3. `BINSO_OPERATOR_PASSKEY_SETUP=true` setzen. Unter
+   `/operator/login?passkey=einrichten` Passkey einrichten und anschliessend
+   erneut bestätigen. Diese Prüfung erstellt keine Admin-Sitzung. Der
+   reguläre Login läuft währenddessen weiter über Entra.
+4. Sobald die vorgesehenen Operatoren geprüft sind,
+   `BINSO_OPERATOR_PASSKEY_LOGIN=true` setzen und die Einrichtungsvorschau
+   deaktivieren. Einen neuen Admin-Login auf der Produktionsdomain prüfen.
+   Zum Rückwechsel `BINSO_OPERATOR_PASSKEY_LOGIN=false` setzen. Beide Modi
+   akzeptieren nur Sitzungen aus demselben Anmeldeverfahren.
+
 Stand: 5. Oktober 2026
 
 Interne Binso-Mitarbeitende authentifizieren sich für One Admin über Microsoft Entra ID. Die Kunden-Authentifizierung bleibt davon vollständig getrennt.

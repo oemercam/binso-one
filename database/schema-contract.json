@@ -117,7 +117,8 @@
     "0113_variable_advance_allocations.sql",
     "0114_expense_beneficiary_review.sql",
     "0115_resource_quotas.sql",
-    "0116_timer_calendar_days.sql"
+    "0116_timer_calendar_days.sql",
+    "0117_operator_password_passkeys.sql"
   ],
   "tables": [
     {
@@ -7709,6 +7710,11 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "required": true
+        },
+        {
+          "name": "auth_source",
+          "type": "text",
+          "required": true
         }
       ],
       "policies": []
@@ -8047,6 +8053,97 @@
         {
           "name": "language",
           "type": "text",
+          "required": false
+        },
+        {
+          "name": "passkey_password_hash",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "passkey_setup_hash",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "passkey_setup_expires_at",
+          "type": "timestamp with time zone",
+          "required": false
+        }
+      ],
+      "policies": []
+    },
+    {
+      "name": "platform_operator_passkey_challenges",
+      "rls": false,
+      "forced": false,
+      "columns": [
+        {
+          "name": "token_hash",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "challenge",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "purpose",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "assignment_version",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "required": true
+        }
+      ],
+      "policies": []
+    },
+    {
+      "name": "platform_operator_passkeys",
+      "rls": false,
+      "forced": false,
+      "columns": [
+        {
+          "name": "credential_id",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "public_key",
+          "type": "bytea",
+          "required": true
+        },
+        {
+          "name": "counter",
+          "type": "bigint",
+          "required": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "required": true
+        },
+        {
+          "name": "last_used_at",
+          "type": "timestamp with time zone",
           "required": false
         }
       ],
