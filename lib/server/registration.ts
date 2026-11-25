@@ -53,7 +53,7 @@ export async function sendRegistrationVerification(input:{email:string;userId:st
  const linkText=t("mailLink",{hours:domainConfig.emailVerificationMinutes/60});
  try{
   if(env.appMode==="production"&&(url.protocol!=="https:"||["localhost","127.0.0.1"].includes(url.hostname)))return false;
-  const result=await sendMail({to:input.email,subject:t("mailSubject"),text:`${text}\n${url.href}\n${linkText}`,html:mailLayout(t("verification"),`<p>${text}</p><p>${linkText}</p>`,{label:t("verify"),url:url.href},input.locale)});
+  const result=await sendMail({to:input.email,subject:t("mailSubject"),text:`${text}\n${url.href}\n${linkText}`,html:mailLayout(t("verification"),`<p>${text}</p><p>${linkText}</p>`,{label:t("verify"),url:url.href},input.locale,{preheader:text})});
   return result.delivered;
  }catch{return false;}
 }
