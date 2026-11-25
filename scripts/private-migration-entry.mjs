@@ -28,15 +28,14 @@ if(alreadyApplied){
 
 const steps = [
   ['wait-postgres.mjs'],
-  ['single-company-preflight.mjs'],
+  ['single-company-preflight.mjs', ['--private-slot']],
   ['migrate.mjs'],
   ['check-db.mjs'],
-  ['retention-cleanup.mjs', {RETENTION_DRY_RUN: 'true'}],
 ];
 
-for (const [script, settings] of steps) {
-  const result = spawnSync(process.execPath, ['scripts/' + script], {
-    env: {...process.env, ...settings},
+for (const [script, args = []] of steps) {
+  const result = spawnSync(process.execPath, ['scripts/' + script, ...args], {
+    env: process.env,
     stdio: 'inherit',
   });
   if (result.error) throw result.error;

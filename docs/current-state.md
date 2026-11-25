@@ -14,8 +14,12 @@ Nur-Lese-Probeauftrag verifiziert den Zugriff auf die Migrationshistorie. Wenn
 alle erwarteten Migrationen bereits eingetragen sind, prüft der Release deren
 Datei-Prüfsummen und den vollständigen Schema- und RLS-Vertrag lesend. Offene
 Migrationen gehen weiter durch den bestehenden privaten Schreibpfad.
-Produktive Schemaänderungen setzen passende PostgreSQL-Rechte auf den
-betroffenen Objekten voraus.
+Der private Slot verwendet die datenbankspezifische Rolle `binso_one_migrations`
+für Tabellen, Sequenzen und neue Schemaobjekte. Die Lifecycle-Vorprüfung liest
+vier Zähler über `binso_release_control.preflight()`. Änderungen an bestehenden
+Views oder Funktionen, die einer anderen Rolle gehören, erfordern deren
+Eigentümer. Der einmalige Aufbau steht in
+[`enable-binso-one-migration-role.sql`](operations/enable-binso-one-migration-role.sql).
 Infrastrukturänderungen folgen dem separaten Azure-Pfad. Nach dem App-Wechsel
 prüfen die öffentlichen Health-Endpunkte die veröffentlichte Version.
 

@@ -118,7 +118,8 @@
     "0114_expense_beneficiary_review.sql",
     "0115_resource_quotas.sql",
     "0116_timer_calendar_days.sql",
-    "0117_operator_password_passkeys.sql"
+    "0117_operator_password_passkeys.sql",
+    "0118_document_operator_passkey_storage.sql"
   ],
   "tables": [
     {
