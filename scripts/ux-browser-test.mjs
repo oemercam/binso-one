@@ -307,6 +307,7 @@ try{
    else if(p==='/api/operator/preferences')data={item:{language:null}};
    else if(p==='/api/operator/customers')data={items:[{id:'tenant-one',name:'Prüffirma AG',created_at:'2026-10-09',account:{plan:'pro',account_status:'trial'}},{id:'tenant-two',name:'Zeta AG',created_at:'2026-10-08',account:{plan:'start',account_status:'suspended'}},{id:'tenant-three',name:'Büro AG',created_at:'2026-10-08',account:{plan:'start',account_status:'read_only'}}]};
    else if(p==='/api/operator/tickets')data={items:[{...ticket,tenant:{name:'Prüffirma AG'}}]};
+   else if(p==='/api/operator/customers/tenant-one')data={overview:{tenant:{id:'tenant-one',name:'Prüffirma AG',created_at:'2026-10-09'},account:operatorAccount},tickets:[],audit:[]};
    else if(p==='/api/operator/dashboard')data={stats:{customers_total:2,subscriptions_active:1,trials_active:1,users_active:1,payments_30d:79,monthly_contract_value:79,tickets_open:2,tickets_in_progress:3,tickets_resolved:5},tickets:[{...ticket,tenant:{name:'Prüffirma AG'}}],incidents:[]};
    else if(p==='/api/operator/monitoring')data=monitoringFixture();
    else if(p==='/api/operator/restrictions')data={items:[{id:'restriction-one',tenant_id:'tenant-one',tenant:{name:'Prüffirma AG'},active:true,scope:'write',reason:'Manuelle Prüfung',starts_at:'2026-01-01T00:00:00.000Z',ends_at:null}]};

@@ -5707,7 +5707,6 @@
         "components/app-shell.tsx#ShellRegistration",
         "components/app-shell.tsx#ShellConfiguration",
         "components/app-legal-document.tsx#AppLegalDocument",
-        "components/app-legal-document.tsx#AppLegalNavigation",
         "components/legal-language-notice.tsx#LegalLanguageNotice"
       ],
       "layouts": [
