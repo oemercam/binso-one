@@ -24,7 +24,7 @@ export function paymentEntryIssue(amount:number,remaining:number,confirmed=false
  if(typeof expectedRemaining!=='number'||!Number.isFinite(expectedRemaining)||expectedRemaining<0||expectedRemaining!==Math.round(expectedRemaining*100)/100||cents(expectedRemaining)!==cents(remaining))return 'payment_balance_changed';
  return null;
 }
-export function businessDate(){return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Zurich"});}
+export function businessDate(date=new Date()){return date.toLocaleDateString("en-CA",{timeZone:"Europe/Zurich"});}
 export function paymentStatus(document:FinancialDocument){
  if(customerCredit(document)>0)return 'overpaid';
  if(cents(document.total)>0&&cents(document.credit_amount)>=cents(document.total)&&cents(document.paid_amount)===cents(document.refund_amount))return 'credited';

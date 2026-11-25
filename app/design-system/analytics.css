@@ -7,9 +7,9 @@
  .bo-dashboard-overview>.bo-workspace-section{min-width:0}
  .bo-dashboard-overview .bo-cash-trend{min-width:0}
  .bo-dashboard-overview .section-title{margin:0 0 10px;min-height:0}
- .bo-dashboard-overview .section-title h2{font-size:var(--type-body);line-height:1.4}
+ .bo-dashboard-overview .section-title h2{font-size:1rem;line-height:1.4}
  .bo-dashboard-overview .bo-cash-overview>.metrics-grid{grid-auto-rows:1fr;gap:10px;margin:0 0 12px;align-items:stretch}
- .bo-dashboard-overview .bo-metric-tiles .metric{border:1px solid var(--color-line);border-radius:var(--shape-panel);padding:14px;min-height:116px;background:var(--color-bg)}
+ .bo-dashboard-overview .bo-metric-tiles .metric{border:1px solid transparent;border-radius:var(--shape-panel);padding:14px;min-height:116px;background:var(--app-surface)}
  .bo-dashboard-overview .metric-top{align-items:flex-start;gap:6px;font-size:var(--type-label);overflow-wrap:anywhere}
  .bo-dashboard-overview .bo-metric-tiles .metric strong{font-weight:600;line-height:1.25;margin-top:10px}
  .bo-dashboard-overview .metric-money{gap:2px}
@@ -152,7 +152,7 @@
 
 /* Dashboard KPIs share compact geometry on mobile and desktop. */
 .bo-dashboard-overview .bo-cash-overview>.metrics-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;align-items:stretch;gap:10px;margin-bottom:12px}
-.bo-dashboard-overview .bo-metric-tiles .metric{padding:12px;min-height:94px;border:1px solid var(--color-line);border-radius:var(--shape-panel);background:var(--color-bg);display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.bo-dashboard-overview .bo-metric-tiles .metric{padding:12px;min-height:94px;border:1px solid transparent;border-radius:var(--shape-panel);background:var(--app-surface);display:flex;flex-direction:column;justify-content:space-between;gap:10px}
 .bo-dashboard-overview .bo-metric-tiles .metric strong{font-size:var(--type-subtitle);line-height:1.3;margin:0;letter-spacing:-.3px}
 .bo-dashboard-overview .metric-money{display:inline-flex;flex-direction:row;align-items:baseline;gap:4px;white-space:nowrap}
 .bo-dashboard-overview .metric-money-currency{font-size:var(--type-secondary);font-weight:400;color:var(--color-muted)}
@@ -169,8 +169,17 @@
  .bo-dashboard-overview .bo-overview-bar-track{height:88px}
 }
 
-.bo-dashboard-overview .document-summary-row.is-information{height:auto;min-height:var(--navigation-row-height);padding-block:0;gap:12px}
-.bo-dashboard-overview .document-summary-row.is-information b{font-weight:400}
+.app-root .bo-dashboard-overview .bo-workspace-section{
+ border:0;
+ background:var(--app-surface);
+}
+.bo-dashboard-overview .document-summary-row.is-information{
+ height:auto;
+ min-height:var(--navigation-row-height);
+ padding-block:var(--space-8);
+ gap:var(--space-12);
+}
+.bo-dashboard-overview .document-summary-row.is-information b{font-size:1rem;font-weight:400}
 
 @media(min-width:761px){
  .bo-dashboard-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;min-width:0}
@@ -202,7 +211,7 @@
 }
 
 :is(.app-root[data-ux="master-v3"] .bo-cash-overview,.bo-statistics)[data-compact]>.metrics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:12px;align-items:stretch;margin-block:12px 16px}
-:is(.app-root[data-ux="master-v3"] .bo-cash-overview,.bo-statistics)[data-compact] .metric{display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:var(--ux-card-inset);min-height:104px;border:1px solid var(--color-line);border-radius:var(--shape-panel);background:var(--color-bg)}
+:is(.app-root[data-ux="master-v3"] .bo-cash-overview,.bo-statistics)[data-compact] .metric{display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:var(--ux-card-inset);min-height:104px;border:1px solid transparent;border-radius:var(--shape-panel);background:var(--app-surface)}
 :is(.app-root[data-ux="master-v3"] .bo-cash-overview,.bo-statistics)[data-compact] .metric-top{display:flex;align-items:center;gap:8px;font-size:var(--kpi-label-font);line-height:1.4}
 :is(.app-root[data-ux="master-v3"] .bo-cash-overview,.bo-statistics)[data-compact] .metric strong{font-size:var(--kpi-value-font);line-height:1.25;font-weight:600;margin:0}
 :is(.app-root[data-ux="master-v3"] .bo-cash-overview,.bo-statistics)[data-compact] .metric-money{display:inline-flex;flex-direction:row;align-items:baseline;gap:4px;white-space:nowrap}

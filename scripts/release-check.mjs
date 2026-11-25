@@ -30,7 +30,7 @@ const customerLoginUi=await readPageFile('app/login/page.tsx','utf8');
 assert.ok(customerLoginUi.includes('autoComplete="username"')&&customerLoginUi.includes('autoComplete="current-password"')&&!customerLoginUi.includes('PasskeyLogin')&&!customerLoginUi.includes('"totp"'),'Customer login uses password-manager fields without additional ceremonies');
 const operatorEntra=await readPageFile('lib/server/operator/entra.ts','utf8');
 const operatorSessions=await readPageFile('lib/server/operator/session.ts','utf8');
-assert.ok(operatorEntra.includes('if(!hasEntraMfaProof(principal.claims??[]))return null')&&operatorSessions.includes('platform_auth_sessions')&&operatorSessions.includes("if(env.appMode==='production'&&!identity)return null"),'Customer login changes must preserve separate Entra-MFA operator sessions');
+assert.ok(operatorEntra.includes('if(!hasEntraMfaProof(principal.claims??[]))return null')&&operatorSessions.includes('platform_auth_sessions')&&operatorSessions.includes("if(!local&&env.appMode==='production'&&!identity)return null")&&operatorSessions.includes("s.auth_source='password_passkey'"),'Operator sessions retain isolated Entra MFA and passkey modes');
 assert.ok(recoverRoute.includes('domainConfig.passwordResetMinutes'),'Password recovery must use the canonical reset lifetime');
 assert.ok(provisioningSource.includes('input.language??"de"'),'Persisted profile language must remain schema-compatible');
 assert.ok(provisioningSource.includes('const expiresAt=null'),'Trial expiry must not start before first email verification');

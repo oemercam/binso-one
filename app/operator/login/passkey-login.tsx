@@ -23,7 +23,7 @@ async function login(body:Record<string,unknown>){
  return result;
 }
 
-export default function OperatorPasskeyLogin(){
+export default function OperatorPasskeyLogin({preparation=false}:{preparation?:boolean}){
  const pending=useRef(false);
  const [email,setEmail]=useState('');
  const [password,setPassword]=useState('');
@@ -31,6 +31,7 @@ export default function OperatorPasskeyLogin(){
  const [code,setCode]=useState('');
  const [options,setOptions]=useState<Options|null>(null);
  const [error,setError]=useState('');
+ const [verified,setVerified]=useState(false);
  const [busy,setBusy]=useState(false);
 
  const begin=async(event:FormEvent<HTMLFormElement>)=>{
@@ -60,6 +61,11 @@ export default function OperatorPasskeyLogin(){
     :await startAuthentication({optionsJSON:options.options});
    const result=await login({action:'verify',response});
    if(result.ok!==true)throw new Error(errorFallback);
+   if(result.signedIn!==true){
+    setOptions(null);
+    setVerified(true);
+    return;
+   }
    clearClientSession();
    const next=safeAppPath(new URLSearchParams(window.location.search).get('next'),'/operator');
    window.location.replace(next==='/operator'||next.startsWith('/operator/')?next:'/operator');
@@ -72,8 +78,8 @@ export default function OperatorPasskeyLogin(){
  const passkeyAction=options?.mode==="register"?"Passkey einrichten":"Mit Passkey bestätigen";
 
  return <AuthWorkspace variant="login"><section className="auth-card operator-login-card" aria-labelledby="login-heading">
-  <h1 id="login-heading"><LocalizedText>{options?'Passkey bestätigen':'Admin Portal'}</LocalizedText></h1>
-  {options?<div className="auth-passkey">
+  <h1 id="login-heading"><LocalizedText>{options?'Passkey bestätigen':preparation?'Passkey vorbereiten':'Admin Portal'}</LocalizedText></h1>
+  {verified?<p role="status"><LocalizedText>Passkey erfolgreich geprüft.</LocalizedText></p>:options?<div className="auth-passkey">
    <Button onClick={()=>void confirm()} disabled={busy}><LocalizedText>{passkeyAction}</LocalizedText></Button>
    <button type="button" className="auth-inline-action" disabled={busy} onClick={()=>{setOptions(null);setError('')}}><LocalizedText>Zurück</LocalizedText></button>
   </div>:<form onSubmit={begin}>
@@ -83,7 +89,7 @@ export default function OperatorPasskeyLogin(){
    {error&&<ErrorState className="auth-error"><LocalizedText>{error}</LocalizedText></ErrorState>}
    <Button type="submit" disabled={busy}><LocalizedText>{busy?'Wird geprüft…':'Weiter'}</LocalizedText></Button>
   </form>}
-  {!options&&<button type="button" className="auth-inline-action" disabled={busy} onClick={()=>{setSetup(!setup);setError('');setCode('')}}><LocalizedText>{setup?'Zurück':'Passkey einrichten'}</LocalizedText></button>}
+  {!verified&&!options&&<button type="button" className="auth-inline-action" disabled={busy} onClick={()=>{setSetup(!setup);setError('');setCode('')}}><LocalizedText>{setup?'Zurück':'Passkey einrichten'}</LocalizedText></button>}
   <p className="auth-bottom"><Link href="/"><LocalizedText>Zurück zu Binso One</LocalizedText></Link></p>
  </section></AuthWorkspace>;
 }

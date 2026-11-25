@@ -149,6 +149,7 @@ export function RecordsView({
   children,
   loading=false,
   error=null,
+  onRetry,
   statusGroups={},
   columns,
   rowHref,
@@ -178,6 +179,7 @@ export function RecordsView({
   chips?: string[];
   loading?: boolean;
   error?: string|null;
+  onRetry?:()=>void;
   statusGroups?: Record<string,string[]>;
   columns?: Array<{label:string;index:number;align?:"left"|"right";status?:boolean;render?:(item:string[])=>React.ReactNode}>;
   rowHref?: (item:string[])=>string|undefined;
@@ -221,7 +223,7 @@ export function RecordsView({
       {showCount&&!loading&&(visible.length>0||hasFilters)&&<span className="records-count" aria-live="polite"><LocalizedText>{`${pagination?.total??visible.length} ${(pagination?.total??visible.length)===1?singularCountLabel:countLabel}`}</LocalizedText></span>}
     </div>}
 
-    {loading?<LoadingState layout="records"><LocalizedText>{"Einträge werden geladen …"}</LocalizedText></LoadingState>:error?<ErrorState><LocalizedText>{error}</LocalizedText></ErrorState>:visible.length ? <><DataTable owner={placeholder} label={placeholder.replace(/ suchen.*$/,"")}>{columns&&<DataTableHead className="desktop-record-head" columns={columns.length}>{columns.map(col=><span role="columnheader" aria-sort={sortIndex===col.index&&sort!=="default"?(sort==="asc"?"ascending":"descending"):"none"} className={col.align==="right"?"align-right":""} key={col.label}><LocalizedText>{col.label}</LocalizedText>{sortIndex===col.index&&sort!=="default"?<span aria-hidden="true"><LocalizedText>{sort==="asc"?" ↑":" ↓"}</LocalizedText></span>:null}</span>)}<span aria-hidden="true"/></DataTableHead>}{visible.map((item,index)=>{const cells=<>{columns?.map(col=><span role="cell" key={col.label} className={`${col.align==="right"?"align-right ":""}${col.status?"table-status-cell":""}`}>{col.render?col.render(item):col.status?<Status appearance="pill" tone={tone(item[col.index]??item.at(-1)??"")}><LocalizedText>{item[col.index]??item.at(-1)??"—"}</LocalizedText></Status>:(item[col.index]||"—")}</span>)}<Icon name="arrow" size={16}/></>;const href=rowHref?.(item);return href?<DataTableRow href={href} className="desktop-record-row" columns={columns?.length??1} key={item.join("-")+index}>{cells}</DataTableRow>:<DataTableRow className="desktop-record-row" columns={columns?.length??1} key={item.join("-")+index}>{cells}</DataTableRow>})}</DataTable><div className="records mobile-record-list" data-records-owner={placeholder}>{visible.map((item,index)=><span className="record-wrapper" key={item.join("-")+index}>{children(item)}</span>)}</div></> :
+    {loading?<LoadingState layout="records"><LocalizedText>{"Einträge werden geladen …"}</LocalizedText></LoadingState>:error?<ErrorState className="record-list-error" onRetry={onRetry}><LocalizedText>{error}</LocalizedText></ErrorState>:visible.length ? <><DataTable owner={placeholder} label={placeholder.replace(/ suchen.*$/,"")}>{columns&&<DataTableHead className="desktop-record-head" columns={columns.length}>{columns.map(col=><span role="columnheader" aria-sort={sortIndex===col.index&&sort!=="default"?(sort==="asc"?"ascending":"descending"):"none"} className={col.align==="right"?"align-right":""} key={col.label}><LocalizedText>{col.label}</LocalizedText>{sortIndex===col.index&&sort!=="default"?<span aria-hidden="true"><LocalizedText>{sort==="asc"?" ↑":" ↓"}</LocalizedText></span>:null}</span>)}<span aria-hidden="true"/></DataTableHead>}{visible.map((item,index)=>{const cells=<>{columns?.map(col=><span role="cell" key={col.label} className={`${col.align==="right"?"align-right ":""}${col.status?"table-status-cell":""}`}>{col.render?col.render(item):col.status?<Status appearance="pill" tone={tone(item[col.index]??item.at(-1)??"")}><LocalizedText>{item[col.index]??item.at(-1)??"—"}</LocalizedText></Status>:(item[col.index]||"—")}</span>)}<Icon name="arrow" size={16}/></>;const href=rowHref?.(item);return href?<DataTableRow href={href} className="desktop-record-row" columns={columns?.length??1} key={item.join("-")+index}>{cells}</DataTableRow>:<DataTableRow className="desktop-record-row" columns={columns?.length??1} key={item.join("-")+index}>{cells}</DataTableRow>})}</DataTable><div className="records mobile-record-list" data-records-owner={placeholder}>{visible.map((item,index)=><span className="record-wrapper" key={item.join("-")+index}>{children(item)}</span>)}</div></> :
       <EmptyState   title={query.trim()?"Keine Treffer für diese Suche":emptyLabel?.(activeChip)??(activeChip==="Inaktiv"?"Keine inaktiven "+countLabel:activeChip==="Aktiv"?"Keine aktiven "+countLabel:"Keine "+countLabel+" erfasst")}/>}
     {pagination&&<RecordsPagination {...pagination} loading={loading}/>}
   </>;

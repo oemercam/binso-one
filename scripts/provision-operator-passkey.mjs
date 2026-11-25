@@ -18,13 +18,12 @@ const client=new pg.Client({connectionString:process.env.DATABASE_URL,ssl:{rejec
 await client.connect();
 try{
  await client.query('begin');
- const operator=(await client.query("select user_id,email from platform_operator_assignments where lower(email)=lower($1) and status='active' for update",[email])).rows[0];
+ const operator=(await client.query("select user_id,email from platform_operator_assignments where lower(email)=lower($1) and status='active' and auth_source='entra' for update",[email])).rows[0];
  if(!operator)throw Error('Active operator assignment not found.');
  const credential=await client.query('select 1 from platform_operator_passkeys where user_id=$1 limit 1',[operator.user_id]);
  if(credential.rowCount)throw Error('This operator already has a passkey.');
- await client.query(`update platform_operator_assignments set auth_source='password_passkey',password_hash=$2,
+ await client.query(`update platform_operator_assignments set passkey_password_hash=$2,
    passkey_setup_hash=$3,passkey_setup_expires_at=now()+interval '30 minutes',updated_at=now() where user_id=$1`,[operator.user_id,passwordHash,setupHash]);
- await client.query('delete from platform_auth_sessions where user_id=$1',[operator.user_id]);
  await client.query('delete from platform_operator_passkey_challenges where user_id=$1',[operator.user_id]);
  await client.query(`insert into platform_audit_events(actor_user_id,actor_email,action,entity_type,entity_id)
    values('system','system@binso.ch','operator.passkey_setup_prepared','platform_operator',$1)`,[operator.user_id]);

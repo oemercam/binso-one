@@ -47,9 +47,9 @@ export function CustomersPage() {
   if(controller.query.trim())query.set('q',controller.query.trim());
   if(controller.activeChip==='Mit offenen Beträgen')query.set('outstanding','1');
   if(controller.activeChip==='Aktiv'||controller.activeChip==='Inaktiv')query.set('status',controller.activeChip==='Aktiv'?'active':'inactive');
-  const {rows:customerRows,total,loading,error}=useRemoteRows("customers",query.toString(),controller.restored);
+  const {rows:customerRows,total,loading,error,refresh}=useRemoteRows("customers",query.toString(),controller.restored);
   return <AppShell title="Kunden" active="kunden">
-    <RecordsControls tools={()=><CustomerDataActions tools/>} appearance="line" chips={visibleChips} filterChips={chips} controller={controller} placeholder="Kunden suchen..." columns={customerSortColumns}><CreateAction href="/kunden/neu" label="Neuer Kunde"/></RecordsControls><RecordsView chips={chips} controller={controller} toolbarActions={false} showCount={false} remote pagination={{total,page:controller.page,pageSize:50,onPage:controller.setPage}} loading={loading} error={error} items={customerRows} countLabel="Kunden" placeholder="Kunden suchen..." columns={columns} rowHref={row=>"/kunden/"+encodeURIComponent(row[3])}>{([name,contact,,id,status])=><RecordRow href={"/kunden/"+encodeURIComponent(id)} title={name} status={status} meta={contact&&contact!=="—"?contact:""}/>}</RecordsView>
+    <RecordsControls tools={()=><CustomerDataActions tools/>} appearance="line" chips={visibleChips} filterChips={chips} controller={controller} placeholder="Kunden suchen..." columns={customerSortColumns}><CreateAction href="/kunden/neu" label="Neuer Kunde"/></RecordsControls><RecordsView chips={chips} controller={controller} toolbarActions={false} showCount={false} remote pagination={{total,page:controller.page,pageSize:50,onPage:controller.setPage}} loading={loading} error={error} onRetry={refresh} items={customerRows} countLabel="Kunden" placeholder="Kunden suchen..." columns={columns} rowHref={row=>"/kunden/"+encodeURIComponent(row[3])}>{([name,contact,,id,status])=><RecordRow href={"/kunden/"+encodeURIComponent(id)} title={name} status={status} meta={contact&&contact!=="—"?contact:""}/>}</RecordsView>
   </AppShell>;
 }
 
@@ -149,7 +149,7 @@ export function CustomerDetail({customerId="acme"}:{customerId?:string}) {
   const city=String(customer.city??"");
   const status=String(customer.status??"active");
   const primaryContact=contacts.find(contact=>contact.is_primary===true)??contacts[0];
-  return <AppShell headingPlacement="header" recordLabel={String(customer.customer_no??"")} titleIsUserContent title={name} status={status==="inactive"?"Inaktiv":"Aktiv"} statusTone={status==="inactive"?"neutral":"success"} subtitle={[sector,city].filter(Boolean).join(" · ")} active="kunden" backHref={tab==='overview'?returnTo:hub} backLabel={tab==='overview'?'Kunden':'Zurück'} mobileActions={<Button variant="ghost" icon="more" ariaLabel="Kundenaktionen" onClick={()=>setCustomerActions(true)}/>} actions={<Button variant="ghost" icon="more" ariaLabel="Kundenaktionen" onClick={()=>setCustomerActions(true)}/>} >
+  return <AppShell headingPlacement="header" recordLabel={String(customer.customer_no??"")} titleIsUserContent title={name} status={status==="inactive"?"Inaktiv":"Aktiv"} statusTone={status==="inactive"?"neutral":"success"} subtitle={[sector,city].filter(Boolean).join(" · ")} active="kunden" backHref={tab==='overview'?returnTo:hub} backLabel={tab==='overview'?'Kunden':'Zurück'} mobileActions={<Button variant="ghost" icon="menu" ariaLabel="Kundenaktionen" onClick={()=>setCustomerActions(true)}/>} actions={<Button variant="ghost" icon="menu" ariaLabel="Kundenaktionen" onClick={()=>setCustomerActions(true)}/>} >
     <div className="customer-detail-workspace">
 
       <div className="desktop-detail-main"><div>

@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {moduleUrl} from './data-test-modules.mjs';
+import {moduleUrl,financialModuleUrl} from './data-test-modules.mjs';
 const next=import.meta.resolve('next/server.js');
 async function compile(file,imports={}){let source=(await fs.readFile(file,'utf8')).replaceAll("import 'server-only';",'').replaceAll('import "server-only";','');for(const [name,url] of Object.entries(imports))source=source.replaceAll("'"+name+"'",JSON.stringify(url)).replaceAll('"'+name+'"',JSON.stringify(url));return moduleUrl(source);}
 const limitsUrl=await compile('config/limits.ts'),httpUrl=await compile('lib/server/http.ts',{'next/server':next});
 const {limitsConfig}=await import(limitsUrl),{ApiError}=await import(httpUrl);
-const scanUrl=await compile('lib/server/receipt-scan.ts',{'@/config/limits':limitsUrl,'./http':httpUrl});
+const scanUrl=await compile('lib/server/receipt-scan.ts',{'@/config/limits':limitsUrl,'@/lib/financial-status':financialModuleUrl,'./http':httpUrl});
 const {scanReceipt,receiptEndpoint,receiptOperation}=await import(scanUrl);
 const endpoint='https://synthetic.cognitiveservices.azure.com',operation=endpoint+'/documentintelligence/documentModels/prebuilt-receipt/analyzeResults/fixture-123?api-version=2024-11-30';
 const file=new File(['Synthetic fixture, not a real receipt'],'unsafe-name.html',{type:'image/jpeg'});

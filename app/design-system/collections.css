@@ -28,7 +28,7 @@
   flex:1;
   border:1px solid var(--color-line);
   border-radius:var(--radius-md);
-  background:var(--color-bg);
+  background:var(--app-surface);
 }
 .searchbox>input,
 .searchbox>input:focus,
@@ -37,6 +37,7 @@ html[data-theme="dark"] .searchbox>input{height:100%;min-width:0;padding:0;borde
 .searchbox>svg{flex:none}
 .toolbar .searchbox{height:var(--control-h);min-height:var(--control-h)}
 .searchbox.large{max-width:none}
+.record-list-error{padding:var(--space-16);border-radius:var(--shape-group);background:var(--app-surface)}
 .chips,
 .tabs{display:flex;align-items:center;gap:6px}
 .chips{overflow-x:auto;scrollbar-width:none}

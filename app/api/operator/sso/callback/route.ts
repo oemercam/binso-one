@@ -16,11 +16,14 @@ export async function GET(request:NextRequest){
 
   const fallbackUserId=`entra:${identity.tenantId}:${identity.objectId}`;
   const userId=await withTransaction(async client=>{
-    const existing=await client.query<{user_id:string;auth_source:string}>(
-      "select user_id,auth_source from platform_operator_assignments where lower(email)=lower($1) or (entra_tenant_id=$2 and entra_object_id=$3) order by created_at asc limit 1 for update",
+    const existing=await client.query<{user_id:string;prepared:boolean;same_identity:boolean}>(
+      `select user_id,passkey_password_hash is not null and auth_source='entra' as prepared,
+              coalesce(entra_tenant_id=$2 and entra_object_id=$3,false) as same_identity
+         from platform_operator_assignments where lower(email)=lower($1) or (entra_tenant_id=$2 and entra_object_id=$3)
+        order by created_at asc limit 1 for update`,
       [identity.email,identity.tenantId,identity.objectId]
     );
-    if(existing.rows[0]?.auth_source==="password_passkey")return null;
+    if(existing.rows[0]?.prepared&&!existing.rows[0].same_identity)return null;
     const id=existing.rows[0]?.user_id??fallbackUserId;
     await client.query(
       `insert into platform_operator_assignments(

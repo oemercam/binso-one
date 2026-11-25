@@ -15,19 +15,19 @@ const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
 const fakeHash='scrypt$'+'0'.repeat(32)+'$'+'0'.repeat(128);
 const invalid=()=>new ApiError(401,'invalid_credentials','E-Mail oder Passwort ist falsch.');
 const invalidPasskey=()=>new ApiError(400,'passkey_invalid','Der Passkey konnte nicht bestätigt werden.');
-type Account={user_id:string;email:string;password_hash:string|null;version:string};
+type Account={user_id:string;email:string;passkey_password_hash:string|null;version:string};
 type Challenge={user_id:string;challenge:string;purpose:'authenticate'|'register';assignment_version:string};
 type Credential={credential_id:string;public_key:Buffer;counter:string};
 
 export async function beginOperatorPasskeyLogin(email:string,password:string,setupCode:string|null){
- const account=(await query<Account>(`select user_id,email,password_hash,updated_at::text as version
-  from platform_operator_assignments where lower(email)=$1 and status='active' and auth_source='password_passkey'`,[email])).rows[0];
- const valid=await verifyPassword(password,account?.password_hash??fakeHash);
- if(!account?.password_hash||!valid)throw invalid();
+ const account=(await query<Account>(`select user_id,email,passkey_password_hash,updated_at::text as version
+  from platform_operator_assignments where lower(email)=$1 and status='active' and auth_source='entra' and passkey_password_hash is not null`,[email])).rows[0];
+ const valid=await verifyPassword(password,account?.passkey_password_hash??fakeHash);
+ if(!account?.passkey_password_hash||!valid)throw invalid();
  const {rpID}=passkeyRelyingParty();
  const prepared=await withTransaction(async c=>{
   const locked=await c.query(`select 1 from platform_operator_assignments where user_id=$1 and status='active'
-   and auth_source='password_passkey' and updated_at::text=$2 for update`,[account.user_id,account.version]);
+   and auth_source='entra' and passkey_password_hash is not null and updated_at::text=$2 for update`,[account.user_id,account.version]);
   if(!locked.rowCount)throw invalid();
   const keys=(await c.query<{credential_id:string}>('select credential_id from platform_operator_passkeys where user_id=$1',[account.user_id])).rows;
   const mode=keys.length?'authenticate':'register';
@@ -50,7 +50,7 @@ export async function beginOperatorPasskeyLogin(email:string,password:string,set
  return {mode:prepared.mode,options:prepared.options};
 }
 
-export async function finishOperatorPasskeyLogin(response:AuthenticationResponseJSON|RegistrationResponseJSON){
+export async function finishOperatorPasskeyLogin(response:AuthenticationResponseJSON|RegistrationResponseJSON,signIn:boolean){
  const jar=await cookies(),token=jar.get(cookieName)?.value;
  if(!token||!/^[A-Za-z0-9_-]{43}$/.test(token))throw invalidPasskey();
  jar.set(cookieName,'',{...cookieOptions,maxAge:0});
@@ -60,8 +60,8 @@ export async function finishOperatorPasskeyLogin(response:AuthenticationResponse
  if(!challenge)throw invalidPasskey();
  const {rpID,origin}=passkeyRelyingParty();
  const session=await withTransaction(async c=>{
-  const account=(await c.query<Account>(`select user_id,email,password_hash,updated_at::text as version
-   from platform_operator_assignments where user_id=$1 and status='active' and auth_source='password_passkey' for update`,[challenge.user_id])).rows[0];
+  const account=(await c.query<Account>(`select user_id,email,passkey_password_hash,updated_at::text as version
+   from platform_operator_assignments where user_id=$1 and status='active' and auth_source='entra' and passkey_password_hash is not null for update`,[challenge.user_id])).rows[0];
   if(!account||account.version!==challenge.assignment_version)throw invalidPasskey();
   const expected={expectedChallenge:challenge.challenge,expectedOrigin:origin,expectedRPID:rpID,requireUserVerification:true};
   if(challenge.purpose==='register'){
@@ -82,9 +82,10 @@ export async function finishOperatorPasskeyLogin(response:AuthenticationResponse
    if(!result.verified)throw invalidPasskey();
    await c.query('update platform_operator_passkeys set counter=$2,last_used_at=now() where credential_id=$1',[key.credential_id,result.authenticationInfo.newCounter]);
   }
+  if(!signIn)return null;
   await c.query('update platform_operator_assignments set last_login_at=now() where user_id=$1',[account.user_id]);
   await platformAudit({userId:account.user_id,userEmail:account.email,action:'operator.password_passkey_login',entityType:'platform_operator',entityId:account.user_id},c);
   return prepareOperatorSession(account.user_id,'password_passkey',c);
  });
- await setOperatorSessionCookie(session);
+ if(session)await setOperatorSessionCookie(session);
 }

@@ -307,6 +307,7 @@ try{
    else if(p==='/api/operator/preferences')data={item:{language:null}};
    else if(p==='/api/operator/customers')data={items:[{id:'tenant-one',name:'Prüffirma AG',created_at:'2026-10-09',account:{plan:'pro',account_status:'trial'}},{id:'tenant-two',name:'Zeta AG',created_at:'2026-10-08',account:{plan:'start',account_status:'suspended'}},{id:'tenant-three',name:'Büro AG',created_at:'2026-10-08',account:{plan:'start',account_status:'read_only'}}]};
    else if(p==='/api/operator/tickets')data={items:[{...ticket,tenant:{name:'Prüffirma AG'}}]};
+   else if(p==='/api/operator/customers/tenant-one')data={overview:{tenant:{id:'tenant-one',name:'Prüffirma AG',created_at:'2026-10-09'},account:operatorAccount},tickets:[],audit:[]};
    else if(p==='/api/operator/dashboard')data={stats:{customers_total:2,subscriptions_active:1,trials_active:1,users_active:1,payments_30d:79,monthly_contract_value:79,tickets_open:2,tickets_in_progress:3,tickets_resolved:5},tickets:[{...ticket,tenant:{name:'Prüffirma AG'}}],incidents:[]};
    else if(p==='/api/operator/monitoring')data=monitoringFixture();
    else if(p==='/api/operator/restrictions')data={items:[{id:'restriction-one',tenant_id:'tenant-one',tenant:{name:'Prüffirma AG'},active:true,scope:'write',reason:'Manuelle Prüfung',starts_at:'2026-01-01T00:00:00.000Z',ends_at:null}]};
@@ -426,10 +427,11 @@ try{
       await verifyMobileLoginGeometry(page,{captureCode:process.env.BINSO_UX_CAPTURE_ALL==='1'?()=>capture(page,{animations:'disabled',path:path.join(output,`${theme}-${width}-auth-email-code.png`),fullPage:true}):undefined});
     }
     if(process.env.BINSO_UX_COMPLIANCE==='1')await measureCompliance(page,{output:path.join(output,'compliance'),route,theme,width,state:process.env.BINSO_UX_FIXTURE_CASE??'normal',engine:process.env.BINSO_UX_BROWSER??'chromium'});
-    // Explicit 15 October white-workspace contract; no screenshot baseline is rewritten.
-    if(!process.env.BINSO_UX_BASELINE&&theme==='light'){
-      const surfaces=await page.locator('.app-root,.operator-root,.page-container,.operator-app-content,.desktop-appbar,.mobile-header,.operator-app-header').evaluateAll(nodes=>nodes.filter(el=>el.getClientRects().length).map(el=>({name:el.className,background:getComputedStyle(el).backgroundColor})));
-      assert.ok(surfaces.every(surface=>surface.background==='rgb(255, 255, 255)'),`${route}: white workspace surfaces ${JSON.stringify(surfaces)}`);
+    // Apple workspace canvas and grouped surfaces are independent roles.
+    if(!process.env.BINSO_UX_BASELINE){
+      const canvas=theme==='light'?'rgb(242, 242, 247)':'rgb(0, 0, 0)';
+      const surfaces=await page.locator('.app-root,.operator-root,.app-root :is(.page-container,.desktop-appbar,.mobile-header),.operator-root :is(.operator-app-content,.operator-app-header)').evaluateAll(nodes=>nodes.filter(el=>el.getClientRects().length).map(el=>({name:el.className,background:getComputedStyle(el).backgroundColor})));
+      assert.ok(surfaces.every(surface=>surface.background===canvas),`${route}: Apple workspace canvas ${JSON.stringify(surfaces)}`);
     }
     const navigationToggle=page.locator('.desktop-navigation-toggle').filter({visible:true});
     const modal=page.locator('[aria-modal="true"]').filter({visible:true});
@@ -477,7 +479,7 @@ try{
     if(!process.env.BINSO_UX_BASELINE){await assertContentGroups(page);if([375,390].includes(width)&&(['/dashboard','/einstellungen'].includes(route)||/^\/(rechnungen|angebote)\//.test(route)))await verifyContentGroupRegression(page);await assertOpaqueChrome(page);await assertPresentationControls(page);if(width===390&&['/dashboard','/einstellungen/darstellung'].includes(route))await verifyPresentationControlRegression(page);if(width<=760&&await page.locator('.app-root').count())await assertMobileHeaderTargets(page);}
     if(!process.env.BINSO_UX_BASELINE&&width<=760&&await page.locator('.page-container,.operator-app-content').count()){
       const appearance=await page.locator('.page-container,.operator-app-content').first().evaluate(el=>({ink:getComputedStyle(el).color,surface:getComputedStyle(el).getPropertyValue('--app-surface').trim(),controls:[...el.querySelectorAll('.form-control,.form-textarea')].filter(node=>!['checkbox','radio','file'].includes(node.type)&&!node.closest('.searchbox,.thread-composer,.records-choice-control')).map(node=>({radius:getComputedStyle(node).borderTopLeftRadius,font:getComputedStyle(node).fontSize})),groups:[...el.querySelectorAll('.bo-settings-group-body')].map(node=>({background:getComputedStyle(node).backgroundColor,border:getComputedStyle(node).borderTopWidth}))}));
-      assert.equal(appearance.ink,theme==='light'?(route.startsWith('/operator')?'rgb(32, 43, 59)':'rgb(33, 48, 71)'):(route.startsWith('/operator')?'rgb(215, 227, 243)':'rgb(215, 227, 243)'),`${route}: app text uses the central theme`);
+      assert.equal(appearance.ink,theme==='light'?'rgb(0, 0, 0)':'rgb(255, 255, 255)',`${route}: app text uses the central theme`);
       const recordTools=await page.locator('.records-choice-control>.app-select-trigger').evaluateAll(nodes=>nodes.filter(node=>node.getClientRects().length).map(node=>{const css=getComputedStyle(node),box=node.getBoundingClientRect();return {width:box.width,height:box.height,radius:css.borderRadius,icon:!!node.querySelector('svg'),label:node.getAttribute('aria-label')}}));
       for(const tool of recordTools){assert.equal(tool.width,44,'V4 tool touch width');assert.equal(tool.height,44,'V4 tool touch height');assert.equal(tool.radius,'50%','V4 round icon shape');assert.ok(tool.icon&&tool.label,'A record tool retains its icon and accessible label');}
       assert.ok(appearance.controls.every(control=>control.radius==='12px'),`${route}: shared app field corners ${JSON.stringify(appearance.controls)}`);
@@ -537,7 +539,7 @@ try{
     if(!process.env.BINSO_UX_BASELINE&&route==='/finanzen/analyse'){
       assert.equal(await page.locator('.bo-statistics .bo-metric-tiles>.metric').count(),4,'Final V1: income, outflows, cash balance and current receivables');
       assert.equal(await page.locator('.bo-statistics').count(),1,'One central statistics surface');
-      assert.equal(await page.locator('.bo-statistics').evaluate(el=>getComputedStyle(el).backgroundColor),width<=760?(theme==='light'?'rgb(255, 255, 255)':'rgb(0, 0, 0)'):(theme==='light'?'rgb(255, 255, 255)':'rgb(0, 0, 0)'),'Statistics follow the app surface on phone/tablet and page surface on desktop');
+      assert.equal(await page.locator('.bo-statistics').evaluate(el=>getComputedStyle(el).backgroundColor),theme==='light'?'rgb(242, 242, 247)':'rgb(0, 0, 0)','Statistics follow the workspace canvas');
       assert.equal(await page.locator('.bo-comparison-track').count(),2,'Final V1 uses two actual-value horizontal bars');
       assert.equal(await page.locator('.bo-statistics-line,.bo-statistics-point').count(),0,'The replaced large time-series chart is absent');
       assert.equal(await page.locator('.bo-finance-analysis>.bo-data-disclosure[open]').count(),0,'Both analysis disclosures start closed');
@@ -636,7 +638,7 @@ try{
     await create.evaluate(el=>{window.__creationTrigger=el;window.__creationFocus=[];document.addEventListener('focusin',event=>window.__creationFocus.push({tag:event.target.tagName,label:event.target.getAttribute('aria-label'),className:event.target.className}),true)});
     if(width<=760){
      const geometry=await page.evaluate(()=>{const rect=selector=>document.querySelector(selector).getBoundingClientRect().toJSON(),css=selector=>getComputedStyle(document.querySelector(selector));return {nav:rect('.bottom-nav'),plus:rect('.workspace-command-bar .bo-create-action,.app-section-dashboard .page-actions .bo-create-action'),capsule:css('.mobile-header-actions').backgroundColor,material:css('.bottom-nav').backgroundColor,header:css('.mobile-header').backgroundColor,page:css('.page-container').backgroundColor,blur:css('.mobile-header').backdropFilter,navBlur:css('.bottom-nav').backdropFilter,targets:[...document.querySelector('.bottom-nav').children].map(el=>el.getBoundingClientRect().toJSON())}});
-     assert.equal(geometry.header,geometry.page,'Header and page share one opaque canvas');assert.equal(geometry.blur,'none');assert.ok([geometry.page,'rgba(0, 0, 0, 0)'].includes(geometry.capsule),'Header actions use the shared canvas or a transparent surface');assert.equal(geometry.material,theme==='light'?'rgb(255, 255, 255)':'rgb(0, 0, 0)','Flat navigation shares the opaque theme canvas');assert.equal(geometry.navBlur,'none','Flat navigation never restores the old glass blur');await assertFlatMobileNavigation(page);
+     assert.equal(geometry.header,geometry.page,'Header and page share one opaque canvas');assert.equal(geometry.blur,'none');assert.ok([geometry.page,'rgba(0, 0, 0, 0)'].includes(geometry.capsule),'Header actions use the shared canvas or a transparent surface');assert.equal(geometry.material,theme==='light'?'rgb(242, 242, 247)':'rgb(0, 0, 0)','Flat navigation shares the opaque theme canvas');assert.equal(geometry.navBlur,'none','Flat navigation never restores the old glass blur');await assertFlatMobileNavigation(page);
      assert.ok(geometry.targets.every(t=>t.width>=44&&t.height>=44),'Destinations keep minimum touch targets');
      assert.ok(geometry.plus.bottom<=geometry.nav.top,'Creation belongs to the page above navigation');
      assert.equal(await page.locator('.mobile-dock .bo-create-action,.dock-create-action').count(),0,'Navigation has no attached creation action');
@@ -1261,7 +1263,7 @@ try{
    await settingsNavigation.getByRole('link',{name:'Abonnement',exact:true}).waitFor();
    assert.equal(await guidePreference.isChecked(),guideChecked,'Searching destinations preserves the separate setup preference');
    const groupSurface=await settingsNavigation.locator('.bo-settings-group-body').evaluate(el=>({border:getComputedStyle(el).borderTopWidth,radius:getComputedStyle(el).borderTopLeftRadius,background:getComputedStyle(el).backgroundColor}));
-   assert.equal(groupSurface.border,'1px');assert.equal(groupSurface.radius,'16px');assert.notEqual(groupSurface.background,'rgba(0, 0, 0, 0)','Grouped settings use the approved customer-detail card');
+   assert.equal(groupSurface.border,'1px');assert.equal(groupSurface.radius,'22px');assert.notEqual(groupSurface.background,'rgba(0, 0, 0, 0)','Grouped settings use the approved customer-detail card');
    await settingsNavigation.getByLabel('Einstellungen suchen',{exact:true}).fill('no-such-setting');await settingsNavigation.getByText('Keine passenden Einstellungen',{exact:true}).waitFor();
    assert.equal(await settingsNavigation.locator('.bo-settings-group').count(),0,'A search without matches leaves no empty navigation groups');assert.equal(await guidePreference.isChecked(),guideChecked,'An empty search cannot change setup preferences');
    await settingsNavigation.getByLabel('Einstellungen suchen',{exact:true}).fill('');assert.ok(await settingsNavigation.locator('.bo-settings-group').count()>=2,'Clearing search restores the groups');

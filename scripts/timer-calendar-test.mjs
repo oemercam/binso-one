@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {moduleUrl} from './data-test-modules.mjs';
+import {moduleUrl,financialModuleUrl} from './data-test-modules.mjs';
 const {timerDays,confirmLegacyTimerDays}=await import(moduleUrl(await fs.readFile('lib/timer-days.ts','utf8')));
+const {businessDate}=await import(financialModuleUrl);
+assert.equal(businessDate(new Date('2026-06-30T22:30:00Z')),'2026-07-01');
+assert.equal(businessDate(new Date('2026-10-24T22:30:00Z')),'2026-10-25');
+assert.equal(businessDate(new Date('2026-12-31T23:30:00Z')),'2027-01-01');
 const running=(start,end,days={},accumulated=0)=>timerDays({state:'running',active_since:start,day_seconds:days,accumulated_seconds:accumulated},Date.parse(end));
 assert.deepEqual(running('2026-10-31T22:50:00Z','2026-10-31T23:10:00Z').days,{'2026-10-31':600,'2026-11-01':600});
 assert.deepEqual(running('2026-12-31T22:50:00Z','2026-12-31T23:10:00Z').days,{'2026-12-31':600,'2027-01-01':600});

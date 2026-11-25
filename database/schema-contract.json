@@ -8056,6 +8056,11 @@
           "required": false
         },
         {
+          "name": "passkey_password_hash",
+          "type": "text",
+          "required": false
+        },
+        {
           "name": "passkey_setup_hash",
           "type": "text",
           "required": false

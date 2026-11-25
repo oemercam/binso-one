@@ -55,7 +55,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale=asLocale((await cookies()).get(localeCookie)?.value);
   return (
-    <html lang={localeTags[locale]} suppressHydrationWarning data-scroll-behavior="smooth" data-binso-pilot={pilotEnabled?"1":undefined}>
+    <html lang={localeTags[locale]} suppressHydrationWarning data-binso-pilot={pilotEnabled?"1":undefined}>
       <head><FontPreload/><script id="binso-theme-init" dangerouslySetInnerHTML={{__html:`(${initializeTheme.toString()})();`}} /></head>
       <body>
         <LocaleProvider initialLocale={locale} initialCatalogue={getLocaleCatalogue(locale)}>

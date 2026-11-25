@@ -129,11 +129,13 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  border:1px solid var(--color-line);
+  border:1px solid transparent;
   border-radius:var(--radius-md);
   background:transparent;
   color:inherit;
 }
+.timer-project>.form-field+.form-field{border-block-start:1px solid var(--app-divider);padding-block-start:var(--space-12)}
+.timer-project .app-select-trigger:not([aria-invalid="true"]){background:transparent;border-color:transparent}
 .timer-actions{display:flex;justify-content:flex-start;gap:8px}
 .timer-actions>.button{flex:1}
 .time-overview-section>.section-title{display:grid;justify-content:start;gap:14px}
@@ -188,13 +190,13 @@
 }
 .thread-day{margin:8px 0 20px;text-align:center;color:var(--color-muted);font-size:var(--type-secondary)}
 .message{max-width:78%;margin-bottom:10px}
-.message>div{padding:11px 13px;border-radius:var(--shape-panel);font-size:var(--type-control);line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.message>div{padding:var(--space-12) var(--space-16);border-radius:var(--shape-group);font-size:var(--type-control);line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .message small{display:block;margin-top:4px;color:var(--color-muted);font-size:var(--type-secondary)}
 .message>span{display:block;margin:0 0 4px 4px;color:var(--color-muted);font-size:var(--type-secondary)}
 .message-user{margin-left:auto;align-self:flex-end;text-align:right}
 .message-user>div{background:var(--app-accent-soft);color:var(--color-fg);text-align:left}
 .message-support{margin-right:auto;align-self:flex-start}
-.message-support>div{background:var(--message-incoming-bg);color:var(--color-fg)}
+.message-support>div{background:var(--app-surface);color:var(--app-text)}
 .thread-composer{
   position:static;
   flex-shrink:0;
@@ -204,8 +206,8 @@
   grid-template-columns:var(--touch) minmax(0,1fr) var(--touch);
   align-items:center;
   border:1px solid var(--color-line);
-  border-radius:var(--shape-panel);
-  background:var(--color-bg);
+  border-radius:var(--shape-group);
+  background:var(--app-surface);
   box-shadow:none;
 }
 .thread-composer :is(input,textarea){
@@ -572,7 +574,7 @@ html,body{width:100%;max-width:100%;min-width:0;overflow-x:clip}
 .mobile-position-remove{justify-self:start}
 .time-filter-toolbar{display:flex;flex-wrap:nowrap;gap:12px}
 .time-project-create{margin-bottom:12px}
-.time-layout{display:block}
+.time-layout{grid-template-columns:minmax(0,1fr)}
 .timer-card{border-left:0;border-right:0;border-radius:0}
 .timer-card{padding-top:12px}
 
@@ -659,7 +661,7 @@ a{-webkit-tap-highlight-color:transparent}
 .mobile-back{min-width:44px;min-height:44px;
   }
 .mobile-detail-actions{display:flex;align-items:center;gap:2px;margin-left:auto}
-.mobile-back{width:40px;height:40px;display:grid;place-items:center;margin-left:-8px}
+.mobile-back{width:44px;height:44px;display:grid;place-items:center;margin-left:-8px;border-radius:50%;background:var(--color-subtle);color:var(--color-fg)}
 .header-search-scopes{display:flex;margin-bottom:12px}
 .header-search-cancel{display:block;flex:none;padding:0;border:0;background:transparent;color:var(--color-fg);font:inherit;font-size:var(--type-body)}
 .header-search-controls{padding-block:8px 12px}
@@ -695,8 +697,8 @@ a{-webkit-tap-highlight-color:transparent}
 .activity-day{padding-block:var(--field-group-gap)}
 .activity-day>h3{margin:0 0 12px;font-size:var(--type-label);font-weight:600;color:var(--color-muted)}
 
-.thread-context{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;padding-block:8px;border-bottom:1px solid var(--color-line);font-size:var(--type-secondary)}
-.thread-context>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thread-context{display:flex;align-items:center;justify-content:space-between;gap:var(--space-12);flex-shrink:0;padding:var(--space-12) var(--space-16);background:var(--app-surface);border-radius:var(--shape-group);font-size:var(--type-secondary)}
+.thread-context>span:first-child{min-width:0;overflow-wrap:anywhere}
 .expense-summary{display:grid;gap:12px}
 .expense-summary h2,.expense-summary p{margin:0}
 .expense-summary-amount{font-size:var(--type-large-heading);font-variant-numeric:tabular-nums}

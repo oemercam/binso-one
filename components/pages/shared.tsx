@@ -58,8 +58,8 @@ export function useRemoteRows(collection:DataCollection,filters="",enabled=true)
   const {locale}=useLocale(),translateUnit=useTranslation();
   const base=`/api/${collection}`;
   const path=base+(filters?(base.includes('?')?'&':'?')+filters:'');
-  const {data,loading,error}=useApiQuery<{items:Record<string,unknown>[];total?:number}>(enabled?path:null);
-  return {rows:mapRemoteRows(collection,data?.items??[],{locale:localeTags[locale],translateUnit}),total:data?.total??Number(data?.items?.[0]?.total_count??data?.items?.length??0),loading:!enabled||loading,error};
+  const {data,loading,error,refresh}=useApiQuery<{items:Record<string,unknown>[];total?:number}>(enabled?path:null);
+  return {rows:mapRemoteRows(collection,data?.items??[],{locale:localeTags[locale],translateUnit}),total:data?.total??Number(data?.items?.[0]?.total_count??data?.items?.length??0),loading:!enabled||loading,error,refresh};
 }
 
 /** Module configuration changes domain fields, never the committed list state owner. */

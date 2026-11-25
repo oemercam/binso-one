@@ -8,13 +8,15 @@ fullRoutes.push('/bericht','/angebot','/berichte','/projekte','/projekte/project
 fullRoutes.push('/lieferanten','/lieferanten/neu','/lieferanten/supplier-one');
 fullRoutes.push('/abwesenheiten','/einstellungen/abwesenheiten');
 fullRoutes.push('/vertraege','/vertraege/contract-one');
+const appGeneralRoutes=['/einstellungen/allgemein','/einstellungen/allgemein/informationen'];
 const appLegalRoutes=['/einstellungen/rechtliches',...['impressum','datenschutz','agb','auftragsbearbeitung','unterauftragsbearbeiter'].map(document=>'/einstellungen/rechtliches/'+document)];
-fullRoutes.push(...appLegalRoutes,'/hilfe','/support/ticket-one?view=conversation');
+const operatorDetailRoutes=['/operator/tickets/ticket-one','/operator/kunden/tenant-one'];
+fullRoutes.push(...appGeneralRoutes,...appLegalRoutes,...operatorDetailRoutes,'/hilfe','/support/ticket-one?view=conversation');
 export const webkitFullRoutes=['/bericht','/angebot','/berichte','/projekte','/projekte/project-one','/dashboard','/finanzen','/support/ticket-one','/rechnungen','/zeit','/mitarbeiter/neu','/mitarbeiter/employee-one','/projekte/neu','/rechnungen/RE-TEST-1','/kunden/neu','/produkte/neu','/spesen/neu','/angebote/neu','/zahlungen/neu'];
 webkitFullRoutes.push('/lieferanten/neu','/lieferanten/supplier-one');
 webkitFullRoutes.push('/abwesenheiten','/einstellungen/abwesenheiten');
 webkitFullRoutes.push('/vertraege','/vertraege/contract-one');
-webkitFullRoutes.push(...appLegalRoutes,'/hilfe','/support/ticket-one?view=conversation');
+webkitFullRoutes.push(...appGeneralRoutes,...appLegalRoutes,...operatorDetailRoutes,'/hilfe','/support/ticket-one?view=conversation');
 const groups={
  contracts:{match:/commercial-contract|contract-document|vertraege|app\/api\/contracts/,routes:['/vertraege','/vertraege/contract-one'],interactions:[]},
  absences:{match:/absence|abwesenheit/,routes:['/abwesenheiten','/einstellungen/abwesenheiten'],interactions:[]},

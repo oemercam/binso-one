@@ -1,9 +1,11 @@
-import {operatorPasskeyLoginEnabled} from '@/lib/server/operator/login-mode';
+import {operatorPasskeyLoginEnabled,operatorPasskeySetupEnabled} from '@/lib/server/operator/login-mode';
 import MicrosoftLogin from './microsoft-login';
 import OperatorPasskeyLogin from './passkey-login';
 
 export const dynamic='force-dynamic';
 
-export default function Page(){
- return operatorPasskeyLoginEnabled()?<OperatorPasskeyLogin/>:<MicrosoftLogin/>;
+export default async function Page({searchParams}:{searchParams:Promise<{passkey?:string}>}){
+ if(operatorPasskeyLoginEnabled())return <OperatorPasskeyLogin/>;
+ if(operatorPasskeySetupEnabled()&&(await searchParams).passkey==='einrichten')return <OperatorPasskeyLogin preparation/>;
+ return <MicrosoftLogin/>;
 }

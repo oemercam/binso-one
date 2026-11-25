@@ -9,7 +9,6 @@ import {isPlanId,moduleForPath,pilotEnabled,planAllowsPath,type PlanId} from "@/
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {loadTheme,saveTheme} from "@/lib/client/theme";
-import {AppStart} from "./app-start";
 import {WorkspaceStartup} from './workspace-startup';
 import {useNavigationScroll} from "./use-navigation-scroll";
 import {TimerResumeNotice} from "./timer-resume-notice";
@@ -39,6 +38,17 @@ import {SettingsGroup} from './binso-ux';
 import {UserProfileContext} from '@/lib/client/user-profile';
 import {AppHeader,MobileDock} from "./app-chrome";
 import {DesktopNavigationToggle,useDesktopNavigation} from "./desktop-navigation";
+
+/** Traverse only when the browser can verify the parent entry. Deep links use their declared parent. */
+function previousEntryIsParent(href:string){
+ const navigation=(window as Window&{navigation?:{currentEntry?:{index:number};entries:()=>Array<{url?:string}>}}).navigation;
+ const index=navigation?.currentEntry?.index??-1;
+ if(!navigation||index<1)return false;
+ const previous=navigation.entries()[index-1]?.url;
+ if(!previous)return false;
+ const target=new URL(href,window.location.href),entry=new URL(previous);
+ return entry.origin===target.origin&&entry.pathname===target.pathname&&(!target.search||entry.search===target.search)&&(!target.hash||entry.hash===target.hash);
+}
 
 const SearchPanel=dynamic(()=>import('./header-panel-content').then(module=>module.SearchPanel),{loading:()=> <LoadingState/>});
 const NotificationPanel=dynamic(()=>import('./header-panel-content').then(module=>module.NotificationPanel),{loading:()=> <LoadingState/>});
@@ -218,6 +228,12 @@ function AppShellFrame({
   },[formActive]);
   const [leaveHref,setLeaveHref]=useState<string|null>(null);
   const leaveBack=useBrowserBackGuard(dirty,()=>setLeaveHref("browser-back"));
+  const followParent=(event:React.MouseEvent<HTMLAnchorElement>)=>{
+    if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+    if(!previousEntryIsParent(event.currentTarget.href))return;
+    event.preventDefault();
+    router.back();
+  };
   useEffect(()=>{
     if(!dirty)return;
     const navigate=(event:MouseEvent)=>{
@@ -384,7 +400,7 @@ function AppShellFrame({
         </div>}
       </div>
       <AppHeader className={headerOwnsDetail ? "mobile-header mobile-header-detail" : "mobile-header"} detail={headerOwnsDetail} contentHeader={headingPlacement==="content"} leadingClassName="mobile-header-leading" leading={<>
-        {headerOwnsDetail ? !formActive&&<Link scroll={false} className="mobile-back" href={backHref!} aria-label={backLabel}><Icon name="back"/></Link> : <>{hasListBack&&<Link scroll={false} className="mobile-back" href={backHref!} aria-label={backLabel}><Icon name="back"/></Link>}<h1 className="mobile-section-title"><LocalizedText verbatim={titleIsUserContent&&pathname!=="/dashboard"}>{mobileHeading}</LocalizedText></h1></>}
+        {headerOwnsDetail ? !formActive&&<Link scroll={false} className="mobile-back" href={backHref!} replace onClick={followParent} aria-label={backLabel}><Icon name="back"/></Link> : <>{hasListBack&&<Link scroll={false} className="mobile-back" href={backHref!} replace onClick={followParent} aria-label={backLabel}><Icon name="back"/></Link>}<h1 className="mobile-section-title"><LocalizedText verbatim={titleIsUserContent&&pathname!=="/dashboard"}>{mobileHeading}</LocalizedText></h1></>}
         {headerOwnsDetail&&<div className="mobile-header-context"><h1 className="mobile-header-title"><span><LocalizedText verbatim={titleIsUserContent}>{title}</LocalizedText></span></h1></div>}
       </>} actionClassName={headerOwnsDetail?"mobile-detail-actions":"mobile-header-actions"} actions={headerOwnsDetail ? (allowed&&(headerActions||mobileActions||headingActions)?<>{headerActions}{mobileActions??headingActions}</>:undefined) : <>
         <IconButton label="Suche" icon="search" onClick={()=>setSheet("search")}/>
@@ -397,7 +413,7 @@ function AppShellFrame({
       <main className="page-container" data-section={active}>
         {headerOwnsDetail&&headingPlacement==='header'&&!formActive&&(recordLabel||subtitle||status!=null)&&<div className="detail-context-line">{recordLabel&&<span translate="no">{recordLabel}</span>}{subtitle&&<span><LocalizedText verbatim={titleIsUserContent}>{subtitle}</LocalizedText></span>}{status!=null&&(typeof status==='string'?<Status appearance="pill" tone={statusTone}>{status}</Status>:status)}</div>}
         <div className={headerOwnsDetail ? "page-head page-head-detail" : "page-head"} data-heading-placement={headingPlacement}>
-          {headerOwnsDetail ? <DetailHeading verbatimTitle={titleIsUserContent} title={title} subtitle={headingSubtitle} status={status} tone={statusTone} recordLabel={recordLabel} statusPlacement={headingPlacement==="content"?"subtitle":"title"} mobileAction={undefined} action={(headingActions||contextActions)&&allowed?<div className="page-actions">{headingActions}{contextActions&&<div className="context-actions-inline">{contextActions.content}</div>}</div>:undefined} leading={!formActive&&backHref?<Link scroll={false} className="desktop-back" href={backHref} aria-label={backLabel}><Icon name="back" size={16}/><LocalizedText>{backLabel}</LocalizedText></Link>:undefined}/> : <PageHeading leading={hasListBack?<Link scroll={false} className="desktop-back" href={backHref!}><Icon name="back" size={16}/><LocalizedText>{backLabel}</LocalizedText></Link>:undefined} verbatimTitle={titleIsUserContent} title={title} description={headingSubtitle} action={(headingActions||contextActions)&&allowed?<div className="page-actions">{headingActions}{contextActions&&<div className="context-actions-inline">{contextActions.content}</div>}</div>:undefined}/> }
+          {headerOwnsDetail ? <DetailHeading verbatimTitle={titleIsUserContent} title={title} subtitle={headingSubtitle} status={status} tone={statusTone} recordLabel={recordLabel} statusPlacement={headingPlacement==="content"?"subtitle":"title"} mobileAction={undefined} action={(headingActions||contextActions)&&allowed?<div className="page-actions">{headingActions}{contextActions&&<div className="context-actions-inline">{contextActions.content}</div>}</div>:undefined} leading={!formActive&&backHref?<Link scroll={false} className="desktop-back" href={backHref} replace onClick={followParent} aria-label={backLabel}><Icon name="back" size={16}/><LocalizedText>{backLabel}</LocalizedText></Link>:undefined}/> : <PageHeading leading={hasListBack?<Link scroll={false} className="desktop-back" href={backHref!} replace onClick={followParent}><Icon name="back" size={16}/><LocalizedText>{backLabel}</LocalizedText></Link>:undefined} verbatimTitle={titleIsUserContent} title={title} description={headingSubtitle} action={(headingActions||contextActions)&&allowed?<div className="page-actions">{headingActions}{contextActions&&<div className="context-actions-inline">{contextActions.content}</div>}</div>:undefined}/> }
         </div>
         {allowed&&orientation&&<p className="page-orientation"><LocalizedText>{orientation}</LocalizedText></p>}
         <SettingsWorkspace>
@@ -412,7 +428,7 @@ function AppShellFrame({
 
       {!preview && !formActive && !chatActive && <MobileDock><LocalizedElement as="nav" className="bottom-nav" data-module-profile={access?.moduleProfile} data-visible-count={1+navItems.length} aria-label="Hauptnavigation">
         {navItems.map(item=><Link key={item.href} href={item.href} className={navSection===item.section?'active':''} aria-current={navSection===item.section?'page':undefined}><Icon name={item.icon} size={20}/><span><LocalizedText>{item.label}</LocalizedText></span></Link>)}
-        <button type="button" className={navSection==='more'?'active':''} aria-current={navSection==='more'?'page':undefined} aria-haspopup="dialog" aria-expanded={sheet==='more'} onClick={() => setSheet("more")}><Icon name="ellipsis" size={20}/><span><LocalizedText>{"Mehr"}</LocalizedText></span></button>
+        <button type="button" className={navSection==='more'?'active':''} aria-current={navSection==='more'?'page':undefined} aria-haspopup="dialog" aria-expanded={sheet==='more'} onClick={() => setSheet("more")}><Icon name="menu" size={20}/><span><LocalizedText>{"Mehr"}</LocalizedText></span></button>
       </LocalizedElement></MobileDock>}
 
       {headerPanel&&<HeaderPanel key={sheet} kind={sheet} label={sheet==="search"?"Suche":sheet==="account"?"Konto":"Benachrichtigungen"} onClose={()=>setSheet(null)}>
@@ -469,6 +485,5 @@ export function AppShellLayout({children}:{children:React.ReactNode}){
 }
 /** Root suspense sits inside the persistent frame on an app route. */
 export function RouteLoading(){
- const inShell=useContext(ShellRegistration);
- return inShell?<LoadingState layout="page"/>:<AppStart/>;
+ return <LoadingState layout="page"/>;
 }

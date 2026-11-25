@@ -23,6 +23,7 @@ import {FormPage,ActionsMenu,ActionRow,ActionSheet,FormSheet,ListRow,SelectionRo
 import Link from "next/link";
 import {Monitor} from "lucide-react";
 import { saveTheme, type ThemeMode } from "@/lib/client/theme";
+import {useThemePreference} from "@/lib/client/use-theme-preference";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { AppShell } from "../app-shell";
@@ -34,11 +35,12 @@ import {formatCurrency} from "@/lib/financial-status";
 
 export function SettingsPage() {
   return <AppShell title="Einstellungen" active="einstellungen" backHref="/dashboard">
-    <SetupGuidePreference/><SettingsNavigation/>
+    <SettingsNavigation/><SetupGuidePreference/>
   </AppShell>;
 }
 
 export function AccountSettingsPage() {
+  const access=usePageAccess();
 
   const [profileName,setProfileName]=useState("");
   const [firstName,setFirstName]=useState("");
@@ -128,6 +130,12 @@ export function AccountSettingsPage() {
         <FormActions sheet><Button variant="secondary" onClick={()=>setEditing(false)}><LocalizedText>{"Abbrechen"}</LocalizedText></Button><Button requiresWrite disabled={loading||!!loadError||saving||avatarUploading} type="submit"><LocalizedText>{saving?"Wird gespeichert…":"Speichern"}</LocalizedText></Button></FormActions>
       </form></FormPage>:<section className="settings-readonly"><dl className="detail-list settings-master-data"><div><dt><LocalizedText>{"Name"}</LocalizedText></dt><dd>{displayName}</dd></div><div><dt><LocalizedText>{"E-Mail"}</LocalizedText></dt><dd><LocalizedText>{email||"Nicht hinterlegt"}</LocalizedText></dd></div><div><dt><LocalizedText>{"Telefon"}</LocalizedText></dt><dd><LocalizedText>{phone||"Nicht hinterlegt"}</LocalizedText></dd></div><div><dt><LocalizedText>{"Funktion"}</LocalizedText></dt><dd><LocalizedText>{jobTitle||"Nicht hinterlegt"}</LocalizedText></dd></div></dl></section>}
     </div>}
+    {!editing&&access.canOpen("/einstellungen/sicherheit")&&<SettingsGroup title="Sicherheit" hideTitle>
+      <div className="settings-list">
+        <ActionRow href="/einstellungen/sicherheit?accountReturn=%2Feinstellungen%2Fkonto" icon="lock" title="Sicherheit"/>
+        <ActionRow href="/einstellungen/sicherheit?accountReturn=%2Feinstellungen%2Fkonto#sitzungen" icon="clock" title="Sitzungen"/>
+      </div>
+    </SettingsGroup>}
     {toast&&<Toast title={toast} tone={["Persönliche Daten gespeichert.","Firmendaten gespeichert.","Profilbild gespeichert.","Firmenlogo gespeichert."].includes(toast)?"success":"danger"}/>}
   </AppShell>;
 }
@@ -412,12 +420,7 @@ const themeOptions=[
  {value:"dark",title:"Dunkel",description:"Dunkle Oberfläche",icon:"moon"},
 ] as const;
 export function AppearanceSettingsPage(){
- const [theme,setTheme]=useState<ThemeMode>("system"),[error,setError]=useState("");
- useEffect(()=>{
-  const sync=()=>{const mode=document.documentElement.dataset.themeMode;setTheme(mode==="light"||mode==="dark"?mode:"system")};
-  queueMicrotask(sync);window.addEventListener("binso-theme",sync);
-  return()=>window.removeEventListener("binso-theme",sync);
- },[]);
+ const theme=useThemePreference(),[error,setError]=useState("");
  const choose=(next:ThemeMode)=>{setError("");void saveTheme(next).catch(()=>setError("Darstellung konnte nicht gespeichert werden."))};
  return <AppShell title="Darstellung" subtitle="Binso One passt sich deiner Arbeitsweise an." active="einstellungen" backHref="/einstellungen" backLabel="Einstellungen">
   {error&&<ErrorState><LocalizedText>{error}</LocalizedText></ErrorState>}

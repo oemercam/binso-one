@@ -23,11 +23,12 @@ const runtime=async(orgId,userId,platform,fn)=>transaction(async c=>{
 globalThis.__passkey={s,jar,sent,runtime,appUrl:'https://fixture.invalid',createRace:null};
 const adapters={
  'server-only':uri(''),
+ 'lib/server/operator/entra.ts':uri('export const getEntraOperatorIdentity=async()=>globalThis.__passkey.operatorIdentity??null;'),
  'lib/server/rate-limit.ts':uri('export const enforceRateLimit=async()=>{};'),
  '@simplewebauthn/server':import.meta.resolve('@simplewebauthn/server'),
  'next/headers':uri('export const headers=async()=>new Headers();export const cookies=async()=>({get:n=>{const v=globalThis.__passkey.jar.get(n);return v&&{value:v.value}},set:(n,value,options)=>globalThis.__passkey.jar.set(n,{value,options}),delete:n=>globalThis.__passkey.jar.delete(n)});'),
  'next/server':uri('export class NextResponse{static json(data,options){return Response.json(data,options)}}'),
- 'lib/server/env.ts':uri('export const env={get appUrl(){return globalThis.__passkey.appUrl},appMode:"production",sessionTtlHours:168,sessionCookieName:"binso_session",appEncryptionKey:"isolated-passkey-test-only"};'),
+ 'lib/server/env.ts':uri('export const env={get appUrl(){return globalThis.__passkey.appUrl},appMode:"production",sessionTtlHours:168,sessionCookieName:"binso_session",operatorSessionCookieName:"binso_operator_session",appEncryptionKey:"isolated-passkey-test-only"};'),
  'lib/server/db.ts':uri('export const withPlatform=fn=>globalThis.__passkey.runtime(null,null,true,fn);export const withTenant=(org,user,fn)=>globalThis.__passkey.runtime(org,user,false,fn);export const withTransaction=fn=>globalThis.__passkey.runtime(globalThis.__passkey.s.organizationId,globalThis.__passkey.s.userId,false,fn);export const query=(sql,args)=>withTransaction(c=>c.query(sql,args));'),
  'lib/server/email.ts':uri('export const mailLayout=(title,body)=>title+body;export const sendMail=async mail=>{globalThis.__passkey.sent.push(mail);return {delivered:true}};'),
  'lib/server/registration.ts':uri('export const registrationHandoff=async(org,role,enabled)=>({next:enabled?"/dashboard":"/einstellungen/sicherheit?setup=1",mfaSetupRequired:!enabled});'),
@@ -202,5 +203,56 @@ try{
  await db.query("update organization_memberships set role='admin' where organization_id=$1 and user_id=$2",[org,user]);assert.equal((await memberPatch(user,{action:'deactivate'})).status,409,'Admins cannot suspend their own remaining access');
  await db.query("update organization_memberships set role='reader' where organization_id=$1 and user_id=$2",[org,user]);assert.equal((await memberPatch(normalUser,{role:'admin'})).status,403,'A downgraded actor cannot reuse an old admin session for privilege assignment');
  await db.query("update organization_memberships set role='owner' where organization_id=$1 and user_id=$2",[org,user]);
+ const operatorId='synthetic-operator-passkey',operatorEmail='operator-passkey@fixture.invalid';
+ const setupCode=randomBytes(32).toString('base64url'),entraToken='synthetic-entra-session';
+ const operatorIdentity={objectId:randomUUID(),tenantId:randomUUID(),role:'platform_owner'};
+ globalThis.__passkey.operatorIdentity=operatorIdentity;
+ await db.query(`insert into platform_operator_assignments(user_id,email,role,status,auth_source,entra_object_id,entra_tenant_id,passkey_password_hash,passkey_setup_hash,passkey_setup_expires_at)
+  values($1,$2,$3,'active','entra',$4,$5,$6,$7,now()+interval '30 minutes')`,[operatorId,operatorEmail,operatorIdentity.role,operatorIdentity.objectId,operatorIdentity.tenantId,passwordHash,hash(setupCode).toString('hex')]);
+ await db.query("insert into platform_auth_sessions(user_id,token_hash,expires_at) values($1,$2,now()+interval '1 hour')",[operatorId,hash(entraToken).toString('hex')]);
+ jar.set('binso_operator_session',{value:entraToken});
+ const operatorRoute=await import(await load('app/api/operator/login/route.ts'));
+ const operatorSessions=await import(await load('lib/server/operator/session.ts'));
+ const requestOperator=(body,origin)=>operatorRoute.POST(loginRequest('/api/operator/login',body,origin));
+ const beginOperator=(code,operatorPassword=password)=>requestOperator({action:'begin',email:operatorEmail,password:operatorPassword,setupCode:code});
+ const verifyOperator=response=>requestOperator({action:'verify',response});
+ const operatorKey=makeCredential();
+ const flags=['BINSO_OPERATOR_PASSKEY_SETUP','BINSO_OPERATOR_PASSKEY_LOGIN'];
+ const priorFlags=flags.map(flag=>process.env[flag]);
+ try{
+  for(const flag of flags)delete process.env[flag];
+  assert.equal((await beginOperator(setupCode)).status,404);
+  assert.equal((await operatorSessions.getOperatorSession())?.authSource,'entra');
+  process.env.BINSO_OPERATOR_PASSKEY_SETUP='true';
+  assert.equal((await requestOperator({action:'begin'},'https://foreign.invalid')).status,403);
+  assert.equal((await beginOperator(setupCode,'synthetic wrong password')).status,401);
+  assert.equal((await beginOperator(null)).status,403);
+  const prepared=await beginOperator(setupCode);
+  assert.equal(prepared.status,200);
+  const enrollment=await prepared.json();
+  assert.equal(enrollment.mode,'register');
+  assert.equal(enrollment.options.authenticatorSelection.userVerification,'required');
+  const response=registration(enrollment.options,{key:operatorKey});
+  assert.deepEqual(await (await verifyOperator(response)).json(),{ok:true,signedIn:false});
+  assert.equal((await verifyOperator(response)).status,400);
+  assert.equal(jar.get('binso_operator_session').value,entraToken,'Preparation must preserve the existing Entra session');
+  const attempt=(await (await beginOperator(null)).json()).options;
+  assert.deepEqual(await (await verifyOperator(authentication(attempt,{key:operatorKey}))).json(),{ok:true,signedIn:false});
+  assert.equal((await db.query('select count(*)::int n from platform_auth_sessions where user_id=$1',[operatorId])).rows[0].n,1);
+  process.env.BINSO_OPERATOR_PASSKEY_LOGIN='true';
+  assert.equal(await operatorSessions.getOperatorSession(),null,'Entra session cannot cross the passkey sign-in boundary');
+  const preparedSignIn=(await (await beginOperator(null)).json()).options;
+  assert.deepEqual(await (await verifyOperator(authentication(preparedSignIn,{key:operatorKey,counter:2}))).json(),{ok:true,signedIn:true});
+  assert.equal((await operatorSessions.getOperatorSession())?.authSource,'password_passkey');
+  process.env.BINSO_OPERATOR_PASSKEY_LOGIN='false';
+  assert.equal(await operatorSessions.getOperatorSession(),null,'Passkey session cannot cross the rollback boundary');
+  jar.set('binso_operator_session',{value:entraToken});
+  assert.equal((await operatorSessions.getOperatorSession())?.authSource,'entra');
+ }finally{
+  for(const [index,flag] of flags.entries()){
+   if(priorFlags[index]===undefined)delete process.env[flag];else process.env[flag]=priorFlags[index];
+  }
+ }
+ console.log('Operator passkeys: migrated database, password and one-time setup, signed proof, staged verification without a session, cutover and Entra rollback passed.');
  console.log('Passkey: real P-256 signatures, RP/origin/UV/challenge/counter/user-handle negatives, UV strong sessions without extra TOTP, password login without legacy enrollment gate, session-bound step-up, rename, last-method protection, email plus single-use recovery, RLS, replay/expiry, notices and revoke guards passed. Physical authenticators remain untested.');
 }finally{if(native)await db.end();else await db.close();delete globalThis.__passkey}

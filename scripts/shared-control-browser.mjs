@@ -2,19 +2,27 @@ import assert from 'node:assert/strict';
 
 // Owner-approved customer-detail material applies to these existing content owners.
 // Menus, forms, navigation chrome and public output keep their own geometry.
-export const contentGroupSelector=':is(.surface,.bo-workspace-section,.detail-card,.settings-readonly,.security-card,.monitoring-panel,.operator-payment-insight,.bo-statistics,.time-section,.desktop-record-table,.mobile-record-list,.customer-tab-panel,.employee-tab-panel,.project-tab-panel,.navigation-group,.bo-settings-group-body,.settings-form,.invoice-form,.bo-cash-trend,.document-detail-view,.form-page,.announcement-card,.context-block,.detail-list,.action-list,.plan-hero)';
+export const contentGroupSelector=':is(.surface,.bo-workspace-section,.detail-card,.settings-readonly,.security-card,.monitoring-panel,.operator-payment-insight,.bo-statistics,.time-section,.desktop-record-table,.mobile-record-list,.customer-tab-panel,.employee-tab-panel,.project-tab-panel,.navigation-group,.bo-settings-group-body,.settings-form,.invoice-form,.bo-cash-trend,.form-page,.announcement-card,.context-block,.detail-list,.action-list,.plan-hero)';
 
 export async function assertContentGroups(page){
  const groups=await page.evaluate(selector=>[...document.querySelectorAll(':is(.app-root,.operator-root) '+selector)].filter(el=>el.checkVisibility()).map(el=>{
   const css=getComputedStyle(el),nested=!!el.parentElement?.closest(selector);
-  return {name:el.className,nested,borders:[css.borderTopWidth,css.borderRightWidth,css.borderBottomWidth,css.borderLeftWidth],radius:css.borderRadius,padding:[css.paddingTop,css.paddingRight,css.paddingBottom,css.paddingLeft],navigation:el.matches('.navigation-group,.bo-settings-group-body,.action-list'),shadow:css.boxShadow};
+  return {name:el.className,nested,dashboard:el.matches('.app-root .bo-dashboard-overview .bo-workspace-section'),borders:[css.borderTopWidth,css.borderRightWidth,css.borderBottomWidth,css.borderLeftWidth],radius:css.borderRadius,padding:[css.paddingTop,css.paddingRight,css.paddingBottom,css.paddingLeft],navigation:el.matches('.navigation-group,.bo-settings-group-body,.action-list'),shadow:css.boxShadow};
  }),contentGroupSelector);
  for(const group of groups){
-  assert.ok(group.borders.every(value=>value===(group.nested?'0px':'1px')),'One card perimeter, no nested or doubled borders: '+JSON.stringify(group));
-  assert.equal(group.radius,group.nested?'0px':'16px','Shared customer-detail card radius: '+JSON.stringify(group));
+  assert.ok(group.borders.every(value=>value===(group.nested||group.dashboard?'0px':'1px')),'One card perimeter, no nested or doubled borders: '+JSON.stringify(group));
+  assert.equal(group.radius,group.nested?'0px':'22px','Shared customer-detail card radius: '+JSON.stringify(group));
   assert.deepEqual(group.padding,group.nested?['0px','0px','0px','0px']:group.navigation?['0px','16px','0px','16px']:['16px','16px','16px','16px'],'Shared customer-detail card inset: '+JSON.stringify(group));
   assert.equal(group.shadow,'none','Quiet shared card material');
  }
+ const documentCards=await page.locator('.document-detail-view[data-document-kind]').filter({visible:true}).evaluateAll(frames=>frames.flatMap(frame=>{
+  const outer=frame.getBoundingClientRect();
+  return [...frame.querySelectorAll(':scope > :is(.document-detail-section,.document-detail-index,.document-facts)')].map(card=>{
+   const inner=card.getBoundingClientRect();
+   return {left:inner.left-outer.left,right:outer.right-inner.right};
+  });
+ }));
+ for(const gap of documentCards)assert.ok(Math.abs(gap.left)<=1&&Math.abs(gap.right)<=1,'Document cards align with the document workspace: '+JSON.stringify(gap));
  const information=await page.locator('.document-summary-row.is-information[href]').evaluateAll(nodes=>nodes.filter(el=>el.checkVisibility()).map(el=>({label:el.textContent,icon:el.querySelector(':scope>svg')?.getBoundingClientRect().width,height:el.getBoundingClientRect().height,gap:getComputedStyle(el).columnGap,line:getComputedStyle(el,'::after').content==='none'?null:parseFloat(getComputedStyle(el,'::after').left),labelOffset:el.querySelector(':scope>b').getBoundingClientRect().left-el.getBoundingClientRect().left})));
  for(const row of information){
   assert.equal(row.icon,18,'Shared information navigation retains its existing 18px area icon: '+row.label);
@@ -30,7 +38,7 @@ export async function verifyContentGroupRegression(page){
  const card=page.locator(':is(.app-root,.operator-root) '+contentGroupSelector).filter({visible:true}).first();
  if(!await card.count())return;
  const original=await card.getAttribute('style');
- for(const [property,value,message] of [['border-width','2px',/One card perimeter/],['border-radius','7px',/Shared customer-detail card radius/],['padding-left','11px',/Shared customer-detail card inset/]]){
+ for(const [property,value,message] of [['border','2px solid currentColor',/One card perimeter/],['border-radius','7px',/Shared customer-detail card radius/],['padding-left','11px',/Shared customer-detail card inset/]]){
   try{await card.evaluate((el,{property,value})=>el.style.setProperty(property,value,'important'),{property,value});await assert.rejects(()=>assertContentGroups(page),message);}
   finally{await card.evaluate((el,value)=>value===null?el.removeAttribute('style'):el.setAttribute('style',value),original);}
  }
@@ -70,7 +78,7 @@ export async function measureMetricDividers(page){
 }
 
 export async function measureOpenSectionShapes(page){
- return page.evaluate(selector=>[...document.querySelectorAll('.page-container :is(.surface,.detail-card,.timer-card,.invoice-form)')].flatMap(el=>{const css=getComputedStyle(el),box=el.getBoundingClientRect();return box.width>0&&box.height>0&&!['hidden','collapse'].includes(css.visibility)?[{radius:css.borderRadius,expectedRadius:el.closest('.app-root,.operator-root')&&el.matches(selector)&&!el.parentElement?.closest(selector)?'16px':'0px'}]:[];}),contentGroupSelector);
+ return page.evaluate(selector=>[...document.querySelectorAll('.page-container :is(.surface,.detail-card,.timer-card,.invoice-form)')].flatMap(el=>{const css=getComputedStyle(el),box=el.getBoundingClientRect();return box.width>0&&box.height>0&&!['hidden','collapse'].includes(css.visibility)?[{radius:css.borderRadius,expectedRadius:el.closest('.app-root,.operator-root')&&el.matches(selector)&&!el.parentElement?.closest(selector)?'22px':'0px'}]:[];}),contentGroupSelector);
 }
 
 /** Real-browser countercases: detached snapshots, live borders and hidden tables. */
@@ -98,12 +106,12 @@ export async function verifyListFrameMeasurement(page){
 /** Current global UX audit: 48px fields, 14px desktop text and 16px mobile text (iOS focus zoom).
  * Textareas and checkbox/radio controls have their own semantic geometry. */
 export async function assertCanonicalClosedFields(page,route=''){
- const fields=await page.evaluate(()=>[...document.querySelectorAll('.form-field>.form-control:not(textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),.form-field .app-select-trigger')].flatMap(el=>{const css=getComputedStyle(el),box=el.getBoundingClientRect();return box.width>0&&box.height>0&&!['hidden','collapse'].includes(css.visibility)?[{height:box.height,padding:css.paddingLeft,radius:css.borderRadius,font:css.fontSize,mobile:matchMedia('(max-width:760px)').matches}]:[]}));
+ const fields=await page.evaluate(()=>[...document.querySelectorAll('.form-field>.form-control:not(textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),.form-field .app-select-trigger')].flatMap(el=>{const css=getComputedStyle(el),box=el.getBoundingClientRect();return box.width>0&&box.height>0&&!['hidden','collapse'].includes(css.visibility)?[{height:box.height,padding:css.paddingLeft,radius:css.borderRadius,font:css.fontSize,mobile:matchMedia('(max-width:760px)').matches,login:!!el.closest('.auth-workspace:is([data-layout=login],[data-layout=access])')}]:[]}));
  for(const geometry of fields){
-  assert.equal(geometry.height,48,route+': canonical closed field height');
+  assert.equal(geometry.height,geometry.login&&!geometry.mobile?52:48,route+': canonical closed field height');
   assert.equal(geometry.padding,'16px',route+': canonical field inset');
   assert.equal(geometry.radius,'12px',route+': canonical field radius');
-  assert.equal(geometry.font,geometry.mobile?'16px':'14px',route+': canonical field text');
+  assert.equal(geometry.font,(geometry.login||geometry.mobile)?'16px':'14px',route+': canonical field text');
  }
 }
 

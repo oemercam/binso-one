@@ -5,7 +5,7 @@ import {Children,cloneElement,isValidElement,Fragment,useEffect,useLayoutEffect,
 import {Button,FormActions,FormSection} from "./ui";
 
 /** Keeps every step mounted: a step change never changes drafts or navigation. */
-export function FormWizard({labels,step,onStep,children,action,cancelAction,busy=false,guided=true,backLabel="Zurück",nextLabel="Weiter",progressLabel,ariaLabel="Geführte Erfassung"}:{labels:string[];step:number;onStep:(step:number)=>void;children:ReactNode;action:ReactNode;cancelAction:ReactNode;busy?:boolean;guided?:boolean;backLabel?:string;nextLabel?:string;progressLabel?:(step:number,total:number,label:string)=>string;ariaLabel?:string}){
+export function FormWizard({labels,step,onStep,children,action,cancelAction,busy=false,guided=true,segmented=false,backLabel="Zurück",nextLabel="Weiter",progressLabel,ariaLabel="Geführte Erfassung"}:{labels:string[];step:number;onStep:(step:number)=>void;children:ReactNode;action:ReactNode;cancelAction:ReactNode;busy?:boolean;guided?:boolean;segmented?:boolean;backLabel?:string;nextLabel?:string;progressLabel?:(step:number,total:number,label:string)=>string;ariaLabel?:string}){
  const rootRef=useRef<HTMLDivElement>(null);
  const previousStep=useRef(step);
  useLayoutEffect(()=>{
@@ -53,7 +53,7 @@ export function FormWizard({labels,step,onStep,children,action,cancelAction,busy
   onStep(next);
  };
  return <LocalizedElement as="div" ref={rootRef} className="form-wizard" data-guided={guided?"true":undefined} aria-label={ariaLabel}>
-  {guided&&<div className="wizard-progress" role="status"><LocalizedText>{progressLabel?progressLabel(step+1,labels.length,labels[step]):`Schritt ${step+1} von ${labels.length} · ${labels[step]}`}</LocalizedText></div>}
+  {guided&&<div className="wizard-progress" data-segmented={segmented||undefined} role="status"><LocalizedText>{progressLabel?progressLabel(step+1,labels.length,labels[step]):`Schritt ${step+1} von ${labels.length} · ${labels[step]}`}</LocalizedText>{segmented&&<div className="wizard-segments" aria-hidden="true">{labels.map((label,index)=><span key={label} data-reached={index<=step||undefined}/>)}</div>}</div>}
   <div className="wizard-content">{Children.map(children,child=>guided&&isValidElement<{title?:string}>(child)&&child.type===FormSection&&child.props.title===labels[step]?cloneElement(child,{title:undefined}):child)}</div>
   <FormActions onClickCapture={event=>{
    const button=event.target instanceof Element?event.target.closest('button.button-primary'):null;

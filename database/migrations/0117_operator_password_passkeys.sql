@@ -1,7 +1,5 @@
 alter table platform_operator_assignments
-  drop constraint platform_operator_assignments_auth_source_check,
-  add constraint platform_operator_assignments_auth_source_check
-    check (auth_source in ('legacy', 'entra', 'password_passkey')),
+  add column passkey_password_hash text,
   add column passkey_setup_hash text,
   add column passkey_setup_expires_at timestamptz;
 

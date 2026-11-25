@@ -25,7 +25,7 @@ export async function verifyDocumentDiscountBrowser({page,context,base,navigate,
  const directory=route=>{const path=new URL(route.request().url()).pathname;return route.fulfill({json:path==='/api/customers'?{items:[{...customer,discount:5}]}:{item:{...customer,discount:5}}});};
  const handlers=[['**/api/documents',documents],['**/api/documents/*',documents],['**/api/customers?*',directory],['**/api/customers/'+customer.id,directory]];
  for(const [pattern,fn] of handlers)await context.route(pattern,fn);
- const openEdit=async()=>{await page.getByRole('button',{name:'Weitere Aktionen',exact:true}).filter({visible:true}).first().click();await page.getByRole('button',{name:'Bearbeiten',exact:true}).filter({visible:true}).click();};
+ const openEdit=async()=>{await page.getByRole('button',{name:'Bearbeiten',exact:true}).click();};
  const openPosition=async()=>{await page.locator('.document-position-row .document-position-open').first().click();return page.getByRole('dialog',{name:'Position bearbeiten',exact:true});};
  const global=async()=>{await page.getByRole('button',{name:'Gesamtrabatt',exact:true}).click();return page.getByRole('dialog',{name:'Gesamtrabatt',exact:true});};
  const apply=async sheet=>{await sheet.getByRole('button',{name:'Übernehmen',exact:true}).click();await sheet.waitFor({state:'hidden'});};
