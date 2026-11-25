@@ -25,7 +25,7 @@ for(const to of ['victim@fixture.invalid,other@fixture.invalid','victim@fixture.
 await assert.rejects(()=>renderMailMessage({...message,subject:'Injected\r\nBcc:other@fixture.invalid'},'sender@fixture.invalid'),/Invalid mail envelope/);
 await assert.rejects(()=>renderMailMessage(message,'not-an-email-guid'),/Invalid mail envelope/);
 await assert.rejects(()=>renderMailMessage({...message,text:''},'sender@fixture.invalid'),/Plain text and HTML/);
-globalThis.__mailMessageTest={env:{appMode:'production',graphTenantId:'synthetic-tenant',graphClientId:'synthetic-client',graphClientSecret:'synthetic-secret',graphSenderUserId:'sender@fixture.invalid'},logs:[]};
+globalThis.__mailMessageTest={env:{appMode:'production',appUrl:'https://fixture.invalid',graphTenantId:'synthetic-tenant',graphClientId:'synthetic-client',graphClientSecret:'synthetic-secret',graphSenderUserId:'sender@fixture.invalid'},logs:[]};
 const env=moduleUrl('export const env=globalThis.__mailMessageTest.env;'),logger=moduleUrl('export const log=(...args)=>globalThis.__mailMessageTest.logs.push(args);');
 const email=await import(await compile('lib/server/email.ts',{'./mail-message':rendererUrl,'@/lib/server/env':env,'@/lib/server/logger':logger}));
 let providerStatus=202;const requests=[],originalFetch=globalThis.fetch;
@@ -46,6 +46,10 @@ try{
   const html=email.mailLayout('Title <unsafe>','<p>Safe formatted body</p>',{label:'Action <unsafe>',url:'https://fixture.invalid/path?a=1&b=2'},locale);
   assert.ok(html.includes(`lang="${locale}"`));assert.ok(html.includes('color-scheme'));assert.ok(html.includes('prefers-color-scheme:dark'));assert.ok(html.includes('role="presentation"'));assert.ok(html.includes('Title &lt;unsafe&gt;'));assert.ok(!html.includes('href="javascript:'));
  }
+ const preheader='123456 & <preview>';
+ const preview=email.mailLayout('Verification','<p>Body</p>',undefined,'en',{preheader});
+ assert.match(preview,/123456 &amp; &lt;preview&gt;.*<p>Body<\/p>/s,'Escaped code preview precedes visible content');
+ assert.ok(preview.includes('alt="Binso One"'),'Preview-only options preserve the Binso logo');
  assert.throws(()=>email.mailLayout('Title','<p>Body</p>',{label:'Unsafe',url:'javascript:alert(1)'}),/Invalid mail action URL/);
  for(const entry of globalThis.__mailMessageTest.logs){assert.ok(!JSON.stringify(entry).includes(message.to));assert.ok(!JSON.stringify(entry).includes('synthetic-secret'));}
  console.log('Graph MIME: actual plain/HTML/PDF roundtrip, single-envelope/header guards, no file/URL transport, exact Graph 202, no retry/fallback, missing-config failure, localized Light/Dark template and safe logs passed. Real client rendering/delivery remains open.');
