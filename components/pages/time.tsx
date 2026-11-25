@@ -56,11 +56,21 @@ export function TimePage() {
   // A context reset stays in the same evaluation and retains its period/search.
   const [periodScope]=useState(projectFilter);
   const resetContext=(key:"projectId"|"customerId")=>{const params=new URLSearchParams(searchParams.toString());params.delete(key);params.delete("manual");params.set("tab","entries");router.replace("/zeit?"+params.toString(),{scroll:false});};
-  const [entryFilter,setEntryFilter]=useState(searchParams.has("invoice")?"Freigegeben":"Alle");
+  const ownPending=!reviewMode&&searchParams.get("own")==="1"&&searchParams.get("status")==="unapproved";
+  const [selectedStatus,setSelectedStatus]=useState(searchParams.has("invoice")?"Freigegeben":"Alle");
+  const entryFilter=ownPending?"Zu prüfen":selectedStatus;
+  const setEntryFilter=(status:string)=>{
+    setSelectedStatus(status);
+    if(!ownPending||status==="Zu prüfen")return;
+    const params=new URLSearchParams(searchParams.toString());
+    params.delete("own");
+    params.delete("status");
+    router.replace("/zeit?"+params.toString(),{scroll:false});
+  };
   const [entryQuery,setEntryQuery]=useState("");
   const [timeFilterOpen,setTimeFilterOpen]=useState(false);
   const [pendingStatus,setPendingStatus]=useState("Alle");
-  const [entryPeriod,setEntryPeriod,entryPeriodReady]=useStatisticPeriod('time-entries:'+String(employeeFilter??'')+':'+String(periodScope??'')+':'+String(reviewMode),null);
+  const [entryPeriod,setEntryPeriod,entryPeriodReady]=useStatisticPeriod('time-entries:'+String(employeeFilter??'')+':'+String(periodScope??'')+':'+String(reviewMode)+(ownPending?':own-pending':''),null);
   const entryBounds=entryPeriod&&statisticBounds(entryPeriod,businessDate());
   const entryFrom=entryBounds?.from??'',entryTo=entryBounds?.to??'';
   const [timeSaving,setTimeSaving]=useState(false);
@@ -105,7 +115,7 @@ export function TimePage() {
   const [debouncedEntryQuery,setDebouncedEntryQuery]=useState('');
   useEffect(()=>{const timer=window.setTimeout(()=>setDebouncedEntryQuery(entryQuery),180);return()=>window.clearTimeout(timer)},[entryQuery]);
   const entryFilters={projectId:timeTab==='timer'?timerProjectId:projectFilter,customerId:timeTab==='timer'?timerCustomer||null:customerFilter,query:timeTab==='entries'?debouncedEntryQuery:'',from:timeTab==='timer'?today:entryFrom,to:timeTab==='timer'?today:entryTo,status:timeTab==='entries'&&!reviewMode?entryFilter:'Alle'};
-  const scopeOptions={employeeId:employeeFilter,review:reviewMode,own:timeTab==='timer',internal:timeTab==='timer'&&!timerCustomer&&!timerProjectId,projectLabel:timeTab==='timer'&&!timerProjectId&&!['Arbeitszeit','Interne Planung'].includes(timerProject)?timerProject:undefined};
+  const scopeOptions={employeeId:employeeFilter,review:reviewMode,own:timeTab==='timer'||ownPending,internal:timeTab==='timer'&&!timerCustomer&&!timerProjectId,projectLabel:timeTab==='timer'&&!timerProjectId&&!['Arbeitszeit','Interne Planung'].includes(timerProject)?timerProject:undefined};
   const filterScope=timeEntryQuery(entryFilters,scopeOptions).toString();
   const [pagination,setPagination]=useState({scope:'',page:0});
   const timePage=pagination.scope===filterScope?pagination.page:0;
@@ -235,8 +245,8 @@ export function TimePage() {
 
     {employeeFilter&&<p role="status"><LocalizedText>{"Arbeitszeiten des ausgewählten Mitarbeiters · "}</LocalizedText><Link href="/zeit"><LocalizedText>{"Alle anzeigen"}</LocalizedText></Link></p>}
     {timeTab==="entries"&&<div className="toolbar time-filter-toolbar"><ListSearch ariaLabel="Zeiteinträge suchen" placeholder="Kunde, Mitarbeiter oder Tätigkeit suchen" value={entryQuery} onChange={setEntryQuery}/>{headerActions??<IconButton label="Zeitfilter" icon="filter" onClick={()=>{setPendingStatus(entryFilter);setTimeFilterOpen(true)}}/>}</div>}{timeTab==="entries"&&<><StatisticPeriodPicker period={entryPeriod} onChange={setEntryPeriod}/></>}
-    <FilterSheet label="Zeitfilter" open={timeFilterOpen} onClose={()=>setTimeFilterOpen(false)}><div className="sheet-body form-grid two">{!reviewMode&&<Field allowReadOnlyInput label="Status"><Select value={pendingStatus} onChange={e=>setPendingStatus(e.target.value)}>{["Alle","Erfasst","Eingereicht","Freigegeben","Zurückgewiesen","Verrechnet","Intern"].map(status=><option key={status} value={status}>{status}</option>)}</Select></Field>}</div><FormActions sheet><Button variant="secondary" onClick={()=>{setEntryQuery("");setEntryPeriod(null);setEntryFilter("Alle");setSelectedTimeIds([]);setTimeFilterOpen(false)}}><LocalizedText>{"Zurücksetzen"}</LocalizedText></Button><Button onClick={()=>{setEntryFilter(pendingStatus);setTimeFilterOpen(false)}}><LocalizedText>{"Anwenden"}</LocalizedText></Button></FormActions></FilterSheet>
-    {timeTab==="entries"&&!reviewMode&&entryFilter!=="Alle"&&<button className="filter-chip" type="button" onClick={()=>setEntryFilter("Alle")}>{entryFilter}<Icon name="close" size={14}/></button>}
+    <FilterSheet label="Zeitfilter" open={timeFilterOpen} onClose={()=>setTimeFilterOpen(false)}><div className="sheet-body form-grid two">{!reviewMode&&<Field allowReadOnlyInput label="Status"><Select value={pendingStatus} onChange={e=>setPendingStatus(e.target.value)}>{["Alle","Erfasst","Eingereicht","Freigegeben","Zurückgewiesen","Verrechnet","Intern","Zu prüfen"].map(status=><option key={status} value={status}>{status}</option>)}</Select></Field>}</div><FormActions sheet><Button variant="secondary" onClick={()=>{setEntryQuery("");setEntryPeriod(null);setEntryFilter("Alle");setSelectedTimeIds([]);setTimeFilterOpen(false)}}><LocalizedText>{"Zurücksetzen"}</LocalizedText></Button><Button onClick={()=>{setEntryFilter(pendingStatus);setTimeFilterOpen(false)}}><LocalizedText>{"Anwenden"}</LocalizedText></Button></FormActions></FilterSheet>
+    {timeTab==="entries"&&!reviewMode&&entryFilter!=="Alle"&&<button className="filter-chip" type="button" onClick={()=>setEntryFilter("Alle")}><LocalizedText>{ownPending?"Offene Zeiten":entryFilter}</LocalizedText><Icon name="close" size={14}/></button>}
     {timeTab==="entries"&&(projectFilter||customerFilter)&&<div className="records-active-filters" aria-live="polite">{projectFilter&&<div className="records-active-line"><span><LocalizedText>Auftrag</LocalizedText>{': '}{availableProjects.find(item=>item.id===projectFilter)?.name??<LocalizedText>Ausgewählter Auftrag</LocalizedText>}</span><button type="button" className="records-reset" aria-label={t('Auftragsfilter zurücksetzen')} onClick={()=>resetContext('projectId')}><LocalizedText>Zurücksetzen</LocalizedText></button></div>}{customerFilter&&<div className="records-active-line"><span><LocalizedText>Kunde</LocalizedText>{': '}{availableCustomers.find(item=>item.id===customerFilter)?.name??<LocalizedText>Ausgewählter Kunde</LocalizedText>}</span><button type="button" className="records-reset" aria-label={t('Kundenfilter zurücksetzen')} disabled={searchParams.has('invoice')} title={searchParams.has('invoice')?t('Für Rechnung festgelegt'):undefined} onClick={()=>resetContext('customerId')}><LocalizedText>Zurücksetzen</LocalizedText></button></div>}</div>}
     {mixedCustomers&&<ErrorState><LocalizedText>{"Bitte nur Zeiten eines Kunden für eine Rechnung auswählen."}</LocalizedText></ErrorState>}
 

@@ -26,10 +26,28 @@ export async function checkSchema(client,contract){
  if(unknown.length)throw Error('Unclassified application tables: '+unknown.join(', '));
 }
 export async function migrationFiles(){return (await fs.readdir('database/migrations')).filter(f=>f.endsWith('.sql')).sort();}
-export async function checkMigrationVersions(applied,{checksums=false}={}){
+export async function checkMigrationVersions(applied,{checksums=false,allowPending=false}={}){
  const map=new Map(applied.map(row=>[row.version,row]));
+ let complete=true;
  for(const version of await migrationFiles()){
-  const row=map.get(version);if(!row)throw Error('Required migration not applied: '+version);
-  if(checksums){const digest=createHash('sha256').update(await fs.readFile('database/migrations/'+version)).digest('hex');if(row.checksum!==digest)throw Error('Migration checksum mismatch: '+version);}
+  const row=map.get(version);
+  if(!row){
+   if(!allowPending)throw Error('Required migration not applied: '+version);
+   complete=false;
+   continue;
+  }
+  if(checksums){
+   const digest=createHash('sha256').update(await fs.readFile('database/migrations/'+version)).digest('hex');
+   if(row.checksum!==digest)throw Error('Migration checksum mismatch: '+version);
+  }
  }
+ return complete;
+}
+
+/** Return false only when the release has migrations still to apply. */
+export async function verifyAppliedMigrationState(client,contract){
+ const {rows}=await client.query('select version,checksum from public.schema_migrations');
+ if(!await checkMigrationVersions(rows,{checksums:true,allowPending:true}))return false;
+ await checkSchema(client,contract);
+ return true;
 }

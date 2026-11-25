@@ -176,7 +176,7 @@ export function OperatorPage({ section = "", identity, role="platform_owner" }: 
         {operatorNavGroups.map(group=>{const items=group.slugs.map(slug=>operatorNav.find(([candidate])=>candidate===slug)).filter((item):item is NonNullable<typeof item>=>Boolean(item&&["zahlungen","finanzen","abonnemente","sperrungen","ankuendigungen","sicherheit","audit"].includes(item[0])&&(canOpenOperatorSection(role,item[0]))));if(!items.length)return null;return <section className="navigation-sheet-group" key={group.label}><h3><LocalizedText>{group.label}</LocalizedText></h3><div className="action-list">{items.map(([slug,label,icon])=><ActionRow href={`/operator/${slug}`} key={slug} icon={icon} title={label} navigation onClick={()=>setMobileMore(false)}/>)}</div></section>})}
       </ActionSheet>
 
-      <div className="operator-app-content">{!allowed ? <EmptyState  title="Keine Berechtigung für diesen Bereich" description="Deine Adminrolle erlaubt diesen Zugriff nicht. Wende dich für eine passende Rolle an die Entra-Administration."/> : detail && key === "tickets" ? <TicketDetail ticketId={detail}/> :
+      <div className="operator-app-content">{!allowed ? <EmptyState  title="Keine Berechtigung für diesen Bereich" description="Deine Adminrolle erlaubt diesen Zugriff nicht. Wende dich für eine passende Rolle an die Administration."/> : detail && key === "tickets" ? <TicketDetail ticketId={detail}/> :
         detail && key === "kunden" ? <OperatorCustomerDetail tenantId={detail}/> :
         key === "tickets" ? <TicketsView/> :
         key === "kunden" ? <CustomersView/> :
@@ -206,7 +206,7 @@ function operatorSubtitle(key: string, detail: string) {
     sperrungen: "Einschränkungen kontrolliert verwalten.",
     monitoring: "Status der Plattform und abhängiger Services.",
     ankuendigungen: "Hinweise für Kunden veröffentlichen.",
-    sicherheit: "Interne Microsoft-Entra-Zugriffe, Rollen und Berechtigungen.",
+    sicherheit: "Interne Zugriffe, Rollen und Berechtigungen.",
     audit: "Kritische Operator-Aktionen nachvollziehen.",
   };
   return subtitles[key] ?? "Binso One Operator";
@@ -640,13 +640,14 @@ function SecurityView() {
  const {locale}=useLocale();
 
 
-  const resource=useApiQuery<{items:Array<Record<string,unknown>>}>("/api/operator/users");
+  const resource=useApiQuery<{items:Array<Record<string,unknown>>;source?:string}>("/api/operator/users");
   const items=resource.data?.items??[];
+  const local=resource.data?.source==="password_passkey";
   const roleLabel:Record<string,string>={platform_owner:'Plattform Owner',platform_admin:'Administrator',platform_support:'Support',platform_billing:'Finanzen',platform_auditor:'Audit'};
   const chips=['Alle','Aktiv','Inaktiv'];
-  const columns=[{label:'Benutzer',index:0},{label:'Rolle',index:1},{label:'Status',index:2,status:true},{label:'Synchronisiert',index:3}];
+  const columns=[{label:'Benutzer',index:0},{label:'Rolle',index:1},{label:'Status',index:2,status:true},{label:local?'Letzte Anmeldung':'Synchronisiert',index:3}];
   const controller=useRecordsController({placeholder:'Adminbenutzer suchen...',chips,columns});
-  const rows=items.map(item=>[String(item.display_name??item.email??''),roleLabel[String(item.role)]??String(item.role),item.active===true?'Aktiv':'Inaktiv',item.last_entra_sync_at?new Date(String(item.last_entra_sync_at)).toLocaleString(localeTags[locale],{dateStyle:'short',timeStyle:'short'}):'—',String(item.email??'')]);
+  const rows=items.map(item=>{const last=local?item.last_login_at:item.last_entra_sync_at;return [String(item.display_name??item.email??''),roleLabel[String(item.role)]??String(item.role),item.active===true?'Aktiv':'Inaktiv',last?new Date(String(last)).toLocaleString(localeTags[locale],{dateStyle:'short',timeStyle:'short'}):'—',String(item.email??'')];});
   const loading=resource.loading,loadError=resource.error,refresh=resource.refresh;
 
 
@@ -657,10 +658,10 @@ function SecurityView() {
 
   return <>
     <WorkspaceSection>
-      <SectionTitle title="Microsoft Entra Zugriffe"/>
-      <p className="technical-hint"><LocalizedText>{"Interne Identitäten, MFA und Rollen werden in Microsoft Entra ID verwaltet. Binso One zeigt hier nur die zuletzt synchronisierte Berechtigung."}</LocalizedText></p>
+      <SectionTitle title={local?"Adminbenutzer":"Microsoft Entra Zugriffe"}/>
+      {!local&&<p className="technical-hint"><LocalizedText>{"Interne Identitäten, MFA und Rollen werden in Microsoft Entra ID verwaltet. Binso One zeigt hier nur die zuletzt synchronisierte Berechtigung."}</LocalizedText></p>}
       <RecordsControls inline controller={controller} placeholder="Adminbenutzer suchen..." chips={chips} columns={columns}/>
-      <RecordsView controller={controller} items={rows} placeholder="Adminbenutzer suchen..." chips={chips} columns={columns} toolbarActions={false} showCount={false} countLabel="Adminbenutzer" emptyLabel={()=>'Noch keine Entra-Anmeldung'}>{row=><RecordRow compact title={row[0]} meta={[row[4],row[1],row[3]].join(' · ')} status={row[2]}/>}</RecordsView>
+      <RecordsView controller={controller} items={rows} placeholder="Adminbenutzer suchen..." chips={chips} columns={columns} toolbarActions={false} showCount={false} countLabel="Adminbenutzer" emptyLabel={()=>local?'Keine Einträge verfügbar':'Noch keine Entra-Anmeldung'}>{row=><RecordRow compact title={row[0]} meta={[row[4],row[1],row[3]].join(' · ')} status={row[2]}/>}</RecordsView>
     </WorkspaceSection>
 
   </>;

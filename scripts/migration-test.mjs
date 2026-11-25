@@ -1188,6 +1188,10 @@ try{
  const timeQueue=await manualTimeHandler.GET({nextUrl:new URL('https://fixture.invalid/api/time-entries?review=1')});
  assert.equal(timeQueue.status,200);assert.equal(timeQueue.data.items.length,reviewTotals.timeReviews,'Dashboard count matches the server-side time review queue');
  assert.ok(timeQueue.data.items.every(row=>row.created_by_user_id!==session.userId&&row.submitted_at&&!row.approved));
+ const ownPending=await manualTimeHandler.GET({nextUrl:new URL('https://fixture.invalid/api/time-entries?own=1&status=unapproved&limit=1')});
+ assert.equal(ownPending.status,200);
+ assert.equal(ownPending.data.total,reviewTotals.pending,'Dashboard own pending count matches the filtered list before pagination');
+ assert.ok(ownPending.data.items.every(row=>row.created_by_user_id===session.userId&&row.billable&&!row.approved&&!row.invoiced_invoice_id));
  const expenseQueue=await listApiBusiness(client,session,'expenses','review=1');
  assert.equal(Number(expenseQueue[0]?.total_count??0),reviewTotals.expenseReviews,'Dashboard count matches the server-side expense review queue');
  globalThis.__processSession={...session,role:'member'};
