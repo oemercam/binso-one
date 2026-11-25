@@ -1,3 +1,4 @@
+import {businessDate} from '@/lib/financial-status';
 import { NextRequest } from "next/server";
 import { ApiError, apiError, assertSameOrigin, cleanText, json, readJson } from "@/lib/server/http";
 import { tenantList, tenantUpdate, requireTenantFeature } from "@/lib/server/database";
@@ -29,7 +30,7 @@ export async function PATCH(request:NextRequest,{params}:{params:Promise<{id:str
     if(status&&!["draft","submitted","approved","rejected"].includes(status)) return json({error:"status_invalid",message:"Ungültiger Status."},400);
     const rows=await tenantUpdate("expenses",id,{
       ...(body.paymentKind===undefined?{}:{payment_kind:body.paymentKind}),
-      customer_id:cleanText(body.customerId,80)||null,billable:body.billable===true,employee_id:cleanText(body.employeeId,80)||null,merchant,expense_date:cleanText(body.expenseDate,20)||new Date().toISOString().slice(0,10),category:cleanText(body.category,120)||null,
+      customer_id:cleanText(body.customerId,80)||null,billable:body.billable===true,employee_id:cleanText(body.employeeId,80)||null,merchant,expense_date:cleanText(body.expenseDate,20)||businessDate(),category:cleanText(body.category,120)||null,
       amount,currency:cleanText(body.currency,3)||"CHF",vat_rate:vat,description:cleanText(body.description,2000)||null,status:status||"draft",
     });
     if(!rows[0]) return json({error:"not_found",message:"Spese wurde nicht gefunden."},404);
