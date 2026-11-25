@@ -51,9 +51,21 @@ assert.equal(graph.on.workflow_dispatch.inputs.send_self_test.default,false);
 const deploy=workflows['deploy-azure.yml'].jobs.deploy;
 const appRelease=workflows['deploy-production.yml'];
 for(const [file,workflow] of Object.entries(workflows)){
- if(file==='deploy-production.yml')continue;
+ if(file==='deploy-production.yml'||file==='pr-quality.yml')continue;
  assert(!workflow.on.push&&!workflow.on.pull_request,'Separate checks do not run on code changes: '+file);
 }
+const prQuality=workflows['pr-quality.yml'];
+assert.deepEqual(prQuality.on,{pull_request:{branches:['main']}});
+assert.deepEqual(prQuality.permissions,{contents:'read'});
+assert.deepEqual(Object.keys(prQuality.jobs),['contracts']);
+const prContract=prQuality.jobs.contracts;
+assert.equal(prContract.name,'PR quality contracts');
+assert.equal(prContract.environment,undefined);
+assert.equal(prContract.permissions,undefined);
+assert.equal(prContract.if,undefined);
+const prCheckout=prContract.steps.find(step=>step.uses?.startsWith('actions/checkout@'));
+assert.equal(prCheckout.with['persist-credentials'],false);
+assert(!/secrets\.|azure\/|deploy-production/.test(JSON.stringify(prQuality)),'PR checks cannot use deployment credentials or actions');
 assert.deepEqual(appRelease.on.push.branches,['main'],'Only main pushes trigger customer releases');
 assert.ok(appRelease.on.workflow_dispatch,'Manual retry remains available');
 assert.equal(appRelease.on.workflow_dispatch.inputs.deploy,undefined,'Customer releases do not require a manual approval input');

@@ -1,0 +1,29 @@
+name: PR quality
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-quality-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: PR quality contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node
+      - run: pnpm exec next typegen
+      - run: pnpm typecheck
+      - run: pnpm ux:contract
+      - run: node scripts/foundation-integration-test.mjs
+      - run: node scripts/workflow-safety-test.mjs
