@@ -19,7 +19,7 @@ für Tabellen, Sequenzen und neue Schemaobjekte. Die Lifecycle-Vorprüfung liest
 vier Zähler über `binso_release_control.preflight()`. Änderungen an bestehenden
 Views oder Funktionen, die einer anderen Rolle gehören, erfordern deren
 Eigentümer. Der einmalige Aufbau steht in
-[`enable-binso-one-migration-role.sql`](../database/operations/enable-binso-one-migration-role.sql).
+[`enable-binso-one-migration-role.sql`](operations/enable-binso-one-migration-role.sql).
 Infrastrukturänderungen folgen dem separaten Azure-Pfad. Nach dem App-Wechsel
 prüfen die öffentlichen Health-Endpunkte die veröffentlichte Version.
 
