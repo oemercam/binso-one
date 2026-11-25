@@ -7,6 +7,15 @@ export class PreflightBlocked extends Error{constructor(counts){super('Read-only
 export async function singleCompanyPreflight(client){
  const sql=await fs.readFile(new URL('../database/operations/single-company-preflight.sql',import.meta.url),'utf8');
  let result;try{result=await client.query(sql);}finally{await client.query('rollback');}
+ return preflightCounts(result);
+}
+async function privateSlotPreflight(client){
+ await client.query('begin read only');
+ try{
+  return preflightCounts(await client.query('select * from binso_release_control.preflight()'));
+ }finally{await client.query('rollback');}
+}
+function preflightCounts(result){
  const rows=(Array.isArray(result)?result:[result]).flatMap(item=>item.rows??[]),counts={};
  for(const key of keys){const values=rows.filter(row=>Object.hasOwn(row,key));const raw=values[0]?.[key],n=Number(raw);if(values.length!==1||!(typeof raw==='number'||typeof raw==='string'&&/^[0-9]+$/.test(raw))||!Number.isSafeInteger(n)||n<0)throw new Error('Incomplete lifecycle preflight metadata');counts[key]=n;}
  if(keys.some(key=>counts[key]!==0))throw new PreflightBlocked(counts);
@@ -28,6 +37,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   if(!process.env.DATABASE_URL)throw new Error('Database connection unavailable');
   pool=new pg.Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:true},connectionTimeoutMillis:10000,statement_timeout:30000,query_timeout:45000,max:1});client=await pool.connect();
   if(process.argv[2]==='--diagnose-ownerless')console.log({ownerlessCompanyDiagnostic:'read_only',items:await ownerlessCompanyDiagnostic(client),note:'Legacy seed identity match is not proof of disposable data. No mutation or preflight exception.'});
+  else if(process.argv[2]==='--private-slot')console.log({lifecyclePreflight:'passed',counts:await privateSlotPreflight(client)});
   else{if(process.argv.length>2)throw new Error('Unknown preflight argument');console.log({lifecyclePreflight:'passed',counts:await singleCompanyPreflight(client)});}
  }catch(error){console.error({lifecyclePreflight:'blocked',...(error instanceof PreflightBlocked?{counts:error.counts}:{reason:'Connection, metadata or unrestricted read authorization unavailable'})});process.exitCode=1;
  }finally{client?.release();await pool?.end();}
