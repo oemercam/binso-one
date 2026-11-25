@@ -10,7 +10,10 @@ Geplante Produktionsüberwachung läuft unabhängig vom Release.
 Schemaänderungen laufen vor dem App-Wechsel über den vorhandenen Azure-Slot
 `db-migrations` im privaten Netz. GitHub meldet sich per OIDC am Azure-Slot an.
 Der Slot verwendet seine eigene verwaltete Identität für PostgreSQL. Der
-Nur-Lese-Probeauftrag verifiziert den Zugriff auf die Migrationshistorie.
+Nur-Lese-Probeauftrag verifiziert den Zugriff auf die Migrationshistorie. Wenn
+alle erwarteten Migrationen bereits eingetragen sind, prüft der Release deren
+Datei-Prüfsummen und den vollständigen Schema- und RLS-Vertrag lesend. Offene
+Migrationen gehen weiter durch den bestehenden privaten Schreibpfad.
 Produktive Schemaänderungen setzen passende PostgreSQL-Rechte auf den
 betroffenen Objekten voraus.
 Infrastrukturänderungen folgen dem separaten Azure-Pfad. Nach dem App-Wechsel
