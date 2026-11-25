@@ -20,6 +20,10 @@ updates:
       time: "05:30"
       timezone: Europe/Zurich
     open-pull-requests-limit: 3
+    # Update the config and its version-specific pnpm patch together.
+    ignore:
+      - dependency-name: eslint-config-next
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
     groups:
       npm-kleinere-updates:
         update-types:
