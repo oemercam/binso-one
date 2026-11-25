@@ -40,7 +40,7 @@ try{
   await context.addInitScript(theme=>{localStorage.setItem('binso.theme.mode',theme);localStorage.setItem('binso.privacy.preferences.v1',JSON.stringify({essential:true,performance:false,updatedAt:'2026-10-10'}))},theme);
   const page=await context.newPage();await page.goto(base+'/registrieren?plan=business&billing=yearly');
   const sheet=page.getByRole('region',{name:'Binso One einrichten'});await sheet.waitFor();assert.equal(await page.getByRole('dialog').count(),0,'Registration is a real page, never an onboarding modal');
-  await sheet.locator('input[name="email"]').fill('synthetic-long-email@company.example.invalid');
+  await sheet.locator('input[name="username"]').fill('synthetic-long-email@company.example.invalid');
   await sheet.getByRole('button',{name:catalog.registrationText('next','de'),exact:true}).click();
   await sheet.locator('input[name="password"]').fill('Synthetic-Test-Password1!');
   await sheet.getByRole('button',{name:catalog.registrationText('next','de'),exact:true}).click();
@@ -66,8 +66,8 @@ try{
   }
   await page.goto(base+'/registrieren?lang='+locale);const sheet=page.getByRole('region',{name:t('title')});await sheet.waitFor();
   await sheet.getByRole('button',{name:t('cancel'),exact:true}).click();await page.waitForURL('**/preise*');assert.equal(await page.getByRole('alertdialog').count(),0,'Untouched setup closes without a discard prompt');
-  await page.goto(base+'/registrieren?lang='+locale);await sheet.waitFor();await sheet.locator('input[name="email"]').fill(syntheticEmail);await sheet.getByRole('button',{name:t('cancel'),exact:true}).click();const discard=page.getByRole('alertdialog',{name:t('leaveTitle')});await discard.waitFor();await discard.getByRole('button',{name:t('keep'),exact:true}).click();await sheet.getByRole('button',{name:t('cancel'),exact:true}).click();await discard.getByRole('button',{name:t('discard'),exact:true}).click();await page.waitForURL('**/preise*');await page.goto(base+'/registrieren?lang='+locale);await sheet.waitFor();assert.equal(await sheet.locator('input[name="email"]').inputValue(),'');
-  await sheet.locator('input[name="email"]').fill('invalid-email');await sheet.getByRole('button',{name:t('next'),exact:true}).click();assert.equal(await sheet.locator('input[name="email"]').evaluate(input=>input.validity.typeMismatch),true);await sheet.locator('input[name="email"]').fill(syntheticEmail);assert.equal(await sheet.locator('input[name="email"]').getAttribute('autocomplete'),'email');await sheet.getByRole('button',{name:t('next'),exact:true}).click();
+  await page.goto(base+'/registrieren?lang='+locale);await sheet.waitFor();await sheet.locator('input[name="username"]').fill(syntheticEmail);await sheet.getByRole('button',{name:t('cancel'),exact:true}).click();const discard=page.getByRole('alertdialog',{name:t('leaveTitle')});await discard.waitFor();await discard.getByRole('button',{name:t('keep'),exact:true}).click();await sheet.getByRole('button',{name:t('cancel'),exact:true}).click();await discard.getByRole('button',{name:t('discard'),exact:true}).click();await page.waitForURL('**/preise*');await page.goto(base+'/registrieren?lang='+locale);await sheet.waitFor();assert.equal(await sheet.locator('input[name="username"]').inputValue(),'');
+  await sheet.locator('input[name="username"]').fill('invalid-email');await sheet.getByRole('button',{name:t('next'),exact:true}).click();assert.equal(await sheet.locator('input[name="username"]').evaluate(input=>input.validity.typeMismatch),true);await sheet.locator('input[name="username"]').fill(syntheticEmail);assert.equal(await sheet.locator('input[name="username"]').getAttribute('autocomplete'),'username');await sheet.getByRole('button',{name:t('next'),exact:true}).click();
   await sheet.locator('input[name="password"]').fill('short');await sheet.getByRole('button',{name:t('next'),exact:true}).click();assert.equal(await sheet.locator('input[name="password"]').evaluate(input=>input.validity.tooShort),true);
   for (const incompletePassword of ['SyntheticPassword1', 'SyntheticPassword!']) {
    await sheet.locator('input[name="password"]').fill(incompletePassword);
@@ -76,7 +76,7 @@ try{
   }
   await sheet.locator('input[name="password"]').fill('Synthetic-Test-Password1!');
   await page.evaluate(()=>history.back());await discard.waitFor();await discard.getByRole('button',{name:t('keep'),exact:true}).click();await sheet.locator('input[name="password"]').waitFor({state:'visible'});
-  await sheet.getByRole('button',{name:t('back'),exact:true}).click();assert.equal(await sheet.locator('input[name="email"]').inputValue(),syntheticEmail);await sheet.getByRole('button',{name:t('next'),exact:true}).click();assert.equal(await sheet.locator('input[name="password"]').inputValue(),'Synthetic-Test-Password1!');await sheet.getByRole('button',{name:t('next'),exact:true}).click();
+  await sheet.getByRole('button',{name:t('back'),exact:true}).click();assert.equal(await sheet.locator('input[name="username"]').inputValue(),syntheticEmail);await sheet.getByRole('button',{name:t('next'),exact:true}).click();assert.equal(await sheet.locator('input[name="password"]').inputValue(),'Synthetic-Test-Password1!');await sheet.getByRole('button',{name:t('next'),exact:true}).click();
   await sheet.locator('input[name="company"]').fill('Synthetic Company GmbH');await sheet.locator('input[name="firstName"]').fill('Synthetic');await sheet.locator('input[name="lastName"]').fill('Contact');await sheet.getByRole('checkbox').check();
   await assertReviewGeometry(sheet,page,locale);
   await sheet.getByRole('checkbox').uncheck();assert.equal(await sheet.getByRole('button',{name:t('create'),exact:true}).isDisabled(),true,'Consent remains mandatory before creation');
