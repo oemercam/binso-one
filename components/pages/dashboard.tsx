@@ -12,9 +12,9 @@ import {QuickCreateAction,ListRow,ActionRow} from '../binso-ux';
 import {CashOverview} from '../cash-statistics';
 import type {CashStatisticsData} from '@/lib/cash-statistics';
 import {useApiQuery} from '@/lib/client/use-api-query';
-import {financialStatus,formatCurrency} from '@/lib/financial-status';
+import {financialStatus} from '@/lib/financial-status';
 import {DocumentSummaryRow,type DocumentListItem} from '../document-list';
-import {SectionTitle,LoadingState,ErrorState,EmptyState} from '../ui';
+import {SectionTitle,LoadingState,ErrorState} from '../ui';
 export type DashboardData={setup?:SetupGuide|null;work?:{hours:number|null;pending:number|null;expenses:number|null;timeReviews?:number|null;expenseReviews?:number|null}|null;cash?:CashStatisticsData|null;canFinance?:boolean;canInvoices?:boolean;canPayments?:boolean;stats?:{customer_count:number|null;project_count?:number|null;employee_count?:number|null};invoices?:DocumentListItem[];attention?:DocumentListItem[];recent?:DocumentListItem[]};
 export function DashboardPage(){
  const query=useApiQuery<DashboardData>('/api/dashboard');
@@ -24,44 +24,55 @@ export function DashboardPage(){
 }
 export function DashboardOverview({data}:{data:DashboardData|undefined}){
  const translate=useTranslation(),access=usePageAccess();
- const attention=(data?.attention??[]).filter(item=>financialStatus(item)==='overdue');
- const hasOverview=data?.setup||data?.work||data?.stats||data?.cash||attention.length||data?.recent?.length||data?.invoices?.length;
- const recent=(data?.recent??data?.invoices??[]).slice(0,3);
- const work=data?.work,snapshot=data?.canFinance?data.cash?.financial?.snapshot:undefined;
- const pilotRows=pilotEnabled?[
-  {href:"/angebote?status=Versendet",title:"Angebote",value:undefined},
-  {href:"/projekte?status=Aktiv",title:"Laufende Aufträge",value:data?.stats?.project_count?.toString()},
-  {href:"/rechnungen?status=Offen",title:"Offene Rechnungen",value:snapshot?formatCurrency(Number(snapshot.open)+Number(snapshot.overdue)):undefined},
- ].filter(row=>access.canOpen(row.href)):[];
+ const canOpenInvoices=data?.canInvoices!==false&&access.canOpen('/rechnungen');
+ const canOpenTime=access.canOpen('/zeit');
+ const work=data?.work,stats=data?.stats;
+ const attention=canOpenInvoices?(data?.attention??[]).filter(item=>financialStatus(item)==='overdue'):[];
+ const attentionIds=new Set(attention.map(item=>item.id));
+ const recent=canOpenInvoices?(data?.recent??data?.invoices??[]).filter(item=>!attentionIds.has(item.id)&&financialStatus(item)!=='overdue').slice(0,3):[];
+ const companyRows=[
+  {href:'/kunden',title:'Kunden',value:stats?.customer_count},
+  {href:'/mitarbeiter',title:'Mitarbeiter',value:stats?.employee_count},
+  {href:'/projekte?status=Aktiv',title:'Laufende Aufträge',value:stats?.project_count},
+ ].filter(row=>row.value!=null&&access.canOpen(row.href));
  const taskRows=[
-  ...pilotRows,
-  ...(!pilotEnabled&&snapshot&&Number(snapshot.open)+Number(snapshot.overdue)>0?[{href:'/rechnungen?status=Offen',title:'Forderungen',value:formatCurrency(Number(snapshot.open)+Number(snapshot.overdue))}]:[]),
-  ...(snapshot&&Number(snapshot.overdue)>0?[{href:'/rechnungen?status=Überfällig',title:'Überfällig',value:formatCurrency(Number(snapshot.overdue))}]:[]),
-  ...(Number(work?.timeReviews)>0?[{href:'/zeit?tab=entries&review=1',title:'Zeitfreigaben',value:String(work!.timeReviews)}]:[]),
-  ...(Number(work?.expenseReviews)>0?[{href:'/spesen?status=Eingereicht&review=1',title:'Spesenfreigaben',value:String(work!.expenseReviews)}]:[])
- ];
+  {href:'/zeit?tab=entries&review=1',title:'Zeitfreigaben',value:work?.timeReviews},
+  {href:'/spesen?status=Eingereicht&review=1',title:'Spesenfreigaben',value:work?.expenseReviews},
+ ].filter(row=>Number(row.value)>0&&access.canOpen(row.href));
  const shortcuts=[
-  {href:"/kunden",title:"Kunden",icon:"users"},
-  {href:"/rechnungen",title:"Rechnungen",icon:"receipt"},
-  {href:"/zeit",title:"Zeiterfassung",icon:"clock"},
-  {href:"/support",title:"Support",icon:"help"},
- ].filter(row=>(row.href!=="/rechnungen"||data?.canInvoices!==false)&&access.canOpen(row.href));
- const tasks=<div className="bo-overview-task-grid">
-  {(pilotRows.length>0||work?.timeReviews!=null||work?.expenseReviews!=null||snapshot)&&<section className="bo-workspace-section"><SectionTitle title="Offene Aufgaben"/>{taskRows.length?taskRows.map(row=><ListRow information key={row.title} {...row} meta=""/>):<ListRow information title="Keine offenen Aufgaben" meta=""/>}</section>}
-  {attention.length>0&&<section className="bo-workspace-section"><SectionTitle title="Handlungsbedarf"/><div className="recent-invoices">{attention.map(item=><DocumentSummaryRow key={item.id} item={item} customerHeading compact/>)}</div></section>}
- </div>;
+  ...(companyRows.some(row=>row.href==='/kunden')?[]:[{href:'/kunden',title:'Kunden',icon:'users'}]),
+  ...(canOpenInvoices&&!recent.length?[{href:'/rechnungen',title:'Rechnungen',icon:'receipt'}]:[]),
+  {href:'/zeit',title:'Zeiterfassung',icon:'clock'},
+  {href:'/support',title:'Support',icon:'help'},
+ ].filter(row=>access.canOpen(row.href));
+ const canShowWork=canOpenTime&&(work?.hours!=null||Number(work?.pending)>0);
+ const tasks=(taskRows.length>0||attention.length>0)&&<section className="bo-workspace-section">
+  <SectionTitle title="Handlungsbedarf" action={attention.length===5?<Link href="/rechnungen?status=%C3%9Cberf%C3%A4llig"><LocalizedText>{'Überfällig'}</LocalizedText></Link>:undefined}/>
+  {taskRows.map(row=><ListRow information key={row.href} href={row.href} title={row.title} meta="" value={String(row.value)}/>)}
+  {attention.length>0&&<div className="recent-invoices">{attention.map(item=><DocumentSummaryRow key={item.id} item={item} customerHeading compact/>)}</div>}
+ </section>;
  const quickAccess=shortcuts.length>0&&<section className="bo-workspace-section">
-   <SectionTitle title="Schnellzugriff"/>
-   <div className="action-list">{shortcuts.map(row=><ActionRow key={row.href} {...row}/>)}</div>
-  </section>;
+  <SectionTitle title="Schnellzugriff"/>
+  <div className="action-list">{shortcuts.map(row=><ActionRow key={row.href} {...row}/>)}</div>
+ </section>;
+ const dashboardActions=<div className="bo-overview-task-grid">{tasks}{quickAccess}</div>;
  return <div className="bo-dashboard-overview">
   {data?.setup&&<SetupGuideView item={data.setup}/>}
-  {!hasOverview&&<section className="bo-workspace-section"><EmptyState title="Noch keine Geschäftsvorgänge vorhanden."/></section>}
-  {!pilotEnabled&&data?.canFinance&&data.cash?<CashOverview data={data.cash} dashboard afterMetrics={<>{quickAccess}{tasks}</>}/>:<>{quickAccess}{tasks}</>}
+  {!pilotEnabled&&data?.canFinance&&data.cash?<CashOverview data={data.cash} dashboard afterMetrics={dashboardActions}/>:dashboardActions}
   <div className="bo-overview-secondary">
-   {(data?.stats?.customer_count!=null||data?.stats?.project_count!=null||data?.stats?.employee_count!=null)&&<section className="bo-workspace-section"><SectionTitle title="Unternehmen"/>{data.stats.customer_count!=null&&<ListRow information href="/kunden" title="Kunden" meta="Sichtbarer Kundenbestand" value={String(data.stats.customer_count)}/ >}{data.stats.employee_count!=null&&<ListRow information href="/mitarbeiter" title="Mitarbeiter" meta="Aktive Mitarbeiter" value={String(data.stats.employee_count)}/ >}{!pilotEnabled&&data.stats.project_count!=null&&<ListRow information href="/projekte?status=Aktiv" title="Aufträge" meta="Aktive, berechtigte Aufträge" value={String(data.stats.project_count)}/>}</section>}
-   {work&&[work.hours,work.pending,work.expenses].some(value=>value!==null)&&<section className="bo-workspace-section"><SectionTitle title="Meine Arbeit"/>{work.hours!==null&&<ListRow information href="/zeit" title="Stunden" meta="Dieser Monat" value={formatTimeDuration(Number(work.hours)*60,translate)}/>}{work.pending!==null&&<ListRow information href="/zeit?tab=entries" title="Offene Zeiten" meta="Eigene Einträge" value={String(work.pending)}/>}{work.expenses!==null&&<ListRow information href="/spesen" title="Spesen" meta="Eigene Einträge" value={String(work.expenses)}/>}</section>}
+   {companyRows.length>0&&<section className="bo-workspace-section">
+    <SectionTitle title="Unternehmen"/>
+    {companyRows.map(row=><ListRow information key={row.href} href={row.href} title={row.title} meta="" value={String(row.value)}/>)}
+   </section>}
+   {canShowWork&&<section className="bo-workspace-section">
+    <SectionTitle title="Meine Arbeit"/>
+    {work?.hours!=null&&<ListRow information title="Stunden" meta="" valueLabel="Dieser Monat" value={formatTimeDuration(work.hours*60,translate)}/>}
+    {Number(work?.pending)>0&&<ListRow information href="/zeit?tab=entries&amp;own=1&amp;status=unapproved" title="Offene Zeiten" meta="Eigene Einträge" value={String(work?.pending)}/>}
+   </section>}
   </div>
-  {data?.canInvoices!==false&&recent.length>0&&<section className="bo-workspace-section"><SectionTitle title="Zuletzt bearbeitete Rechnungen" action={<Link href="/rechnungen"><LocalizedText>{'Alle anzeigen'}</LocalizedText></Link>}/>{recent.length?<div className="recent-invoices">{recent.map(item=><DocumentSummaryRow key={item.id} item={item} customerHeading compact/>)}</div>:<EmptyState title="Noch keine Geschäftsvorgänge vorhanden."/>}</section>}
+  {recent.length>0&&<section className="bo-workspace-section">
+   <SectionTitle title="Zuletzt bearbeitete Rechnungen" action={<Link href="/rechnungen"><LocalizedText>{'Alle anzeigen'}</LocalizedText></Link>}/>
+   <div className="recent-invoices">{recent.map(item=><DocumentSummaryRow key={item.id} item={item} customerHeading compact/>)}</div>
+  </section>}
  </div>;
 }
