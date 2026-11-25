@@ -24,8 +24,8 @@ export async function dashboardWork(c:PoolClient,s:SessionUser){
  const reviewer=['owner','admin','project_manager','manager'].includes(s.role);
  const params=[s.organizationId,s.userId];
  const time=canTime?(await c.query(`select coalesce(sum(hours) filter(where created_by_user_id=$2 and work_date>=date_trunc('month',now() at time zone 'Europe/Zurich')::date and work_date<=(now() at time zone 'Europe/Zurich')::date),0) hours,
- count(*) filter(where created_by_user_id=$2 and billable and not approved)::int pending,
- count(*) filter(where created_by_user_id<>$2 and billable and not approved and submitted_at is not null and invoiced_invoice_id is null)::int reviews
+ count(*) filter(where created_by_user_id=$2 and billable and not approved and invoiced_invoice_id is null)::int pending,
+ count(*) filter(where created_by_user_id<>$2 and not approved and submitted_at is not null and invoiced_invoice_id is null)::int reviews
  from time_entries where organization_id=$1 and archived_at is null`,params)).rows[0]:null;
  const expenses=canExpenses?(await c.query(`select count(*) filter(where created_by_user_id=$2 and status='submitted')::int pending,
  count(*) filter(where created_by_user_id<>$2 and status='submitted')::int reviews from expenses where organization_id=$1 and archived_at is null`,params)).rows[0]:null;
