@@ -8,6 +8,7 @@ on:
       - 'scripts/package-private-migrations.sh'
       - 'scripts/private-migration-*.mjs'
       - 'scripts/workflow-safety-test.mjs'
+      - 'scripts/ux-browser-test.mjs'
       - 'docs/**'
       - 'AGENTS.md'
       - '.github/workflows/**'
