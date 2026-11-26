@@ -31,14 +31,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          APP_NAME="binso-admin-prod"
+          APP_NAME="app-binso-one-prod"
+          APP_RG="rg-binso-one-prod"
           PG_NAME="binso-platform-db"
-
-          APP_RG="$(az resource list --name "$APP_NAME" --resource-type Microsoft.Web/sites --query "[0].resourceGroup" -o tsv)"
-          PG_RG="$(az resource list --name "$PG_NAME" --resource-type Microsoft.DBforPostgreSQL/flexibleServers --query "[0].resourceGroup" -o tsv)"
+          PG_RG="rg-binso-admin-prod"
           echo "App resource group: ${APP_RG:-NOT_FOUND}"
           echo "PostgreSQL resource group: ${PG_RG:-NOT_FOUND}"
-          test -n "$APP_RG"
 
           echo "=== App Service ==="
           az webapp show -g "$APP_RG" -n "$APP_NAME" --query "{name:name,state:state,httpsOnly:httpsOnly,kind:kind,location:location,identity:identity.type,clientAffinityEnabled:clientAffinityEnabled}" -o json
@@ -57,9 +55,13 @@ jobs:
           done
 
           echo "=== Production auth/mail readiness (no secret values) ==="
-          APP_SETTINGS_JSON="$(az webapp config appsettings list -g "$APP_RG" -n "$APP_NAME" -o json)"
-          node - "$APP_SETTINGS_JSON" <<'NODE'
-          const settings=JSON.parse(process.argv[2]);
+          umask 077
+          SETTINGS_FILE="$(mktemp)"
+          AUTH_FILE="$(mktemp)"
+          trap 'rm -f "$SETTINGS_FILE" "$AUTH_FILE"' EXIT
+          az webapp config appsettings list -g "$APP_RG" -n "$APP_NAME" -o json > "$SETTINGS_FILE"
+          node - "$SETTINGS_FILE" <<'NODE'
+          const settings=JSON.parse(require('node:fs').readFileSync(process.argv[2], 'utf8'));
           const map=Object.fromEntries(settings.map(x=>[x.name,x.value]));
           const present=name=>Boolean(String(map[name]??"").trim());
           const readiness={
@@ -91,65 +93,41 @@ jobs:
           echo "=== App Service Authentication v2 via ARM ==="
           SUBSCRIPTION_ID="$(az account show --query id -o tsv)"
           AUTH_V2_URL="https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$APP_RG/providers/Microsoft.Web/sites/$APP_NAME/config/authsettingsV2/list?api-version=2023-12-01"
-          AUTH_FILE="$(mktemp)"
-          trap 'rm -f "$AUTH_FILE"' EXIT
           az rest --method get --url "$AUTH_V2_URL" > "$AUTH_FILE"
           AUDIT_ENTRA_TENANT_ID="$(az webapp config appsettings list -g "$APP_RG" -n "$APP_NAME" --query "[?name=='OPERATOR_ENTRA_TENANT_ID'].value | [0]" -o tsv)" node scripts/azure-auth-check.mjs "$AUTH_FILE"
 
-          echo "=== PostgreSQL connection from configured App Service setting ==="
-          DATABASE_URL="$(az webapp config appsettings list -g "$APP_RG" -n "$APP_NAME" --query "[?name=='DATABASE_URL'].value | [0]" -o tsv)"
-          if [ -n "$DATABASE_URL" ]; then
-            echo "::add-mask::$DATABASE_URL"
-            PGCONNECT_TIMEOUT=10 PGSSLROOTCERT=system psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atc "select current_database(),current_user,version();" | sed -E 's/(PostgreSQL [0-9.]+).*/\1/'
-            echo "=== Runtime database privileges (no credentials) ==="
-            PGCONNECT_TIMEOUT=10 PGSSLROOTCERT=system psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select rolname,rolsuper,rolbypassrls,rolcreatedb,rolcreaterole from pg_roles where rolname=current_user;"
-            echo "=== Tenant table RLS inventory ==="
-            PGCONNECT_TIMEOUT=10 PGSSLROOTCERT=system psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select c.relname,c.relrowsecurity,c.relforcerowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and exists(select 1 from pg_attribute a where a.attrelid=c.oid and a.attname='organization_id' and not a.attisdropped) order by c.relname;"
-          else
-            echo "::error::DATABASE_URL is not configured; runtime isolation cannot be verified."
-            exit 1
-          fi
-
-          echo "=== PostgreSQL Flexible Servers visible to deployment identity ==="
-          az resource list --resource-type Microsoft.DBforPostgreSQL/flexibleServers --query "[].{name:name,resourceGroup:resourceGroup,location:location}" -o json
-          if [ -n "$PG_RG" ]; then
-            echo "=== PostgreSQL Flexible Server ==="
-            az postgres flexible-server show -g "$PG_RG" -n "$PG_NAME" --query "{name:name,state:state,version:version,location:location,publicNetworkAccess:network.publicNetworkAccess,delegatedSubnetResourceId:network.delegatedSubnetResourceId,privateDnsZoneArmResourceId:network.privateDnsZoneArmResourceId,authConfig:authConfig,backup:backup,highAvailability:highAvailability,storage:storage}" -o json
-            echo "=== PostgreSQL databases ==="
-            az postgres flexible-server db list -g "$PG_RG" -s "$PG_NAME" --query "[].name" -o tsv | sort
-          fi
+          echo "=== Private PostgreSQL and production readiness ==="
+          az postgres flexible-server show -g "$PG_RG" -n "$PG_NAME" -o json |
+            jq -e '.state == "Ready" and .network.publicNetworkAccess == "Disabled" and .backup.backupRetentionDays > 0'
+          az webapp show -g "$APP_RG" -n "$APP_NAME" -o json |
+            jq -e '.state == "Running" and .httpsOnly and (.virtualNetworkSubnetId | length > 0) and (.hostNames | index("one.binso.ch") != null)'
+          curl --fail --silent --show-error --max-time 30 https://one.binso.ch/api/health/ready |
+            jq -e '.status == "ready"'
+          echo "::notice::Application readiness passed. SQL role and RLS checks require a private-network session; this hosted audit does not certify those privileges."
 
           echo "=== Storage accounts in App resource group ==="
           az storage account list -g "$APP_RG" --query "[].{name:name,httpsOnly:enableHttpsTrafficOnly,minTlsVersion:minimumTlsVersion,publicNetworkAccess:publicNetworkAccess,allowBlobPublicAccess:allowBlobPublicAccess,kind:kind,sku:sku.name}" -o json
 
-          echo "=== Application Insights in App resource group ==="
-          az monitor app-insights component show --app "$APP_NAME" -g "$APP_RG" --query "{name:name,provisioningState:provisioningState,location:location}" -o json 2>/dev/null || echo "No App Insights component named $APP_NAME"
-          echo "=== Application Insights resources (any name) ==="
-          az resource list -g "$APP_RG" --resource-type Microsoft.Insights/components --query "[].{name:name,location:location}" -o json
-          echo "=== Metric alerts ==="
-          az monitor metrics alert list -g "$APP_RG" --query "[].{name:name,enabled:enabled,severity:severity,scopes:scopes}" -o json
-          echo "=== Scheduled query alerts ==="
-          az monitor scheduled-query list -g "$APP_RG" --query "[].{name:name,enabled:enabled,severity:severity}" -o json
-          echo "=== Alert action groups ==="
-          az monitor action-group list -g "$APP_RG" --query "[].{name:name,enabled:enabled}" -o json
-
-          if [ -z "$PG_RG" ]; then
-            echo "::error::Configured PostgreSQL resource is not visible; backup/network readiness remains unverified."
-            exit 1
-          fi
-
-      - name: Verify production monitoring gate
-        if: ${{ always() }}
-        shell: bash
-        run: bash scripts/production-monitoring-check.sh
-
-      - name: Verify restricted runtime database role
-        if: ${{ always() }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          RG="rg-binso-admin-prod"
-          DATABASE_URL="$(az webapp config appsettings list -g "$RG" -n binso-admin-prod --query "[?name=='DATABASE_URL'].value | [0]" -o tsv)"
-          test -n "$DATABASE_URL"
-          echo "::add-mask::$DATABASE_URL"
-          PGCONNECT_TIMEOUT=10 PGSSLROOTCERT=system psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f scripts/sql/runtime-role-check.sql
+          echo "=== Production Azure Monitor configuration ==="
+          APP_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$APP_RG/providers/Microsoft.Web/sites/$APP_NAME"
+          MONITOR_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$APP_RG/providers/Microsoft.Insights"
+          WORKSPACE_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$PG_RG/providers/Microsoft.OperationalInsights/workspaces/binso-admin-prod-logs"
+          ACTION_ID="$MONITOR_ID/actionGroups/binso-one-de-betriebsalarme"
+          az rest --method get --url "https://management.azure.com$APP_ID/providers/Microsoft.Insights/diagnosticSettings/migration-startup?api-version=2021-05-01-preview" |
+            jq -e --arg ws "$WORKSPACE_ID" '
+              .properties.workspaceId == $ws and
+              any(.properties.logs[]; .category == "AppServiceConsoleLogs" and .enabled) and
+              any(.properties.logs[]; .category == "AppServicePlatformLogs" and .enabled)'
+          az rest --method get --url "https://management.azure.com$ACTION_ID?api-version=2023-01-01" |
+            jq -e '.properties.enabled and any(.properties.logicAppReceivers[]; .name == "Deutsche BINSO One Betriebswarnmail")'
+          check_alert() {
+            local name="$1" metric="$2" operator="$3" threshold="$4" aggregation="$5"
+            az rest --method get --url "https://management.azure.com$MONITOR_ID/metricAlerts/$name?api-version=2018-03-01" |
+              jq -e --arg app "$APP_ID" --arg action "$ACTION_ID" --arg metric "$metric" \
+                --arg op "$operator" --argjson threshold "$threshold" --arg agg "$aggregation" '
+                .properties.enabled and .properties.scopes == [$app] and
+                any(.properties.actions[]; .actionGroupId == $action) and
+                any(.properties.criteria.allOf[]; .metricName == $metric and .operator == $op and .threshold == $threshold and .timeAggregation == $agg)'
+          }
+          check_alert alrt-binso-one-prod-http5xx Http5xx GreaterThan 10 Total
+          check_alert alrt-binso-one-prod-health HealthCheckStatus LessThan 80 Average
