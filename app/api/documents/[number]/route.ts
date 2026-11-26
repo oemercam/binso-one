@@ -76,7 +76,7 @@ export async function PATCH(request:NextRequest,{params}:{params:Promise<{number
       p_valid_until:kind==="offer"?(cleanText(body.validUntil,20)||null):null,
       p_vat_rate:Number(body.vatRate)||0,
       p_note:cleanText(body.note,4000)||null,
-      p_currency:cleanText(body.currency,3)||"CHF",
+      p_currency:typeof body.currency==="string"?(body.currency.trim()||"CHF"):(body.currency??"CHF"),
       p_items:items,
     });
     return json({item:result});

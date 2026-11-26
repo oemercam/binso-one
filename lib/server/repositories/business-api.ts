@@ -190,6 +190,12 @@ export async function mutateApiBusiness(c:PoolClient,s:SessionUser,operation:str
  const body={...args};delete body.p_idempotency_key;delete body.p_number;
  return idempotentBusiness(c,{organizationId:s.organizationId,userId:s.userId,operation:'document.create.'+args.p_kind,key:String(args.p_idempotency_key??''),body},()=>executeBusinessMutation(c,s,operation,mutationArgs(args)));
 }
+function isCalendarDay(value:unknown):value is string{
+ if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||value.startsWith('0000-'))return false;
+ const date=new Date(value+'T12:00:00Z');
+ return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value;
+}
+
 async function executeBusinessMutation(c:PoolClient,s:SessionUser,operation:string,args:Row):Promise<unknown>{
  if(operation==='create_payment_idempotent'){
   if(!tenantCan(s.role,'payments:write'))throw new ApiError(403,'forbidden','Keine Berechtigung.');
@@ -201,8 +207,8 @@ async function executeBusinessMutation(c:PoolClient,s:SessionUser,operation:stri
    return previous.rows[0].response_json;
   }
   const amount=Number(args.p_amount);if(typeof args.p_amount!=='number'||!Number.isFinite(amount)||amount<=0)throw new ApiError(400,'amount_invalid','Ungültiger Betrag.');
-  const paidOn=String(args.p_paid_on??''),paidDate=new Date(paidOn+'T12:00:00Z');
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(paidOn)||!Number.isFinite(paidDate.getTime())||paidDate.toISOString().slice(0,10)!==paidOn||paidOn>businessDate())throw new ApiError(400,'payment_date_invalid','Bitte ein gültiges Zahlungsdatum bis heute eingeben.');
+  const paidOn=String(args.p_paid_on??'');
+  if(!isCalendarDay(paidOn)||paidOn>businessDate())throw new ApiError(400,'payment_date_invalid','Bitte ein gültiges Zahlungsdatum bis heute eingeben.');
   const invoice=await c.query('select id,customer_id,total_amount,paid_amount,status from invoices where id::text=$1 and organization_id=$2 and archived_at is null for update',[args.p_invoice_id,s.organizationId]);
   const row=invoice.rows[0];if(!row||['draft','cancelled'].includes(row.status))throw new ApiError(400,'invoice_invalid','Bitte eine ausgestellte Rechnung auswählen.');
   // Existing dated advance receipts remain valid; never relabel their cash date
@@ -229,6 +235,9 @@ async function executeBusinessMutation(c:PoolClient,s:SessionUser,operation:stri
  }
  if(!['create_document_atomic','update_document_atomic'].includes(operation))throw new ApiError(400,'invalid_operation','Ungültige Aktion.');
  const invoice=args.p_kind==='invoice';if(!tenantCan(s.role,invoice?'invoices:write':'sales:write'))throw new ApiError(403,'forbidden','Keine Berechtigung.');
+ const deadline=invoice?args.p_due_date:args.p_valid_until;
+ if(!isCalendarDay(args.p_issue_date)||(deadline!=null&&!isCalendarDay(deadline)))throw new ApiError(400,'date_invalid','Bitte ein gültiges Datum eingeben.');
+ if(args.p_currency!=='CHF'&&args.p_currency!=='EUR')throw new ApiError(400,'currency_invalid','Ungültige Währung.');
  // Drafts do not require banking setup. Issue validates complete QR/payment data in document-process.
  if(operation==='create_document_atomic'){
   const year=businessDate().slice(0,4);
@@ -239,7 +248,6 @@ async function executeBusinessMutation(c:PoolClient,s:SessionUser,operation:stri
  }
  const table=invoice?'invoices':'quotes',numberColumn=invoice?'invoice_no':'quote_no',lineTable=invoice?'invoice_lines':'quote_lines',parentColumn=invoice?'invoice_id':'quote_id';
  const vat=Number(args.p_vat_rate);if(!Number.isFinite(vat)||vat<0||vat>100)throw new ApiError(400,'vat_invalid','Ungültiger MwSt.-Satz.');
- if(!['CHF','EUR'].includes(String(args.p_currency)))throw new ApiError(400,'currency_invalid','Ungültige Währung.');
  const found=await c.query('select id,discount from customers where id::text=$1 and organization_id=$2 and archived_at is null',[args.p_customer_id,s.organizationId]);
  if(!found.rowCount)throw new ApiError(400,'customer_invalid','Kunde wurde nicht gefunden.');
  let sourceQuoteId:string|null=null;
