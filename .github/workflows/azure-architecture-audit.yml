@@ -42,11 +42,14 @@ jobs:
           echo "App resource group: ${APP_RG:-NOT_FOUND}"
           echo "PostgreSQL resource group: ${PG_RG:-NOT_FOUND}"
 
-          echo "=== App Service ==="
-          az webapp show -g "$APP_RG" -n "$APP_NAME" --query "{name:name,state:state,httpsOnly:httpsOnly,kind:kind,location:location,identity:identity.type,clientAffinityEnabled:clientAffinityEnabled}" -o json
-          echo "=== App Service Authentication v2 via ARM ==="
           SUBSCRIPTION_ID="$(az account show --query id -o tsv)"
           APP_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$APP_RG/providers/Microsoft.Web/sites/$APP_NAME"
+          PG_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$PG_RG/providers/Microsoft.DBforPostgreSQL/flexibleServers/$PG_NAME"
+          echo "=== App Service ==="
+          az rest --method get --url "https://management.azure.com$APP_ID?api-version=2023-12-01" |
+            jq -e '.properties | .state == "Running" and .httpsOnly and (.virtualNetworkSubnetId | length > 0) and (.hostNames | index("one.binso.ch") != null)'
+
+          echo "=== App Service Authentication v2 via ARM ==="
           umask 077
           AUTH_FILE="$(mktemp)"
           trap 'rm -f "$AUTH_FILE"' EXIT
@@ -55,10 +58,8 @@ jobs:
           echo "::notice::App setting values and Graph credentials are outside this read-only audit. Use Microsoft Graph Mail Readiness for credential checks."
 
           echo "=== Private PostgreSQL and production readiness ==="
-          az postgres flexible-server show -g "$PG_RG" -n "$PG_NAME" -o json |
-            jq -e '.state == "Ready" and .network.publicNetworkAccess == "Disabled" and .backup.backupRetentionDays > 0'
-          az webapp show -g "$APP_RG" -n "$APP_NAME" -o json |
-            jq -e '.state == "Running" and .httpsOnly and (.virtualNetworkSubnetId | length > 0) and (.hostNames | index("one.binso.ch") != null)'
+          az rest --method get --url "https://management.azure.com$PG_ID?api-version=2024-08-01" |
+            jq -e '.properties | .state == "Ready" and .network.publicNetworkAccess == "Disabled" and .backup.backupRetentionDays > 0'
           curl --fail --silent --show-error --max-time 30 https://one.binso.ch/api/health/ready |
             jq -e '.status == "ready"'
           echo "::notice::Application readiness passed. SQL role and RLS checks require a private-network session; this hosted audit does not certify those privileges."
