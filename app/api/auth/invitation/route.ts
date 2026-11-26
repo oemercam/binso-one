@@ -6,6 +6,7 @@ import {ApiError,apiError,assertSameOrigin,cleanText,json,readJson} from "@/lib/
 import {withPlatform} from "@/lib/server/db";
 import {hashPassword,verifyPassword} from "@/lib/server/password";
 import {enforceRateLimit} from "@/lib/server/rate-limit";
+import {audit} from "@/lib/server/audit";
 const digest=(token:string)=>createHash("sha256").update(token).digest("hex");
 async function invitation(token:string,lock=false){
  if(!token||token.length>200)throw new ApiError(400,"invitation_invalid","Die Einladung ist ungültig oder abgelaufen.");
@@ -62,6 +63,7 @@ export async function POST(request:NextRequest){try{
   if(!updated.rowCount)throw new ApiError(409,"membership_changed","Die Teamzuordnung hat sich geändert.");
   await c.query("update organization_invitations set status='accepted' where id=$1",[inv.id]);
   await c.query("update auth_tokens set consumed_at=now() where id=$1",[row.id]);
+  await audit(c,{organizationId:row.organization_id,userId:row.user_id,action:'invitation.accepted',entityType:'invitation',entityId:inv.id,metadata:{role:inv.role,moduleProfile:inv.module_profile??'standard'}});
  });
  return json({ok:true});
 }catch(e){return apiError(e)}}
