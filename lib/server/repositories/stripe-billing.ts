@@ -66,7 +66,7 @@ async function processPaymentAdjustment(c:PoolClient,kind:'refund'|'dispute',id:
     (kind==='dispute'&&adjustment.livemode!==stripeLiveMode())||stripeId(adjustment.charge)!==chargeId||
     (stripeId(adjustment.payment_intent)&&stripeId(adjustment.payment_intent)!==intentId)||
     str(adjustment.currency).toUpperCase()!==currency||!Number.isSafeInteger(cents)||cents<=0||
-    cents>Number(charge.amount)||!occurredAt||!status||status.length>64)throw invalid();
+    (kind==='refund'&&cents>Number(charge.amount))||!occurredAt||!status||status.length>64)throw invalid();
  if(!/^pi_[a-zA-Z0-9]+$/.test(intentId))throw invalid();
  const page=await listPaidInvoicePayments(intentId);
  if(page.has_more||page.data.some(entry=>{
