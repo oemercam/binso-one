@@ -31,6 +31,9 @@ try{
    const guard=setTimeout(()=>launcher.kill('SIGKILL'),14000);
    const result=await ended;clearTimeout(guard);
    assert.equal(result.signal,null,test.name+' must finish through the launcher');assert.equal(result.code,test.expected,test.name+': '+logs);
+   const startup=logs.split(/\r?\n/).filter(line=>line.startsWith('{"category":"runtime_startup"')).map(line=>JSON.parse(line));
+   assert.deepEqual(startup.map(event=>event.phase),['launcher_started','scanner_bridge_skipped','node_spawn_requested','node_spawned']);
+   assert.ok(startup.every((event,index)=>Number.isInteger(event.launcherUptimeMs)&&event.launcherUptimeMs>=(startup[index-1]?.launcherUptimeMs??0)));
    if(test.timeout){assert.ok(performance.now()-start>=9900,'The normal grace period must be offered');assert.match(logs,/worker_timeout/);}
    for(let attempt=0;attempt<50;attempt++){try{process.kill(workerPid,0)}catch{workerPid=undefined;break}await wait(10)}
    assert.equal(workerPid,undefined,test.name+' cannot leave an orphan worker');

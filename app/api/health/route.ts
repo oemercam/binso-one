@@ -2,7 +2,17 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+let firstHealthResponse = true;
+
 export function GET() {
+  if (firstHealthResponse) {
+    firstHealthResponse = false;
+    console.info(JSON.stringify({
+      category: "runtime_startup",
+      phase: "health_response",
+      nodeUptimeMs: Math.round(process.uptime() * 1000),
+    }));
+  }
   return NextResponse.json(
     {
       status: "ok",
