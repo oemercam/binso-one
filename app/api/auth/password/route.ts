@@ -6,7 +6,7 @@ import { hashPassword, verifyPassword } from "@/lib/server/password";
 import {requireSession} from "@/lib/server/session";
 import {requireFreshAuthentication} from '@/lib/server/fresh-authentication';
 import {enforceRateLimit} from "@/lib/server/rate-limit";
-import { query,withTransaction } from "@/lib/server/db";
+import { query,withPlatform,withTransaction } from "@/lib/server/db";
 import {verifyTotp,consumeRecoveryCode,consumePasskeyRecoveryCode} from '@/lib/server/totp';
 import {decryptSecret} from '@/lib/server/crypto';
 import {queueSecurityNotice,deliverSecurityNotice} from '@/lib/server/security-notice';
@@ -30,7 +30,7 @@ export async function PATCH(request:NextRequest){
   }
   await enforceRateLimit(request,"password-reset",5,15*60_000);
   const hash=await hashPassword(password);
-  const recovered=await withTransaction(async client=>{
+  const recovered=await withPlatform(async client=>{
     const reset=await consumeAuthToken("password_reset",token,client);
     if(!reset?.user_id)throw new ApiError(400,"reset_invalid","Link ist ungültig oder abgelaufen.");
     const identity=(await client.query("select * from app_users where id=$1 and status='active' for update",[reset.user_id])).rows[0];
@@ -39,7 +39,9 @@ export async function PATCH(request:NextRequest){
     const memberships=(await client.query("select organization_id from organization_memberships where user_id=$1 and status='active'",[reset.user_id])).rows;
     if(memberships.length!==1)throw new ApiError(400,'reset_invalid','Link ist ungültig oder abgelaufen.');
     await client.query("select set_config('app.organization_id',$1,true)",[memberships[0].organization_id]);
-    const hasPasskey=!!(await client.query('select 1 from auth_passkeys where user_id=$1 and revoked_at is null',[reset.user_id])).rowCount;
+    // Passwords and recovery factors belong to the account. A passkey remains
+    // a required recovery factor even if its original membership is inactive.
+    const hasPasskey=!!(await client.query('select 1 from auth_passkeys where user_id=$1 and revoked_at is null limit 1',[reset.user_id])).rowCount;
     if(identity.mfa_enabled||hasPasskey){
       const code=typeof body.recoveryCode==='string'?body.recoveryCode.trim().slice(0,80):'';
       let verified=false;
@@ -51,6 +53,7 @@ export async function PATCH(request:NextRequest){
     if(!changed.rowCount)throw new ApiError(400,"reset_invalid","Link ist ungültig oder abgelaufen.");
     await client.query("delete from auth_sessions where user_id=$1",[reset.user_id]);
     await client.query('delete from auth_passkey_challenges where user_id=$1',[reset.user_id]);
+    await client.query("select set_config('app.platform_operator','false',true)");
     const owner={organizationId:memberships[0].organization_id,userId:reset.user_id,email:identity.email};
     const event=await queueSecurityNotice(client,owner,'auth.password_recovered','Das Passwort deines Binso One Kontos wurde wiederhergestellt und alle Sitzungen wurden abgemeldet. Falls du dies nicht veranlasst hast, kontaktiere den Support.');
     return {owner,event};
