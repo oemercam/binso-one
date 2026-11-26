@@ -18,6 +18,21 @@ export async function verifyBillingIntegration({db:database,load,request,current
  const line=(amount,part='fixed',extra={})=>({description:'Isolated V8 service',quantity:'1',unit:part==='time'?'Stunden':'Stück',unitPrice:String(amount),vatRate:0,billingPart:part,...extra});
  const create=async(b,key=randomUUID())=>{const r=request('POST',{kind:'invoice',customerId:customer,issueDate:'2026-10-27',dueDate:'2026-11-27',currency:'CHF',vatRate:0,items:[line(100)],...b},'https://example.invalid/api/documents');r.headers.set('idempotency-key',key);const response=await documents.POST(r);return {status:response.status,body:await response.json()};};
  const context=number=>({params:Promise.resolve({number})});
+ for(const [input,code] of [[{currency:'CHF-extra'},'currency_invalid'],[{issueDate:'today'},'date_invalid'],[{dueDate:'infinity'},'date_invalid'],[{dueDate:'2026-02-30'},'date_invalid'],[{kind:'offer',validUntil:'tomorrow'},'date_invalid']]){
+  const denied=await create(input);assert.equal(denied.status,400);assert.equal(denied.body.error,code);
+ }
+ const dated=await create({currency:'EUR',issueDate:'2026-10-27',dueDate:'2026-11-27',vatRate:8.1,items:[line(100,'fixed',{vatRate:8.1})]});
+ assert.equal(dated.status,201,JSON.stringify(dated.body));
+ const datedNumber=dated.body.item.number;
+ const reload=await detail.GET(request('GET',undefined,'https://example.invalid/api/documents/'+datedNumber),context(datedNumber));
+ const reloaded=(await reload.json()).item;
+ assert.equal(reload.status,200);
+ assert.deepEqual([reloaded.issue_date,reloaded.due_date,reloaded.currency,Number(reloaded.subtotal),Number(reloaded.vat_amount),Number(reloaded.total),reloaded.status],['2026-10-27','2026-11-27','EUR',100,8.1,108.1,'draft']);
+ const invalidEdit=request('PATCH',{kind:'invoice',customerId:customer,number:datedNumber,currency:'EUR',issueDate:'2026-10-27',dueDate:'infinity',vatRate:8.1,items:[line(100,'fixed',{vatRate:8.1})]},'https://example.invalid/api/documents/'+datedNumber);
+ invalidEdit.headers.set('idempotency-key',randomUUID());
+ const edited=await detail.PATCH(invalidEdit,context(datedNumber));
+ assert.equal(edited.status,400);assert.equal((await edited.json()).error,'date_invalid');
+
  const fixed=await create({billingTerms:terms('fixed',{amount:'100'}),billingContext:{procedure:'partial'},items:[line(40)]});assert.equal(fixed.status,201,JSON.stringify(fixed.body));
  const agreement=fixed.body.item.billing_agreement_id;
  const project=(await db.query("insert into projects(organization_id,external_id,name,customer_id,status,billing_agreement_id) values($1,gen_random_uuid()::text,'V8 fixed source',$2,'planned',$3) returning id",[org,customer,agreement])).rows[0].id;

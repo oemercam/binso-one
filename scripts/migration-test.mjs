@@ -453,6 +453,18 @@ try{
  // A stale cancellation event must use current provider state (still active).
  await globalThis.__provisionTest(c=>processStripeEvent(c,{id:'evt_stale',livemode:false,type:'customer.subscription.deleted',data:{object:{id:'sub_fixture',customer:'cus_fixture',status:'canceled'}}}));
  assert.equal((await db.query('select status from organization_subscriptions where organization_id=$1',[billingTenant.organizationId])).rows[0].status,'active');
+ const billingState=async()=> (await db.query('select s.status,o.status account_status from organization_subscriptions s join organizations o on o.id=s.organization_id where s.organization_id=$1',[billingTenant.organizationId])).rows[0];
+ authoritative={...authoritative,status:'past_due'};
+ await globalThis.__provisionTest(c=>processStripeEvent(c,{...invoiceEvent,id:'evt_payment_failed',type:'invoice.payment_failed'}));
+ assert.deepEqual(await billingState(),{status:'past_due',account_status:'read_only'});
+ assert.equal((await db.query("select count(*)::int n from platform_billing_payments where external_id='in_fixture'")).rows[0].n,1,'A payment failure does not create a payment or erase the earlier entry');
+ authoritative={...authoritative,status:'active'};
+ await globalThis.__provisionTest(c=>processStripeEvent(c,{...invoiceEvent,id:'evt_payment_recovered'}));
+ assert.deepEqual(await billingState(),{status:'active',account_status:'active'});
+ authoritative={...authoritative,status:'canceled',canceled_at:timestamp};
+ await globalThis.__provisionTest(c=>processStripeEvent(c,{id:'evt_canceled',livemode:false,type:'customer.subscription.deleted',data:{object:{id:'sub_fixture',customer:'cus_fixture'}}}));
+ assert.deepEqual(await billingState(),{status:'cancelled',account_status:'read_only'});
+ authoritative={...authoritative,status:'active',canceled_at:null};
  await db.query("update organizations set status='suspended' where id=$1",[billingTenant.organizationId]);
  await globalThis.__provisionTest(c=>processStripeEvent(c,{...invoiceEvent,id:'evt_suspended'}));
  assert.equal((await db.query('select status from organizations where id=$1',[billingTenant.organizationId])).rows[0].status,'suspended');
