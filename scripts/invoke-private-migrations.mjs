@@ -6,7 +6,7 @@ import {setTimeout as sleep} from 'node:timers/promises';
 const [input, ...extra] = process.argv.slice(2);
 if (!input || extra.length) throw new Error('Provide one migration archive');
 
-const slotScm = 'https://binso-admin-prod-db-migrations-fka9gjcycqezgffv.scm.switzerlandnorth-01.azurewebsites.net';
+const slotScm = 'https://app-binso-one-prod-db-migrations.scm.azurewebsites.net';
 const args = ['account', 'get-access-token', '--resource-type', 'arm', '--query', 'accessToken', '-o', 'tsv', '--only-show-errors'];
 const windows = process.platform === 'win32';
 const executable = windows ? 'cmd.exe' : 'az';
