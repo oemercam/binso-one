@@ -39,7 +39,7 @@ jobs:
           import json
           from pathlib import Path
 
-          profile = json.loads(Path(".binso/ci-profile.json").read_text(encoding="utf-8"))
+          profile = json.loads(Path("docs/ci-profile.json").read_text(encoding="utf-8"))
           assert profile["version"] == 1
           assert profile["profile"] in {"static", "backend", "critical", "tooling"}
           workflow = Path(profile["verificationWorkflow"])
