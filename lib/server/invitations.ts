@@ -39,14 +39,11 @@ export async function inviteUser(s:SessionUser,email:string,role:string,key:stri
    await c.query('select pg_advisory_xact_lock(hashtextextended($1,0))',['invitation.identity:'+email]);
    const existing=(await c.query('select id from app_users where lower(email)=lower($1) limit 1',[email])).rows[0];
    const userId=existing?.id??randomUUID();
-   if(existing)await c.query("select set_config('app.user_id',$1,true)",[userId]);
-   if(existing&&(await c.query("select 1 from organization_memberships where user_id=$1 and organization_id<>$2 limit 1",[userId,s.organizationId])).rowCount)throw new ApiError(409,'identity_unavailable','Diese Adresse kann für diese Einladung nicht verwendet werden. Bitte ein separates Konto mit eigener E-Mail verwenden.');
-   await c.query("select set_config('app.user_id',$1,true)",[s.userId]);
    if(!existing)await c.query("insert into app_users(id,email,display_name,status,password_hash) values($1,$2,$2,'invited',$3)",[userId,email,await hashPassword(randomBytes(48).toString('base64url'))]);
    const member=(await c.query('select status from organization_memberships where organization_id=$1 and user_id=$2 for update',[s.organizationId,userId])).rows[0];
    if(member?.status==='active')throw new ApiError(409,'already_member','Diese Person ist bereits im Team.');
    const id=randomUUID(),token=randomBytes(32).toString('base64url');
-   await c.query("insert into organization_invitations(id,organization_id,email,role,status,expires_at,created_by_user_id,module_profile) values($1,$2,$3,$4,'pending',now()+interval '7 days',$5,$6)",[id,s.organizationId,email,role,s.userId,moduleProfile]);
+   await c.query("insert into organization_invitations(id,organization_id,email,role,status,expires_at,created_by_user_id,module_profile,invited_user_id) values($1,$2,$3,$4,'pending',now()+interval '7 days',$5,$6,$7)",[id,s.organizationId,email,role,s.userId,moduleProfile,userId]);
    await c.query("insert into organization_memberships(organization_id,user_id,role,status,email,module_profile) values($1,$2,$3,'invited',$4,$5) on conflict(organization_id,user_id) do update set role=excluded.role,module_profile=excluded.module_profile,status='invited'",[s.organizationId,userId,role,email,moduleProfile]);
    await c.query("insert into auth_tokens(user_id,organization_id,email,token_hash,token_type,metadata,expires_at) values($1,$2,$3,$4,'invitation',$5::jsonb,now()+interval '7 days')",[userId,s.organizationId,email,createHash('sha256').update(token).digest('hex'),JSON.stringify({invitation_id:id})]);
    const url=env.appUrl+'/einladung?token='+encodeURIComponent(token)+'&lang='+locale;

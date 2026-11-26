@@ -883,8 +883,9 @@ try{
  await db.query('insert into organization_entitlements select * from jsonb_populate_record(null::organization_entitlements,$1::jsonb)',[JSON.stringify(quotaSnapshot)]);
  assert.equal((await team.GET()).data.capacityConfigured,true);
  const foreignInvite=await team.POST(inviteRequest('billing-probe@example.invalid','member','invitation-foreign-identity'));
- assert.equal(foreignInvite.status,409,'A foreign company account cannot be invited into another company');
- assert.equal((await db.query("select count(*)::int n from organization_invitations where organization_id=$1 and email='billing-probe@example.invalid'",[demo])).rows[0].n,0,'Foreign identity rejection leaves no pending invitation');
+ assert.equal(foreignInvite.status,201,'An existing identity can receive a second company invitation');
+ assert.ok((await db.query("select invited_user_id from organization_invitations where organization_id=$1 and email='billing-probe@example.invalid'",[demo])).rows[0].invited_user_id,'Invitation is bound to its intended user');
+ globalThis.__invitationMails.length=0;
  const atomicInvite=await team.POST(inviteRequest('atomic-invite@fixture.invalid','finance','invitation-atomic-fixture'));assert.equal(atomicInvite.status,201,JSON.stringify(atomicInvite));
  assert.equal((await team.POST(inviteRequest('atomic-invite@fixture.invalid','finance','invitation-atomic-fixture'))).data.id,atomicInvite.data.id);assert.equal(globalThis.__invitationMails.length,1,'A timeout replay does not send twice');
  assert.equal((await team.POST(inviteRequest('atomic-invite@fixture.invalid','reader','invitation-atomic-fixture'))).status,409,'A changed role cannot reuse a replay key');
@@ -1033,7 +1034,7 @@ try{
  // need room for the newly explicit, independent synthetic reviewers.
  await db.query("update organization_subscriptions set plan='professional' where organization_id=$1",[demo]);
  const passwords=dataModule((await fs.readFile('lib/server/password.ts','utf8')).replace('import "server-only";','').replace('"@/lib/password-policy"',JSON.stringify(passwordPolicy)));const {hashPassword}=await import(passwords);
- const invitationSource=(await fs.readFile('app/api/auth/invitation/route.ts','utf8')).replace('"@/lib/money"',JSON.stringify(moneyModule)).replace('"@/lib/server/http"',JSON.stringify(processHttp)).replace('"@/lib/server/db"',JSON.stringify(processDb)).replace('"@/lib/server/password"',JSON.stringify(passwords)).replace('"@/lib/password-policy"',JSON.stringify(passwordPolicy)).replace('"@/lib/server/rate-limit"',JSON.stringify(dataModule('export async function enforceRateLimit(){}')));
+ const invitationSource=(await fs.readFile('app/api/auth/invitation/route.ts','utf8')).replace('"@/lib/money"',JSON.stringify(moneyModule)).replace('"@/lib/server/http"',JSON.stringify(processHttp)).replace('"@/lib/server/db"',JSON.stringify(processDb)).replace('"@/lib/server/password"',JSON.stringify(passwords)).replace('"@/lib/password-policy"',JSON.stringify(passwordPolicy)).replace('"@/lib/server/audit"',JSON.stringify(audit)).replace('"@/lib/server/rate-limit"',JSON.stringify(dataModule('export async function enforceRateLimit(){}')));
  const invitationHandler=await import(dataModule(invitationSource));
  const {createHash}=await import('node:crypto');
  const seedInvitation=async(userId,email,status,password,token)=>{

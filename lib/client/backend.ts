@@ -1,7 +1,7 @@
 "use client";
 
 import {dataRevision,publishMutation} from "./data-events";
-import {invalidateClientSession,readClientSession} from "./session-cache";
+import {companyRequestHeaders,invalidateClientSession,readClientSession} from "./session-cache";
 
 export function isProductionBackendEnabled(){
   return true;
@@ -83,7 +83,8 @@ export function requestFreshAuthentication(action:string):Promise<void>{
 async function fetchApi(path:string,options:RequestInit={}):Promise<Response>{
   const revision=dataRevision([]);
   try{
-    const fetchOnce=()=>fetch(path,{...options,signal:options.signal??AbortSignal.timeout(options.method&&options.method!=="GET"?30000:15000)});
+    const requestHeaders=path.startsWith('/api/')?companyRequestHeaders(options.headers):options.headers;
+    const fetchOnce=()=>fetch(path,{...options,headers:requestHeaders,signal:options.signal??AbortSignal.timeout(options.method&&options.method!=="GET"?30000:15000)});
     const response=await fetchOnce();
     if(response.status===403&&(await response.clone().json().catch(()=>null))?.error==='fresh_authentication_required'){
       await requestFreshAuthentication(path.startsWith('/api/customers/merge')?'Kundendubletten zusammenführen':path.startsWith('/api/settings/team')?'Zugriffsrechte ändern':path.startsWith('/api/auth/')?'Sicherheitseinstellungen ändern':'Geschützte Einstellungen ändern');

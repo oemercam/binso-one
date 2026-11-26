@@ -51,7 +51,8 @@ export async function verifyInvitationContract({load,mock,db,org,other,act,reque
  transportAvailable=true;assert.equal((await again(failedOld,failedKey)).status,201);assert.equal(token(),failedToken,'Explicit same-key retry keeps the token and outbox');
  const pending=(await db.query("select id from organization_invitations where organization_id=$1 and email='synthetic-retry@example.invalid' and status='pending'",[org])).rows;assert.equal(pending.length,1);
  result=await resend.DELETE(request({},randomUUID(),'DELETE'),{params:Promise.resolve({id:pending[0].id})});assert.equal(result.status,200);assert.equal((await preview(failedToken)).status,400,'Revocation consumes the token too');
- as('owner');assert.equal((await create('dossier-foreign@example.invalid')).status,409,'An identity in another company is not invited into a second one');
+ as('owner');assert.equal((await create('dossier-foreign@example.invalid')).status,201,'An existing identity can receive an invitation from another company');
+ assert.equal((await db.query("select status from organization_memberships where organization_id=$1 and email='dossier-foreign@example.invalid'",[org])).rows[0].status,'invited','Sending an invitation grants no active access');
  const existingId=randomUUID(),password='Synthetic-existing-password-123!',hash=await load('lib/server/password.ts').hashPassword(password);
  await db.query("insert into app_users(id,email,display_name,status,password_hash) values($1,'synthetic-existing@example.invalid','Synthetic active','active',$2)",[existingId,hash]);
  result=await create('synthetic-existing@example.invalid');assert.equal(result.status,201);const existingToken=token();

@@ -6,6 +6,7 @@ import type {PDFDocumentProxy} from "pdfjs-dist";
 import {Icon, ErrorState, LoadingState} from "./ui";
 import {boundPdfZoom,pdfSwipePage} from '@/lib/pdf-gestures';
 import {useDialogFocus} from "./use-dialog-focus";
+import {companyRequestHeaders} from "@/lib/client/session-cache";
 
 function PdfPage({pdf,pageNumber,zoom}: {pdf:PDFDocumentProxy;pageNumber:number;zoom:number}) {
   const canvas=useRef<HTMLCanvasElement>(null);
@@ -112,7 +113,8 @@ export function DocumentModal({ title, onClose, pdfNumber, previewDraft, fileUrl
   useEffect(()=>{
     let active=true;
     const controller=new AbortController(),timeout=window.setTimeout(()=>controller.abort(),20000);
-    const source=fileBlob?Promise.resolve(fileBlob):fetch(fileUrl??(pdfNumber?"/api/documents/"+encodeURIComponent(pdfNumber)+"/pdf":"/api/documents/preview"),{...(fileUrl||pdfNumber?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:previewJson}),signal:controller.signal,cache:'no-store'}).then(async response=>{if(!response.ok)throw new Error("PDF konnte nicht geladen werden.");return response.blob()});
+    const path=fileUrl??(pdfNumber?"/api/documents/"+encodeURIComponent(pdfNumber)+"/pdf":"/api/documents/preview");
+    const source=fileBlob?Promise.resolve(fileBlob):fetch(path,{...(fileUrl||pdfNumber?{}:{method:"POST",body:previewJson}),headers:path.startsWith('/api/')?companyRequestHeaders(fileUrl||pdfNumber?undefined:{"Content-Type":"application/json"}):undefined,signal:controller.signal,cache:'no-store'}).then(async response=>{if(!response.ok)throw new Error("PDF konnte nicht geladen werden.");return response.blob()});
     source.then(blob=>{if(!active)return;window.clearTimeout(timeout);pdfFile.current=new File([blob],(fileName||pdfNumber||"Entwurf")+".pdf",{type:"application/pdf"});setPdfBlob(blob)}).catch(()=>{if(active)setPdfError("PDF konnte nicht geladen werden.")});
     return()=>{active=false;window.clearTimeout(timeout);controller.abort();pdfFile.current=null};
   },[pdfNumber,previewJson,fileUrl,fileBlob,fileName]);

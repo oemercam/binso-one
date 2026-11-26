@@ -158,15 +158,10 @@ try{
  // identity's other memberships without exposing them in the API response.
  await db.query("insert into organization_subscriptions(organization_id,plan,status) values($1,'starter','active')",[org]);
  await db.query('insert into organization_entitlements(organization_id,max_users) values($1,3)',[org]);
+ const invitations=await import(await load('lib/server/invitations.ts'));
  const foreign='passkey-foreign-member';
  await db.query("insert into app_users(id,email,display_name,status,password_hash,email_verified_at) values($1,'foreign-member@fixture.invalid','Synthetic foreign','active',$2,now())",[foreign,passwordHash]);
  await db.query("insert into organization_memberships(organization_id,user_id,email,role,status) values($1,$2,'foreign-member@fixture.invalid','member','active')",[other,foreign]);
- const invitations=await import(await load('lib/server/invitations.ts'));
- for(const status of ['active','suspended']){
-  await db.query('update organization_memberships set status=$3 where organization_id=$1 and user_id=$2',[other,foreign,status]);
-  await assert.rejects(()=>invitations.inviteUser(s,'foreign-member@fixture.invalid','member',randomUUID()),e=>e.code==='identity_unavailable','Historical foreign identities also require a separate email, not an implicit company transfer');
- }
- assert.equal((await db.query("select count(*)::int n from organization_invitations where organization_id=$1 and email='foreign-member@fixture.invalid'",[org])).rows[0].n,0);
  await invitations.inviteUser(s,'late-invitation@fixture.invalid','member',randomUUID());
  const invited=(await db.query("select id from app_users where email='late-invitation@fixture.invalid'")).rows[0].id;
  const link=new URL(sent.at(-1).text.split('Einladung annehmen: ')[1]),invitationToken=link.searchParams.get('token');
@@ -174,9 +169,10 @@ try{
  await db.query("insert into organization_memberships(organization_id,user_id,email,role,status) values($1,$2,'late-invitation@fixture.invalid','member','active')",[other,invited]);
  const invitationRoute=await import(await load('app/api/auth/invitation/route.ts'));
  const accepted=await invitationRoute.POST({headers:new Headers(),nextUrl:new URL('https://fixture.invalid/api/auth/invitation'),body:new Response(JSON.stringify({token:invitationToken,password})).body});
- const acceptedBody=await accepted.json();assert.equal(accepted.status,409,JSON.stringify(acceptedBody));assert.equal(acceptedBody.error,'identity_unavailable','Acceptance rechecks a foreign activation after invitation creation');
- assert.equal((await db.query('select status from organization_memberships where user_id=$1 and organization_id=$2',[invited,org])).rows[0].status,'invited','Denied acceptance preserves the pending identity and membership');
- assert.equal((await db.query("select consumed_at from auth_tokens where user_id=$1 and token_type='invitation'",[invited])).rows[0].consumed_at,null,'Denied acceptance does not burn the invitation token');
+ assert.equal(accepted.status,200,await accepted.clone().text());
+ const additional=(await db.query('select status,accepted_invitation_id from organization_memberships where user_id=$1 and organization_id=$2',[invited,org])).rows[0];
+ assert.equal(additional.status,'active');assert.ok(additional.accepted_invitation_id,'Only verified invitation acceptance grants the additional membership');
+ assert.ok((await db.query("select consumed_at from auth_tokens where user_id=$1 and token_type='invitation'",[invited])).rows[0].consumed_at);
  const metadataBoundary=(await db.query("select p.prosecdef,p.proconfig,(select count(*)::int from aclexplode(p.proacl) a where a.grantee=0 and a.privilege_type='EXECUTE') public_execute from pg_proc p where p.oid='public.read_invitation_organization(text,boolean)'::regprocedure")).rows[0];
  assert.equal(metadataBoundary.prosecdef,true);assert.equal(metadataBoundary.public_execute,0);assert.ok(metadataBoundary.proconfig.includes('search_path=pg_catalog, public, pg_temp'));
  assert.equal((await runtime(null,null,true,c=>c.query('select * from read_invitation_organization($1,false)',['0'.repeat(64)]))).rows.length,0,'A forged hash reveals no organization metadata');

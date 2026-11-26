@@ -120,7 +120,8 @@
     "0116_timer_calendar_days.sql",
     "0117_operator_password_passkeys.sql",
     "0118_document_operator_passkey_storage.sql",
-    "0119_platform_stripe_payment_adjustments.sql"
+    "0119_platform_stripe_payment_adjustments.sql",
+    "0120_verified_company_memberships.sql"
   ],
   "tables": [
     {
@@ -983,6 +984,11 @@
         },
         {
           "name": "passkey_verified",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "persistent",
           "type": "boolean",
           "required": true
         }
@@ -6588,6 +6594,11 @@
           "name": "module_profile",
           "type": "text",
           "required": true
+        },
+        {
+          "name": "invited_user_id",
+          "type": "text",
+          "required": false
         }
       ],
       "policies": [
@@ -6665,6 +6676,11 @@
           "name": "sensitive_grants_version",
           "type": "integer",
           "required": true
+        },
+        {
+          "name": "accepted_invitation_id",
+          "type": "uuid",
+          "required": false
         }
       ],
       "policies": [

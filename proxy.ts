@@ -3,7 +3,22 @@ import {asLocale,localeCookie,locales} from "./lib/locales/config";
 import { NextRequest, NextResponse } from "next/server";
 import {validOperatorSection} from './lib/operator-pages';
 import {isBudgetedApi,requireApiBudget} from './lib/server/api-budget';
-import {apiError} from './lib/server/http';
+import {ApiError,apiError} from './lib/server/http';
+import {companyContext,companyContextHeader,matchesCompanyContext} from './lib/server/company-context';
+
+const sharedAuthPaths=new Set(['/api/auth/login','/api/auth/session','/api/auth/register','/api/auth/invitation',
+ '/api/auth/password','/api/auth/recover','/api/auth/verify-email','/api/auth/resend-verification']);
+
+function enforceCompanyContext(request:NextRequest,token:string|undefined){
+ const path=request.nextUrl.pathname;
+ if(!path.startsWith('/api/')||sharedAuthPaths.has(path)||
+    /^\/api\/(operator|public|health|jobs|integrations|telemetry|demo)(\/|$)/.test(path)||
+    path==='/api/billing/webhook')return;
+ const context=companyContext(token),requestContext=request.headers.get(companyContextHeader);
+ if(!requestContext&&request.method==='GET'&&/^\/api\/files\/[a-f0-9-]{36}\/download$/i.test(path))return;
+ if(context&&!matchesCompanyContext(context,requestContext)||!context&&requestContext)
+  throw new ApiError(409,'company_context_changed','Die Sitzung wurde geändert. Bitte erneut versuchen.');
+}
 
 const protectedPrefixes=[
   "/dashboard","/kunden","/angebote","/rechnungen","/zahlungen","/produkte",
@@ -27,8 +42,10 @@ function routeProxy(request:NextRequest,headers:Headers){
 }
 
 export async function proxy(request:NextRequest){
+ const token=request.cookies.get(process.env.SESSION_COOKIE_NAME||'binso_session')?.value;
+ try{enforceCompanyContext(request,token);}catch(error){return apiError(error);}
  if(isBudgetedApi(request.nextUrl.pathname)){
-  try{await requireApiBudget(request.cookies.get(process.env.SESSION_COOKIE_NAME||'binso_session')?.value);return NextResponse.next();}catch(error){return apiError(error);}
+  try{await requireApiBudget(token);return NextResponse.next();}catch(error){return apiError(error);}
  }
  const requested=request.nextUrl.searchParams.get('lang');
  const explicit=locales.includes(requested as typeof locales[number]);

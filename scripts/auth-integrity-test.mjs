@@ -81,6 +81,7 @@ try{
  actualSession=await import(await load('lib/server/session.ts',true));
  const passwords=await import(await load('lib/server/password.ts')),totp=await import(await load('lib/server/totp.ts')),crypto=await import(await load('lib/server/crypto.ts'));
  const password='Synthetic-integrity-password-123',hash=await passwords.hashPassword(password),user='auth-integrity-fixture',org='00000000-0000-4000-8000-000000000099';
+ await query('update organizations set is_demo=false where id=$1',[org]);
  await query("insert into app_users(id,email,display_name,status,password_hash,email_verified_at) values($1,'integrity@fixture.invalid','Synthetic Auth','active',$2,now())",[user,hash]);
  await query("insert into organization_memberships(organization_id,user_id,email,role,status) values($1,$2,'integrity@fixture.invalid','owner','active')",[org,user]);
  const seedFreshSession=()=>query("insert into auth_sessions(id,user_id,organization_id,token_hash,expires_at,step_up_at) values('00000000-0000-4000-8000-000000000081',$1,$2,'synthetic-current-proof',now()+interval '1 hour',now()) on conflict(id) do update set step_up_at=now(),expires_at=now()+interval '1 hour'",[user,org]);

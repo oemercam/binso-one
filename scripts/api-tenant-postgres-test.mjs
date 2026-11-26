@@ -1,5 +1,6 @@
 import {verifyAdditionalHttpReads} from './api-additional-read-contracts.mjs';
 import {verifyConcurrentTrialExpiry} from './session-expiry-native-test.mjs';
+import {verifyCompanySwitch} from './company-switch-http-test.mjs';
 import assert from 'node:assert/strict';
 import {prepareHistoricalFixtureOwner} from './fixtures/template-access.mjs';
 import fs from 'node:fs/promises';
@@ -478,6 +479,7 @@ try{
  console.log('Native HTTP discounts: all eight roles, tenant boundary, manipulated total, validation, six parallel PATCH retries, key conflict and explicit unapplied customer proposal passed.');
  const ownRows=await get('/api/customers',cookies.get('0:owner')),foreignRows=await get('/api/customers',cookies.get('1:owner'));
  const ownIds=new Set(ownRows.data.items.map(item=>item.id));assert.ok(!foreignRows.data.items.some(item=>ownIds.has(item.id)));
+ await verifyCompanySwitch({base,pool,cookies,organizations});
  await verifyConcurrentTrialExpiry({base,pool,cookie:cookies.get('0:owner'),organizationId:organizations[0]});
  await pool.query("update auth_sessions set expires_at=now()-interval '1 second' where user_id='http-0-owner'");assert.equal((await get('/api/customers',cookies.get('0:owner'))).status,401,'Expired real database session is denied');
  console.log('Real HTTP + PostgreSQL: two isolated tenants, direct IDs in '+positive.join(', ')+', customer snapshot, legal same-number documents, all eight payment roles, operator boundary and actual session expiry passed. Synthetic sessions only.');

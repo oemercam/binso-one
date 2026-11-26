@@ -143,8 +143,9 @@ export async function finishPasskeyAuthentication(response:AuthenticationRespons
   // memberships; platform context is not a general membership-RLS bypass.
   await c.query("select set_config('app.user_id',$1,true)",[credential.user_id]);
   const identity=(await c.query<AuthRow>("select * from app_users where id=$1 and status='active' and email_verified_at is not null for update",[credential.user_id])).rows[0];
-  const memberships=(await c.query<{organization_id:string;role:SessionUser['role']}>("select organization_id,role from organization_memberships where user_id=$1 and status='active'",[credential.user_id])).rows;
-  if(!identity||memberships.length!==1||memberships[0].organization_id!==credential.organization_id)throw new ApiError(401,'invalid_credentials','Anmeldung nicht möglich.');
+  const memberships=(await c.query<{organization_id:string;role:SessionUser['role'];accepted_invitation_id:string|null}>("select organization_id,role,accepted_invitation_id from organization_memberships where user_id=$1 and status='active'",[credential.user_id])).rows;
+  const membership=memberships.find(row=>row.organization_id===credential.organization_id);
+  if(!identity||!membership||memberships.filter(m=>!m.accepted_invitation_id).length>1)throw new ApiError(401,'invalid_credentials','Anmeldung nicht möglich.');
   await c.query("select set_config('app.organization_id',$1,true)",[credential.organization_id]);
   const organization=(await c.query("select status,is_demo from organizations where id=$1",[credential.organization_id])).rows[0];
   if(!organization||organization.is_demo||!['active','trial','grace_period','read_only'].includes(organization.status))throw new ApiError(401,'invalid_credentials','Anmeldung nicht möglich.');
@@ -159,7 +160,7 @@ export async function finishPasskeyAuthentication(response:AuthenticationRespons
    if(!changed.rowCount)throw new ApiError(401,'unauthorized','Anmeldung erforderlich.');
   }
   if(s)await audit(c,{organizationId:credential.organization_id,userId:identity.id,action:'auth.fresh_confirmation',entityType:'auth_sessions',entityId:s.sessionId,metadata:{method:'passkey',userVerified:true}});
-  return {...identity,...memberships[0]};
+  return {...identity,...membership};
  });
  if(s)return {ok:true};
  await endDemoSession();

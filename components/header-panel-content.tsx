@@ -7,7 +7,10 @@ import {LocaleSwitcher} from "./locale-switcher";
 import {usePathname,useSearchParams} from "next/navigation";
 import {safeAppPath} from "@/lib/navigation";
 import {searchSources,type SearchItem} from "@/lib/search";
-import {useState} from "react";
+import {useRef,useState} from "react";
+import {apiPost,clearClientSession,hasPendingClientMutation} from '@/lib/client/backend';
+import {useApiQuery} from '@/lib/client/use-api-query';
+import {allowDraftNavigation} from './use-browser-back-guard';
 import {usePageAccess} from "@/lib/client/page-access";
 import {Avatar} from "./avatar";
 import {ActionRow,DetailTabs,SettingsGroup,ListSearch} from "./binso-ux";
@@ -55,13 +58,35 @@ export function NotificationPanel({items,loading,error,filter,onFilter,onRead,on
  </div>;
 }
 
-export function AccountPanel({profile,logoutBusy,onLogout,onClose}:{profile:{name:string;identity:string;avatar:string};logoutBusy:boolean;onLogout:()=>void;onClose:()=>void}){
+export function AccountPanel({profile,logoutBusy,hasDraft=false,onLogout,onClose}:{profile:{name:string;identity:string;avatar:string};logoutBusy:boolean;hasDraft?:boolean;onLogout:()=>void;onClose:()=>void}){
  const pathname=usePathname(),params=useSearchParams();
+ const companies=useApiQuery<{currentCompanyId:string;items:{id:string;name:string}[]}>('/api/auth/companies');
+ const [switching,setSwitching]=useState(false),[switchError,setSwitchError]=useState('');
+ const switchPending=useRef(false);
+ async function switchCompany(organizationId:string){
+  if(switchPending.current)return;
+  if(hasDraft||hasPendingClientMutation()){setSwitchError('Speichere oder verwirf zuerst deine offenen Änderungen.');return;}
+  switchPending.current=true;setSwitching(true);setSwitchError('');
+  try{
+   const result=await apiPost<{ok?:boolean}>('/api/auth/companies',{organizationId});
+   if(result.ok!==true)throw new Error('Der Firmenwechsel konnte nicht bestätigt werden.');
+   clearClientSession();allowDraftNavigation();window.location.replace('/dashboard');
+  }catch(error){
+   setSwitchError(error instanceof Error?error.message:'Der Firmenwechsel konnte nicht bestätigt werden.');
+   switchPending.current=false;setSwitching(false);
+  }
+ }
  const origin=safeAppPath(params.get("accountReturn"),pathname);
  const target=new URL(origin,"https://binso.invalid");target.searchParams.set("panel","account");
  const back=target.pathname+target.search;
  return <div className="account-sheet"><div className="account-sheet-profile"><Avatar name={profile.name} identity={profile.identity} src={profile.avatar} size="small"/><div><b><LocalizedText verbatim={!!profile.name}>{profile.name||"Persönliches Konto"}</LocalizedText></b><small><LocalizedText verbatim={!!profile.identity}>{profile.identity||"Persönliches Konto"}</LocalizedText></small></div></div>
-  <LocaleSwitcher persist="tenant"/><SettingsGroup title="Persönlich"><div>{settingsGroups[0].rows.filter(([href])=>href!=="/einstellungen/sprache").map(([href,icon,title])=><PanelLink key={href} href={href+"?accountReturn="+encodeURIComponent(back)} icon={icon} title={title} onClose={onClose}/>)}</div></SettingsGroup>
+  <LocaleSwitcher persist="tenant"/>
+  {companies.error&&<ErrorState onRetry={companies.refresh}>{companies.error}</ErrorState>}
+  {companies.data&&companies.data.items.length>1&&<SettingsGroup title="Firma wechseln">
+   {switchError&&<ErrorState>{switchError}</ErrorState>}
+   <div className="action-list">{companies.data.items.map(company=><ActionRow key={company.id} icon="building" verbatim title={company.name} current={company.id===companies.data?.currentCompanyId} disabled={switching||company.id===companies.data?.currentCompanyId} onClick={()=>void switchCompany(company.id)}/>)}</div>
+  </SettingsGroup>}
+  <SettingsGroup title="Persönlich"><div>{settingsGroups[0].rows.filter(([href])=>href!=="/einstellungen/sprache").map(([href,icon,title])=><PanelLink key={href} href={href+"?accountReturn="+encodeURIComponent(back)} icon={icon} title={title} onClose={onClose}/>)}</div></SettingsGroup>
   <SettingsGroup title="Sitzung"><div className="action-list"><PanelLink href={'/einstellungen/sicherheit?accountReturn='+encodeURIComponent(back)+'#sitzungen'} icon="lock" title="Sitzungen" onClose={onClose}/><ActionRow icon="logout" title={logoutBusy?"Wird abgemeldet…":"Abmelden"} disabled={logoutBusy} onClick={onLogout}/></div></SettingsGroup>
  </div>;
 }

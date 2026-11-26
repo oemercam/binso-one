@@ -37,7 +37,7 @@ import { ActionRow, ActionSheet, ActionsMenu, FormSheet,DetailDisclosure,MetricT
 import {DocumentModal} from "./pdf-preview";
 export {DocumentModal} from "./pdf-preview";
 import {Button, EmptyState, Field, Icon, IconButton, Toast, FormActions, Input, Select, Textarea, ErrorState, LoadingState, SectionTitle, Status} from "./ui";
-import {apiReadPost, apiGet, apiPatch, apiPost, apiDelete, isProductionBackendEnabled, useBackendMode } from "@/lib/client/backend";
+import {apiReadPost, apiGet, apiGetFile, apiPatch, apiPost, apiDelete, isProductionBackendEnabled, useBackendMode } from "@/lib/client/backend";
 
 type DocumentKind = "Rechnung" | "Angebot";
 
@@ -530,7 +530,11 @@ function DocumentPage({kind,existing=false,documentKey}:{kind:DocumentKind;exist
       {kind==="Angebot"&&draft.status==="accepted"&&tenantCan(documentRole,"invoices:write")&&<ActionRow href={draft.invoiceNumber?"/rechnungen/"+encodeURIComponent(draft.invoiceNumber):"/rechnungen/neu?sourceOffer="+encodeURIComponent(documentKey??draft.number)} icon="receipt" title={draft.invoiceNumber?"Rechnung öffnen":"Rechnung erstellen"}/>}
       {kind==="Angebot"&&draft.status==="accepted"&&draft.billingAgreementId&&draft.invoiceNumber&&tenantCan(documentRole,"invoices:write")&&<ActionRow href={"/rechnungen/neu?sourceOffer="+encodeURIComponent(documentKey??draft.number)+"&procedure=partial"} icon="receipt" title="Teilrechnung"/>}
       <ActionRow onClick={()=>{setMoreOpen(false);setPreview(true)}} icon="file" title="Vorschau" navigation/>
-      <ActionRow href={"/api/documents/"+encodeURIComponent(documentKey??draft.number)+"/pdf"} icon="file" title="PDF herunterladen"/>
+      <ActionRow icon="file" title="PDF herunterladen" onClick={()=>void apiGetFile("/api/documents/"+encodeURIComponent(documentKey??draft.number)+"/pdf","application/pdf").then(file=>{
+        const url=URL.createObjectURL(file.blob),anchor=document.createElement('a');
+        anchor.href=url;anchor.download=file.fileName??draft.number+'.pdf';anchor.click();
+        window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+      }).catch(error=>setActionError(error instanceof Error?error.message:'PDF konnte nicht geladen werden.'))}/>
       {canWrite&&!(kind==='Rechnung'&&draft.status==='draft')&&!['cancelled','declined','expired','revised'].includes(draft.status??'')&&<ActionRow disabled={demoDocument||actionBusy} onClick={()=>{recipientTouched.current=false;setRecipient(resolveCustomer(draft,directory)?.email??"");setMailSubject(translate(kind)+" "+draft.number);setMailMessage(translate(kind==="Angebot"?"Guten Tag\n\nIm Anhang findest du unser Angebot. Über den sicheren Link kannst du das Angebot prüfen und beantworten.\n\nFreundliche Grüsse":"Guten Tag\n\nIm Anhang findest du unsere Rechnung.\n\nFreundliche Grüsse"));setSendPurpose('document');setSendKey(crypto.randomUUID());setActionError(null);setMoreOpen(false);setSendOpen(true)}} icon="mail" title={demoDocument?'Versand in der Demo deaktiviert':'Per E-Mail senden'} navigation/>}
       {canWrite&&kind==='Angebot'&&presentation.displayStatus==='sent'&&<ActionRow icon="clock" title="Erinnerung" navigation onClick={()=>{setMoreOpen(false);setFollowupOpen(true)}}/>}
       {canWrite&&kind==='Rechnung'&&presentation.displayStatus==='overdue'&&<ActionRow disabled={demoDocument||actionBusy} onClick={()=>{setSendPurpose('reminder');setSendKey(crypto.randomUUID());setActionError(null);setMoreOpen(false);setSendOpen(true)}} icon="mail" title={demoDocument?'Versand in der Demo deaktiviert':'Zahlungserinnerung senden'} navigation/>}

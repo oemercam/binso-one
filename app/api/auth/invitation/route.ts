@@ -53,16 +53,19 @@ export async function POST(request:NextRequest){try{
   const capacityPlan=canonicalPlanId(capacity?.plan);
    if(!capacity||!capacityPlan)throw new ApiError(409,'user_limit','Das Benutzerlimit konnte nicht geprüft werden.');
    if(capacityReached(Number(capacity.occupied),effectiveUserLimit(capacityPlan,capacity.max_users)))throw new ApiError(409,'user_limit','Das Benutzerlimit ist erreicht.');
-  const user=(await c.query("select status,password_hash from app_users where id=$1 for update",[row.user_id])).rows[0];
+  const user=(await c.query("select status,password_hash,email from app_users where id=$1 for update",[row.user_id])).rows[0];
   await c.query("select set_config('app.user_id',$1,true)",[row.user_id]);
-  if((await c.query("select 1 from organization_memberships where user_id=$1 and organization_id<>$2 limit 1",[row.user_id,row.organization_id])).rowCount)throw new ApiError(409,'identity_unavailable','Diese Einladung kann mit diesem Konto nicht angenommen werden.');
+  if(!user||user.email.toLowerCase()!==String(row.email).toLowerCase()||
+    (inv.invited_user_id!==null&&inv.invited_user_id!==row.user_id)||
+    (inv.invited_user_id===null&&(await c.query("select 1 from organization_memberships where user_id=$1 and organization_id<>$2 limit 1",[row.user_id,row.organization_id])).rowCount))
+    throw new ApiError(409,'identity_unavailable','Diese Einladung kann mit diesem Konto nicht angenommen werden.');
   if(user.status==='active'){if(!await verifyPassword(password,user.password_hash))throw new ApiError(403,"credentials_invalid","Das bestehende Passwort stimmt nicht.");}
   else if(user.status==='invited'&&passwordHash)await c.query("update app_users set password_hash=$2,status='active',display_name=$3,first_name=coalesce($4,first_name),last_name=coalesce($5,last_name),email_verified_at=now(),updated_at=now() where id=$1",[row.user_id,passwordHash,structured?[firstName,lastName].join(' '):cleanText(b.name,200)||row.email,structured?firstName:null,structured?lastName:null]);
   else throw new ApiError(409,"account_unavailable","Dieses Konto kann nicht aktiviert werden.");
-  const updated=await c.query("update organization_memberships set status='active',role=$3,module_profile=$4 where organization_id=$1 and user_id=$2 and status='invited' returning user_id",[row.organization_id,row.user_id,inv.role,inv.module_profile??'standard']);
-  if(!updated.rowCount)throw new ApiError(409,"membership_changed","Die Teamzuordnung hat sich geändert.");
-  await c.query("update organization_invitations set status='accepted' where id=$1",[inv.id]);
+  await c.query("update organization_invitations set status='accepted',invited_user_id=$2 where id=$1",[inv.id,row.user_id]);
   await c.query("update auth_tokens set consumed_at=now() where id=$1",[row.id]);
+  const updated=await c.query("update organization_memberships set status='active',role=$3,module_profile=$4,accepted_invitation_id=$5 where organization_id=$1 and user_id=$2 and status='invited' returning user_id",[row.organization_id,row.user_id,inv.role,inv.module_profile??'standard',inv.id]);
+  if(!updated.rowCount)throw new ApiError(409,"membership_changed","Die Teamzuordnung hat sich geändert.");
   await audit(c,{organizationId:row.organization_id,userId:row.user_id,action:'invitation.accepted',entityType:'invitation',entityId:inv.id,metadata:{role:inv.role,moduleProfile:inv.module_profile??'standard'}});
  });
  return json({ok:true});

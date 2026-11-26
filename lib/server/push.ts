@@ -27,7 +27,7 @@ async function claimNext(device:Device):Promise<Claim|null>{
    join organization_memberships m on m.organization_id=p.organization_id and m.user_id=p.user_id and m.status='active'
    join organizations o on o.id=p.organization_id and o.status in ('active','trial','grace_period','read_only') and o.is_demo=false
    where p.id=$1 and p.disabled_at is null
-   and (select count(*) from organization_memberships all_m where all_m.user_id=p.user_id and all_m.status='active')=1`,[device.id])).rows[0];
+   and (select count(*) from organization_memberships all_m where all_m.user_id=p.user_id and all_m.status='active' and all_m.accepted_invitation_id is null)<=1`,[device.id])).rows[0];
   if(!sub)return null;
   if(sub.application_server_key!==pushConfiguration().publicKey){
    await c.query('update push_subscriptions set disabled_at=now() where id=$1',[sub.id]);return null;

@@ -89,26 +89,27 @@ Invertierung bleibt real zu prüfen; keine pauschale Dark-Mode-Garantie.
 
 ## Migration, Preflight und Rollback
 
-### Vorbereitung des Firmenwechsels
+### Firmenwechsel
 
-Ein Login soll mehrere Organisationen mit jeweils eigener Rolle und eigenem
+Ein Login kann mehrere Organisationen mit jeweils eigener Rolle und eigenem
 Modulprofil öffnen können. Jede Sitzung bleibt an genau eine Organisation
 gebunden. Eine bestätigte Einladung ist der Nachweis für eine zusätzliche
 Mitgliedschaft. Eine passende E-Mail-Adresse allein erteilt keinen Zugriff.
 
 Die Passwortwiederherstellung prüft bereits die Faktoren des gesamten Kontos
 und entfernt bei Erfolg alle Sitzungen und offenen Passkey-Challenges dieses
-Kontos. Die Firmenauswahl und der Wechsel benötigen einen eigenen Freigabestand.
-Der Wechsel muss eine neue Sitzung ausstellen, die alte Sitzung widerrufen und
-firmenbezogene Berechtigungen und Entwürfe neu laden. Eine Aktion aus einem
-älteren Tab muss bei abweichender Sitzungsbindung abgelehnt werden.
+Kontos. Die erste Anmeldung öffnet die älteste verfügbare Mitgliedschaft.
+Über Benutzerkonto → Firma wechseln lässt sich eine weitere Firma öffnen.
+Der Wechsel widerruft die bisherige Sitzung, übernimmt weder Passkey-Assurance
+noch eine frische Sicherheitsbestätigung und startet den Arbeitsbereich neu.
+Anfragen aus einem älteren Tab werden bei abweichender Sitzungsbindung abgelehnt.
 
-Die private Migration verwendet `binso_release_control.preflight()` mit den
-Einzelfirmen-Prüfungen. Vor der Freischaltung muss deren Nachfolger nachweislich
-bestätigte Zusatzmitgliedschaften von Alt-Konflikten unterscheiden. Die
-Prüfungen auf Firmen ohne Inhaber und Checkout-Konflikte gelten weiter.
-Der Freigabetest braucht zwei Firmen mit unterschiedlichen Rollen, eine dritte
-fremde Firma, eine gesperrte Mitgliedschaft und zwei parallele Browser-Tabs.
+Die private Migration verwendet `binso_release_control.preflight()` für
+Inhaber- und Checkout-Konflikte. Ab Migration 0120 ergänzt die Prüfung
+`company_membership_preflight()` die Unterscheidung zwischen bestätigten
+Zusatzmitgliedschaften und Alt-Konflikten. Der native HTTP-Test deckt zwei
+Firmen mit unterschiedlichen Rollen, eine fremde Firma und eine gesperrte
+Mitgliedschaft ab. Seine Chromium-Erweiterung prüft zwei parallele Browser-Tabs.
 
 0060 schützt neue aktive Mitgliedschaften, ohne bestehende Mehrfachzuordnungen
 zu löschen. 0061 erhält alte genehmigte Zeiten, sperrt aber neue Draft-Freigaben.
