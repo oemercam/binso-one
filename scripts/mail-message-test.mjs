@@ -25,7 +25,7 @@ for(const to of ['victim@fixture.invalid,other@fixture.invalid','victim@fixture.
 await assert.rejects(()=>renderMailMessage({...message,subject:'Injected\r\nBcc:other@fixture.invalid'},'sender@fixture.invalid'),/Invalid mail envelope/);
 await assert.rejects(()=>renderMailMessage(message,'not-an-email-guid'),/Invalid mail envelope/);
 await assert.rejects(()=>renderMailMessage({...message,text:''},'sender@fixture.invalid'),/Plain text and HTML/);
-globalThis.__mailMessageTest={env:{appMode:'production',appUrl:'https://fixture.invalid',graphTenantId:'synthetic-tenant',graphClientId:'synthetic-client',graphClientSecret:'synthetic-secret',graphSenderUserId:'sender@fixture.invalid',supportEmail:'help@fixture.invalid'},logs:[]};
+globalThis.__mailMessageTest={env:{appMode:'production',appUrl:'https://fixture.invalid',graphTenantId:'synthetic-tenant',graphClientId:'synthetic-client',graphClientSecret:'synthetic-secret',graphSenderUserId:'sender@fixture.invalid'},logs:[]};
 const env=moduleUrl('export const env=globalThis.__mailMessageTest.env;'),logger=moduleUrl('export const log=(...args)=>globalThis.__mailMessageTest.logs.push(args);');
 const email=await import(await compile('lib/server/email.ts',{'./mail-message':rendererUrl,'@/lib/server/env':env,'@/lib/server/logger':logger}));
 let providerStatus=202;const requests=[],originalFetch=globalThis.fetch;
@@ -44,7 +44,7 @@ try{
  globalThis.__mailMessageTest.env.graphClientSecret='';await assert.rejects(()=>email.sendMail(message),/nicht vollständig/);assert.equal(requests.length,before);
  for(const locale of ['de','en','fr','it','tr']){
   const html=email.mailLayout('Title <unsafe>','<p>Safe formatted body</p>',{label:'Action <unsafe>',url:'https://fixture.invalid/path?a=1&b=2'},locale);
-  assert.ok(html.includes(`lang="${locale}"`));assert.ok(html.includes('help@fixture.invalid'));assert.ok(html.includes('color-scheme'));assert.ok(html.includes('prefers-color-scheme:dark'));assert.ok(html.includes('role="presentation"'));assert.ok(html.includes('Title &lt;unsafe&gt;'));assert.ok(!html.includes('href="javascript:'));
+  assert.ok(html.includes(`lang="${locale}"`));assert.ok(html.includes('info@binso.ch'));assert.ok(html.includes('color-scheme'));assert.ok(html.includes('prefers-color-scheme:dark'));assert.ok(html.includes('role="presentation"'));assert.ok(html.includes('Title &lt;unsafe&gt;'));assert.ok(!html.includes('href="javascript:'));
  }
  const preheader='123456 & <preview>';
  const preview=email.mailLayout('Verification','<p>Body</p>',undefined,'en',{preheader});

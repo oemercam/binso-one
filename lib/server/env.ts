@@ -45,7 +45,7 @@ export const env={
   graphClientId:optional("GRAPH_CLIENT_ID"),
   graphClientSecret:optional("GRAPH_CLIENT_SECRET"),
   graphSenderUserId:optional("GRAPH_SENDER_USER_ID"),
-  supportEmail:optional("SUPPORT_EMAIL")||"info@binso.ch",
+  supportEmail:optional("SUPPORT_EMAIL")||"support@binso.ch",
   azureStorageAccount:optional("AZURE_STORAGE_ACCOUNT"),
   azureStorageContainer:optional("AZURE_STORAGE_CONTAINER")||"documents",
   azureStorageSas:optional("AZURE_STORAGE_SAS"),
