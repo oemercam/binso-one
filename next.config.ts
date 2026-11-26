@@ -77,6 +77,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   env: { BINSO_BUILD_SHA: process.env.BINSO_BUILD_SHA ?? process.env.GITHUB_SHA ?? "development" },
   output: "standalone",
+  // Azure Run From Package mounts the Next.js output read-only.
+  images: { maximumDiskCacheSize: 0 },
   poweredByHeader: false,
   compress: true,
   // Resolve the retired public demo before streaming can turn a page redirect
