@@ -34,9 +34,16 @@ export async function verifyInvitationContract({load,mock,db,org,other,act,reque
  as('owner',org,{organizationStatus:'read_only'});assert.equal((await again(next)).status,403);
  as('owner');setAuditFailure(true);assert.equal((await again(next)).status,500);setAuditFailure(false);
  assert.equal((await preview(newToken)).status,200,'Failed audit restores previous invitation/token');assert.equal(mails.length,mailCount,'Rolled-back replacement never sends mail');
+ setAuditFailure(true);
+ try{assert.equal((await accept.POST(request({token:newToken,password:'Synthetic-password-123!',firstName:'Synthetic',lastName:'Invite'}))).status,500);}finally{setAuditFailure(false);}
+ assert.equal((await preview(newToken)).status,200,'Acceptance audit failure rolls back the token and membership');
  result=await accept.POST(request({token:newToken,password:'Synthetic-password-123!',firstName:'Synthetic',lastName:'Invite'}));assert.equal(result.status,200,await result.clone().text());
  assert.equal((await preview(newToken)).status,400);assert.equal((await accept.POST(request({token:newToken,password:'Synthetic-password-123!'}))).status,400,'Invitation is single use');
- const member=(await db.query("select m.status,m.module_profile from organization_memberships m where m.organization_id=$1 and m.email='synthetic-invite@example.invalid'",[org])).rows[0];assert.equal(member.status,'active');assert.equal(member.module_profile,'time_only');
+ const member=(await db.query("select m.user_id,m.status,m.module_profile from organization_memberships m where m.organization_id=$1 and m.email='synthetic-invite@example.invalid'",[org])).rows[0];assert.equal(member.status,'active');assert.equal(member.module_profile,'time_only');
+ const evidence=(await db.query("select organization_id,actor_user_id,detail from audit_events where action='invitation.accepted' and entity_id=$1",[next])).rows;
+ assert.equal(evidence.length,1,'Replay creates no duplicate acceptance audit');
+ assert.equal(evidence[0].organization_id,org);assert.equal(evidence[0].actor_user_id,member.user_id);
+ assert.deepEqual(JSON.parse(evidence[0].detail),{role:'member',moduleProfile:'time_only'});
  as('owner');await db.query('update organization_entitlements set max_users=15 where organization_id=$1',[org]);
  result=await create('synthetic-retry@example.invalid');assert.equal(result.status,201);const failedOld=(await result.json()).id;
  transportAvailable=false;const failedKey=randomUUID();assert.equal((await again(failedOld,failedKey)).status,503);const failedToken=token();
