@@ -402,6 +402,12 @@ try{
  const prices={price_start_m:{id:'price_start_m',active:true,livemode:false,currency:'chf',unit_amount:2900,recurring:{interval:'month',interval_count:1}},price_business_y:{id:'price_business_y',active:true,livemode:false,currency:'chf',unit_amount:69000,recurring:{interval:'year',interval_count:1}}};
  let authoritative={id:'sub_fixture',customer:'cus_fixture',metadata:{organization_id:billingTenant.organizationId},status:'active',cancel_at_period_end:true,items:{data:[{quantity:1,price:prices.price_business_y,current_period_end:timestamp+86400}]}};
  let failInvoice=false,checkoutCalls=0,expireCalls=0,checkoutState="open";
+ const stripeAdjustments={
+  re_fixture1:{id:'re_fixture1',charge:'ch_fixture1',payment_intent:'pi_fixture1',currency:'chf',amount:2500,created:timestamp,status:'succeeded'},
+  re_fixture2:{id:'re_fixture2',charge:'ch_fixture1',payment_intent:'pi_fixture1',currency:'chf',amount:4000,created:timestamp,status:'pending'},
+  du_fixture1:{id:'du_fixture1',charge:'ch_fixture1',payment_intent:'pi_fixture1',currency:'chf',amount:62500,created:timestamp,status:'needs_response',livemode:false}
+ };
+ let chargeCustomer='cus_fixture';
  const originalFetch=globalThis.fetch;
  globalThis.fetch=async(url,options)=>{
   assert.equal(options.headers['Stripe-Version'],stripeApiVersion);
@@ -412,7 +418,16 @@ try{
   if(path.startsWith('/v1/checkout/sessions/')&&options.method==='GET')return Response.json({status:checkoutState});
   if(path.startsWith('/v1/checkout/sessions/')&&path.endsWith('/expire')){expireCalls++;return Response.json({status:'expired'});}
   if(path==='/v1/subscriptions/sub_fixture')return Response.json(authoritative);
-  if(path==='/v1/invoices/in_fixture'){if(failInvoice)throw new Error('Simulated failure');return Response.json({id:'in_fixture',customer:'cus_fixture',status:'paid',amount_paid:69000,currency:'chf',status_transitions:{paid_at:timestamp}});}
+  if(path==='/v1/invoices/in_fixture'){if(failInvoice)throw new Error('Simulated failure');return Response.json({id:'in_fixture',customer:'cus_fixture',status:'paid',amount_paid:69000,currency:'chf',parent:{subscription_details:{subscription:'sub_fixture'}},status_transitions:{paid_at:timestamp}});}
+  if(path.startsWith('/v1/refunds/')||path.startsWith('/v1/disputes/'))return Response.json(stripeAdjustments[path.split('/').pop()]);
+  if(path==='/v1/charges/ch_fixture1')return Response.json({id:'ch_fixture1',customer:chargeCustomer,payment_intent:'pi_fixture1',amount:69000,currency:'chf',livemode:false});
+  if(path==='/v1/invoice_payments'){
+   const query=new URL(url).searchParams;
+   assert.equal(query.get('payment[type]'),'payment_intent');
+   assert.equal(query.get('payment[payment_intent]'),'pi_fixture1');
+   assert.equal(query.get('status'),'paid');
+   return Response.json({data:[{status:'paid',payment:{type:'payment_intent',payment_intent:'pi_fixture1'},invoice:'in_fixture'}],has_more:false});
+  }
   throw new Error('Unexpected Stripe request: '+path);
  };
  await db.query("select set_config('app.organization_id',$1,false)",[billingTenant.organizationId]);
@@ -497,6 +512,29 @@ try{
  assert.equal(await globalThis.__provisionTest(runNextStripeEvent),'empty');
  failInvoice=false;
  console.log('Stripe inbox: acknowledgement persistence, redacted payload, retry backoff, interruption rollback, deduplication and dead-letter retention passed.');
+ const adjustmentEvent=(id,type,objectId)=>({id,livemode:false,type,data:{object:{id:objectId,status:'stale_fixture_snapshot'}}});
+ const queueAdjustment=async event=>{
+  assert.equal((await globalThis.__provisionTest(c=>enqueueStripeEvent(c,event))).queued,true);
+  assert.equal(await globalThis.__provisionTest(runNextStripeEvent),'processed');
+ };
+ const refundEvent=adjustmentEvent('evt_fixture_refund','refund.created','re_fixture1');
+ await queueAdjustment(refundEvent);
+ assert.equal((await globalThis.__provisionTest(c=>enqueueStripeEvent(c,refundEvent))).duplicate,true);
+ await queueAdjustment(adjustmentEvent('evt_fixture_refund2','refund.created','re_fixture2'));
+ stripeAdjustments.re_fixture2.status='failed';
+ await queueAdjustment(adjustmentEvent('evt_fixture_failed','refund.failed','re_fixture2'));
+ await queueAdjustment(adjustmentEvent('evt_fixture_dispute','charge.dispute.created','du_fixture1'));
+ assert.equal((await db.query("select status from platform_stripe_payment_adjustments where external_id='du_fixture1'")).rows[0].status,'needs_response');
+ stripeAdjustments.du_fixture1.status='won';
+ await queueAdjustment(adjustmentEvent('evt_fixture_dispute_won','charge.dispute.closed','du_fixture1'));
+ await queueAdjustment(adjustmentEvent('evt_fixture_dispute_late','charge.dispute.updated','du_fixture1'));
+ const adjustments=(await db.query("select a.external_id,a.status,a.amount,p.amount gross from platform_stripe_payment_adjustments a join platform_billing_payments p on p.id=a.payment_id order by a.external_id")).rows;
+ assert.deepEqual(adjustments.map(a=>[a.external_id,a.status,Number(a.amount),Number(a.gross)]),[
+  ['du_fixture1','won',625,690],['re_fixture1','succeeded',25,690],['re_fixture2','failed',40,690]
+ ]);
+ chargeCustomer='cus_unrelated';
+ assert.equal((await globalThis.__provisionTest(c=>processStripeEvent(c,adjustmentEvent('evt_fixture_other','refund.updated','re_fixture1')))).ignored,true);
+ chargeCustomer='cus_fixture';
  await db.query("update organizations set status='suspended' where id=$1",[billingTenant.organizationId]);
  await globalThis.__provisionTest(c=>processStripeEvent(c,{...invoiceEvent,id:'evt_suspended'}));
  assert.equal((await db.query('select status from organizations where id=$1',[billingTenant.organizationId])).rows[0].status,'suspended');
@@ -505,7 +543,10 @@ try{
  await assert.rejects(globalThis.__provisionTest(c=>processStripeEvent(c,{...invoiceEvent,id:'evt_wrong_tenant'})),e=>e.code==='subscription_mapping_invalid');
  await db.exec('set role binso_runtime');await db.query("select set_config('app.organization_id',$1,false)",[demo]);
  assert.equal((await db.query('select * from billing_checkout_sessions')).rows.length,0);
+ await db.query("select set_config('app.platform_operator','false',false)");
+ assert.equal((await db.query('select * from platform_stripe_payment_adjustments')).rows.length,0);
  await db.exec('reset role');
+ await db.query("select set_config('app.platform_operator','true',false)");
  globalThis.fetch=originalFetch;delete globalThis.__billingEnv;
  console.log('Stripe signature, persisted checkout retries, duplicate/stale events, rollback, billing ledger, entitlements and tenant mapping passed (HTTP fixtures).');
 

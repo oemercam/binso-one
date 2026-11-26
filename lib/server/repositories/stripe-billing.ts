@@ -5,7 +5,7 @@ import {planCatalog} from '@/config/plans';
 import {subscriptionEntitlements} from '@/lib/subscription-plans';
 import {ApiError} from '../http';
 import {env} from '../env';
-import {createCheckoutSession,retrieveCheckoutSession,expireCheckoutSession,createStripeCustomer,retrievePrice,retrieveSubscription,retrieveInvoice,validatePrice,priceSelection,objectValue,stripeId,stripeLiveMode,type StripeObject} from '../stripe';
+import {createCheckoutSession,retrieveCheckoutSession,expireCheckoutSession,createStripeCustomer,retrievePrice,retrieveSubscription,retrieveInvoice,retrieveRefund,retrieveDispute,retrieveCharge,listPaidInvoicePayments,validatePrice,priceSelection,objectValue,stripeId,stripeLiveMode,type StripeObject} from '../stripe';
 import type {SessionUser} from '../session';
 const str=(value:unknown)=>typeof value==='string'?value:'';
 const iso=(value:unknown)=>{const n=Number(value);return Number.isFinite(n)&&n>0?new Date(n*1000).toISOString():null;};
@@ -37,7 +37,9 @@ export async function startBillingCheckout(c:PoolClient,s:SessionUser,plan:PlanI
  await c.query('insert into billing_checkout_sessions(organization_id,request_key,plan,billing_interval,stripe_session_id,checkout_url,expires_at) values($1,$2,$3,$4,$5,$6,$7)',[s.organizationId,requestKey,plan,billing,checkout.id,checkout.url,iso(checkout.expires_at)]);
  return {url:checkout.url};
 }
-export const billingEventTypes=new Set(['checkout.session.completed','checkout.session.async_payment_succeeded','checkout.session.async_payment_failed','customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','customer.subscription.paused','customer.subscription.resumed','invoice.paid','invoice.payment_failed','invoice.payment_action_required']);
+const refundEvents=new Set(['refund.created','refund.updated','refund.failed']);
+const disputeEvents=new Set(['charge.dispute.created','charge.dispute.updated','charge.dispute.closed']);
+export const billingEventTypes=new Set(['checkout.session.completed','checkout.session.async_payment_succeeded','checkout.session.async_payment_failed','customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','customer.subscription.paused','customer.subscription.resumed','invoice.paid','invoice.payment_failed','invoice.payment_action_required',...refundEvents,...disputeEvents]);
 export function validateBillingEvent(event:StripeObject){
  const type=str(event.type),eventId=str(event.id);
  if(!/^evt_[a-zA-Z0-9_]{1,128}$/.test(eventId)||!type)throw new ApiError(400,'event_invalid','Ungültiges Stripe-Ereignis.');
@@ -45,10 +47,59 @@ export function validateBillingEvent(event:StripeObject){
  return {type,eventId};
 }
 
+async function processPaymentAdjustment(c:PoolClient,kind:'refund'|'dispute',id:string,type:string,eventId:string,queued:boolean):Promise<{received:true;processed?:true;ignored?:true;duplicate?:true}>{
+ const invalid=()=>new ApiError(409,'stripe_adjustment_mapping_invalid','Stripe-Zahlungskorrektur konnte keiner eindeutigen Abozahlung zugeordnet werden.');
+ if(!(kind==='refund'?/^re_[a-zA-Z0-9]+$/:/^du_[a-zA-Z0-9]+$/).test(id))throw invalid();
+ const retrieveAdjustment=kind==='refund'?retrieveRefund:retrieveDispute;
+ const initial=await retrieveAdjustment(id);
+ const chargeId=stripeId(initial.charge);
+ if(!/^ch_[a-zA-Z0-9]+$/.test(chargeId))throw invalid();
+ const charge=await retrieveCharge(chargeId);
+ const organization=(await c.query(`select s.organization_id from organization_subscriptions s
+  join organizations o on o.id=s.organization_id where s.billing_customer_id=$1 and not o.is_demo for update of s`,[stripeId(charge.customer)])).rows[0];
+ if(!organization)return {received:true,ignored:true};
+ // Read the current object after taking the same lock used by invoice.paid.
+ const adjustment=await retrieveAdjustment(id);
+ const intentId=stripeId(charge.payment_intent),currency=str(charge.currency).toUpperCase();
+ const cents=Number(adjustment.amount),occurredAt=iso(adjustment.created),status=str(adjustment.status);
+ if(stripeId(charge)!==chargeId||charge.livemode!==stripeLiveMode()||stripeId(adjustment)!==id||
+    (kind==='dispute'&&adjustment.livemode!==stripeLiveMode())||stripeId(adjustment.charge)!==chargeId||
+    (stripeId(adjustment.payment_intent)&&stripeId(adjustment.payment_intent)!==intentId)||
+    str(adjustment.currency).toUpperCase()!==currency||!Number.isSafeInteger(cents)||cents<=0||
+    (kind==='refund'&&cents>Number(charge.amount))||!occurredAt||!status||status.length>64)throw invalid();
+ if(!/^pi_[a-zA-Z0-9]+$/.test(intentId))throw invalid();
+ const page=await listPaidInvoicePayments(intentId);
+ if(page.has_more||page.data.some(entry=>{
+  const payment=objectValue(entry.payment);
+  return entry.status!=='paid'||payment.type!=='payment_intent'||stripeId(payment.payment_intent)!==intentId;
+ }))throw invalid();
+ const invoiceIds=[...new Set(page.data.map(entry=>stripeId(entry.invoice)))];
+ if(!invoiceIds.length)return {received:true,ignored:true};
+ if(invoiceIds.length!==1||!/^in_[a-zA-Z0-9]+$/.test(invoiceIds[0]))throw invalid();
+ const invoice=await retrieveInvoice(invoiceIds[0]);
+ if(stripeId(invoice)!==invoiceIds[0]||stripeId(invoice.customer)!==stripeId(charge.customer)||str(invoice.currency).toUpperCase()!==currency)throw invalid();
+ if(!stripeId(objectValue(objectValue(invoice.parent).subscription_details).subscription)&&!stripeId(invoice.subscription))return {received:true,ignored:true};
+ const payment=(await c.query("select id from platform_billing_payments where provider='stripe' and external_id=$1 and organization_id=$2 and currency=$3",[invoiceIds[0],organization.organization_id,currency])).rows[0];
+ if(!payment)throw new ApiError(409,'stripe_original_payment_pending','Die ursprüngliche Stripe-Abozahlung ist noch nicht verbucht.');
+ const recorded=queued
+  ?await c.query("update billing_webhook_events set organization_id=$2 where provider='stripe' and external_event_id=$1 and status in ('received','failed') returning id",[eventId,organization.organization_id])
+  :await c.query("insert into billing_webhook_events(provider,external_event_id,event_type,status,organization_id) values('stripe',$1,$2,'received',$3) on conflict(provider,external_event_id) do nothing returning id",[eventId,type,organization.organization_id]);
+ if(!recorded.rowCount)return {received:true,duplicate:true};
+ const saved=await c.query(`insert into platform_stripe_payment_adjustments(external_id,payment_id,kind,status,amount,occurred_at)
+  values($1,$2,$3,$4,$5,$6) on conflict(external_id) do update set status=excluded.status,amount=excluded.amount,updated_at=now()
+  where platform_stripe_payment_adjustments.payment_id=excluded.payment_id and platform_stripe_payment_adjustments.kind=excluded.kind
+  returning external_id`,
+ [id,payment.id,kind,status,cents/100,occurredAt]);
+ if(!saved.rowCount)throw invalid();
+ await c.query("update billing_webhook_events set status='processed',processed_at=now() where provider='stripe' and external_event_id=$1",[eventId]);
+ return {received:true,processed:true};
+}
+
 export async function processStripeEvent(c:PoolClient,event:StripeObject,queued=false){
  const {type,eventId}=validateBillingEvent(event);
  const source=objectValue(objectValue(event.data).object);
  if(!billingEventTypes.has(type))return {received:true,ignored:true};
+ if(refundEvents.has(type)||disputeEvents.has(type))return processPaymentAdjustment(c,refundEvents.has(type)?'refund':'dispute',stripeId(source),type,eventId,queued);
  const parent=objectValue(objectValue(source.parent).subscription_details);
  const subscriptionId=type.startsWith('customer.subscription.')?stripeId(source):stripeId(source.subscription)||stripeId(parent.subscription);
  const customerId=stripeId(source.customer);

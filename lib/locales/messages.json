@@ -16444,6 +16444,16 @@
     "Rimborsi",
     "İadeler"
   ],
+  "Zahlungsstreitfall": ["Payment dispute", "Litige de paiement", "Contestazione di pagamento", "Ödeme itirazı"],
+  "Aktion erforderlich": ["Action required", "Action requise", "Azione richiesta", "İşlem gerekiyor"],
+  "Antwort erforderlich": ["Response required", "Réponse requise", "Risposta richiesta", "Yanıt gerekiyor"],
+  "Gewonnen": ["Won", "Gagné", "Vinta", "Kazanıldı"],
+  "Verloren": ["Lost", "Perdu", "Persa", "Kaybedildi"],
+  "Verhindert": ["Prevented", "Évité", "Evitata", "Önlendi"],
+  "Stripe-Zahlungskorrektur konnte keiner eindeutigen Abozahlung zugeordnet werden.": ["The Stripe adjustment could not be linked to a single subscription payment.", "La régularisation Stripe n’a pas pu être rattachée à un paiement d’abonnement unique.", "Non è stato possibile associare la rettifica Stripe a un solo pagamento dell’abbonamento.", "Stripe ödeme düzeltmesi tek bir abonelik ödemesiyle eşleştirilemedi."],
+  "Die ursprüngliche Stripe-Abozahlung ist noch nicht verbucht.": ["The original Stripe subscription payment has not been recorded yet.", "Le paiement d’abonnement Stripe d’origine n’a pas encore été comptabilisé.", "Il pagamento Stripe originale dell’abbonamento non è ancora stato registrato.", "Asıl Stripe abonelik ödemesi henüz kaydedilmedi."],
+  "Bitte ein gültiges Datum eingeben.": ["Enter a valid date.", "Saisissez une date valide.", "Inserisci una data valida.", "Geçerli bir tarih girin."],
+  "Der Stripe-Preis stimmt nicht mit dem veröffentlichten Tarif überein.": ["The Stripe price does not match the published plan price.", "Le prix Stripe ne correspond pas au tarif publié.", "Il prezzo Stripe non corrisponde alla tariffa pubblicata.", "Stripe fiyatı yayımlanan tarife ile eşleşmiyor."],
   "Rückerstattungsdatum": [
     "Refund date",
     "Date du remboursement",
