@@ -404,7 +404,7 @@ try{
   const path=new URL(url).pathname;
   if(path.startsWith('/v1/prices/'))return Response.json(prices[path.split('/').pop()]);
   if(path==='/v1/customers'){assert.ok(options.headers['Idempotency-Key']);return Response.json({id:'cus_fixture'});}
-  if(path==='/v1/checkout/sessions'){checkoutCalls++;const form=options.body;assert.ok(options.headers['Idempotency-Key']);assert.equal(form.get('success_url'),'https://example.invalid/einstellungen/abonnement?checkout=success');assert.equal(form.get('customer'),'cus_fixture');return Response.json({id:'cs_fixture_'+checkoutCalls,url:'https://checkout.stripe.com/c/pay_fixture',expires_at:timestamp+86400});}
+  if(path==='/v1/checkout/sessions'){checkoutCalls++;const form=options.body;assert.ok(options.headers['Idempotency-Key']);assert.equal(form.get('success_url'),'https://example.invalid/einstellungen/abonnement?checkout=success');assert.equal(form.get('customer'),'cus_fixture');assert.equal(form.get('tax_id_collection[enabled]'),'true');assert.equal(form.get('customer_update[name]'),'auto');return Response.json({id:'cs_fixture_'+checkoutCalls,url:'https://checkout.stripe.com/c/pay_fixture',expires_at:timestamp+86400});}
   if(path.startsWith('/v1/checkout/sessions/')&&options.method==='GET')return Response.json({status:checkoutState});
   if(path.startsWith('/v1/checkout/sessions/')&&path.endsWith('/expire')){expireCalls++;return Response.json({status:'expired'});}
   if(path==='/v1/subscriptions/sub_fixture')return Response.json(authoritative);

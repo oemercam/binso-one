@@ -37,8 +37,11 @@ export async function createStripeCustomer(input:{email:string;organizationId:st
  return stripeRequest<{id:string}>('/customers',body,`binso-customer-${input.organizationId}`);
 }
 export async function createCheckoutSession(input:{priceId:string;customerId:string;organizationId:string;successUrl:string;cancelUrl:string;requestKey:string}){
- const body=new URLSearchParams({mode:'subscription',customer:input.customerId,'line_items[0][price]':input.priceId,'line_items[0][quantity]':'1',client_reference_id:input.organizationId,'metadata[organization_id]':input.organizationId,'subscription_data[metadata][organization_id]':input.organizationId,success_url:input.successUrl,cancel_url:input.cancelUrl,billing_address_collection:'required','tax_id_collection[enabled]':'true'});
- if(env.stripeAutomaticTax)body.set('automatic_tax[enabled]','true');
+ const body=new URLSearchParams({mode:'subscription',customer:input.customerId,'line_items[0][price]':input.priceId,'line_items[0][quantity]':'1',client_reference_id:input.organizationId,'metadata[organization_id]':input.organizationId,'subscription_data[metadata][organization_id]':input.organizationId,success_url:input.successUrl,cancel_url:input.cancelUrl,billing_address_collection:'required','tax_id_collection[enabled]':'true','customer_update[name]':'auto'});
+ if(env.stripeAutomaticTax){
+  body.set('automatic_tax[enabled]','true');
+  body.set('customer_update[address]','auto');
+ }
  return stripeRequest<{id:string;url:string;expires_at:number}>('/checkout/sessions',body,`binso-checkout-${input.organizationId}-${input.requestKey}`);
 }
 export const retrieveCheckoutSession=(id:string)=>stripeRequest<StripeObject>('/checkout/sessions/'+encodeURIComponent(id));
