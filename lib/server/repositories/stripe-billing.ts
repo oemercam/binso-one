@@ -38,10 +38,16 @@ export async function startBillingCheckout(c:PoolClient,s:SessionUser,plan:PlanI
  return {url:checkout.url};
 }
 export const billingEventTypes=new Set(['checkout.session.completed','checkout.session.async_payment_succeeded','checkout.session.async_payment_failed','customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','customer.subscription.paused','customer.subscription.resumed','invoice.paid','invoice.payment_failed','invoice.payment_action_required']);
-export async function processStripeEvent(c:PoolClient,event:StripeObject){
- const type=str(event.type),eventId=str(event.id),source=objectValue(objectValue(event.data).object);
- if(!/^evt_/.test(eventId)||!type)throw new ApiError(400,'event_invalid','Ungültiges Stripe-Ereignis.');
+export function validateBillingEvent(event:StripeObject){
+ const type=str(event.type),eventId=str(event.id);
+ if(!/^evt_[a-zA-Z0-9_]{1,128}$/.test(eventId)||!type)throw new ApiError(400,'event_invalid','Ungültiges Stripe-Ereignis.');
  if(typeof event.livemode!=='boolean'||event.livemode!==stripeLiveMode())throw new ApiError(400,'stripe_mode_mismatch','Stripe-Modus stimmt nicht mit der Umgebung überein.');
+ return {type,eventId};
+}
+
+export async function processStripeEvent(c:PoolClient,event:StripeObject,queued=false){
+ const {type,eventId}=validateBillingEvent(event);
+ const source=objectValue(objectValue(event.data).object);
  if(!billingEventTypes.has(type))return {received:true,ignored:true};
  const parent=objectValue(objectValue(source.parent).subscription_details);
  const subscriptionId=type.startsWith('customer.subscription.')?stripeId(source):stripeId(source.subscription)||stripeId(parent.subscription);
@@ -51,7 +57,9 @@ export async function processStripeEvent(c:PoolClient,event:StripeObject){
  const row=(await c.query(`select s.*,o.status account_status,o.is_demo from organization_subscriptions s join organizations o on o.id=s.organization_id where s.billing_customer_id=$1 and not o.is_demo for update of s`,[customerId])).rows[0];
  if(!row)return {received:true,ignored:true};
  if(row.billing_subscription_id&&row.billing_subscription_id!==subscriptionId&&!['cancelled','expired'].includes(row.status))return {received:true,ignored:true};
- const recorded=await c.query("insert into billing_webhook_events(provider,external_event_id,event_type,status,organization_id) values('stripe',$1,$2,'received',$3) on conflict(provider,external_event_id) do nothing returning id",[eventId,type,row.organization_id]);
+ const recorded=queued
+  ?await c.query("update billing_webhook_events set organization_id=$2 where provider='stripe' and external_event_id=$1 and status in ('received','failed') returning id",[eventId,row.organization_id])
+  :await c.query("insert into billing_webhook_events(provider,external_event_id,event_type,status,organization_id) values('stripe',$1,$2,'received',$3) on conflict(provider,external_event_id) do nothing returning id",[eventId,type,row.organization_id]);
  if(!recorded.rowCount)return {received:true,duplicate:true};
  // Retrieve after acquiring the organization lock. Delayed/out-of-order events
  // cannot replace current Stripe state with an older event snapshot.

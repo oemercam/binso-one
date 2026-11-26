@@ -43,3 +43,16 @@ Selbstregistrierung erzeugt eine Testphase, keine bereits bezahlte Subscription.
 Der GitHub-Workflow **Stripe Billing Configuration** liest die produktive App-Service-Konfiguration, prüft das Stripe-Konto, die sechs expliziten Monats-/Jahres-Price-IDs, den Live-Webhook und das Live-Customer-Portal. Ein erfolgreicher Audit-Job erzeugt keine Zahlung. Die sechs `STRIPE_PRICE_*_MONTHLY`/`YEARLY`-Variablen sind die produktive Quelle der Wahrheit.
 
 Vor Änderungen an der produktiven Konfiguration werden Checkout, 3-D-Secure, Webhook-Zustellung, Wiederholung, fehlgeschlagene Zahlung, Kündigung und Customer Portal zuerst in Stripe Sandbox/Test geprüft. Der produktive Betrieb selbst verwendet ausschliesslich Live-Key, Live-Prices, Live-Webhook und Live-Customer-Portal. Der CI-Readiness-Check schlägt fehl, wenn ein Test-Key, nicht freigeschaltetes Konto, Test-Price, fehlender/fehlerhafter Webhook oder unvollständiges Portal erkannt wird. Rückerstattungen/Disputes sind nicht Teil des aktuellen Umsatzbuchungsmodells; deren kaufmännische Verbuchung benötigt eine eigene Erweiterung.
+
+## Dauerhafte Webhook-Verarbeitung
+
+Der Webhook prüft die Signatur und speichert die für die Zuordnung benötigten
+Ereignis-IDs in PostgreSQL, bevor er den Eingang bestätigt. Ein Worker im
+bestehenden App Service verarbeitet offene Einträge mit Zeilensperren. Ein
+Neustart lässt unvollständige Transaktionen zurückrollen. Vorübergehende Fehler
+werden mit Wartezeit erneut versucht. Nach zehn Fehlversuchen bleibt der
+Eintrag für die Betriebsanalyse gespeichert. Fehler sind in der
+Betriebsübersicht und im Anwendungslog sichtbar. Erfolgreich bearbeitete
+Einträge behalten die Ereigniskennung zur Deduplizierung. Der temporäre
+Verarbeitungsinhalt wird entfernt. App Service Always On startet den Worker
+nach einem Neustart wieder.
