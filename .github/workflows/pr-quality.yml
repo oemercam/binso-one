@@ -31,3 +31,18 @@ jobs:
         run: |
           node scripts/schema-contract-test.mjs
           node scripts/plan-catalog-test.mjs
+      - name: BINSO-CI-Profil prüfen
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          profile = json.loads(Path("docs/ci-profile.json").read_text(encoding="utf-8"))
+          assert profile["version"] == 1
+          assert profile["profile"] in {"static", "backend", "critical", "tooling"}
+          workflow = Path(profile["verificationWorkflow"])
+          assert workflow.parent == Path(".github/workflows") and workflow.is_file()
+          print("BINSO-CI-Profil:", profile["profile"])
+          PY
