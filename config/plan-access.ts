@@ -5,7 +5,11 @@ export type {PlanId} from './domain';
 export const pilotEnabled=typeof document==='undefined'
  ? process.env.BINSO_PILOT==='1'||process.env.NEXT_PUBLIC_BINSO_PILOT==='1'
  : document.documentElement.dataset.binsoPilot==='1';
+export const offeredPlanIds=['start','business'] as const satisfies readonly PlanId[];
 export const pilotPlan='start' satisfies PlanId;
+export function availablePlanIds(): readonly typeof offeredPlanIds[number][] {
+  return pilotEnabled ? [pilotPlan] : offeredPlanIds;
+}
 const pilotModules=new Set(['kunden','offerten','auftraege','projekte','zeiterfassung','rechnungen','zahlungen','aufgaben','einstellungen']);
 const pilotExcludedRoutes=['/finanzen','/belege','/einstellungen/abwesenheiten'];
 const moduleSets:Record<PlanId,ReadonlySet<string>>={start:new Set(planCatalog.start.modules),business:new Set(planCatalog.business.modules),pro:new Set(planCatalog.pro.modules)};

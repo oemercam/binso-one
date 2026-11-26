@@ -5,10 +5,10 @@ import Link from "next/link";
 import { MarketingFooter, MarketingHeader } from "@/components/marketing";
 import { Button, Icon } from "@/components/ui";
 import { domainConfig } from "@/config/domain";
-import { plans } from "@/lib/plans";
+import { offeredPlans } from "@/lib/plans";
 
 export function generateMetadata() {
-  return publicPageMetadata("/preise", { title: "Preise", description: `Transparente Preise für Binso One. Business-Software für Schweizer KMU ab CHF ${plans[0].monthly} pro Monat, mit ${domainConfig.trialDays} Tagen kostenloser Testphase.` });
+  return publicPageMetadata("/preise", { title: "Preise", description: `Transparente Preise für Binso One. Business-Software für Schweizer KMU ab CHF ${offeredPlans[0].monthly} pro Monat, mit ${domainConfig.trialDays} Tagen kostenloser Testphase.` });
 }
 
 
@@ -25,7 +25,7 @@ export default function Prices(){
       </div>
     </div>
     <div className="pricing-grid" data-pilot={pilotEnabled||undefined}>
-      {plans.filter(plan=>!pilotEnabled||plan.id===pilotPlan).map(plan=><article className={plan.popular?"price-card featured":"price-card"} key={plan.id}>
+      {offeredPlans.filter(plan=>!pilotEnabled||plan.id===pilotPlan).map(plan=><article className={plan.popular?"price-card featured":"price-card"} key={plan.id}>
         {plan.popular&&<span className="popular"><LocalizedText>{"BELIEBT"}</LocalizedText></span>}
         <div className="plan-name"><h2>{plan.name}</h2>{plan.popular&&<small><LocalizedText>{"Empfohlen für KMU"}</LocalizedText></small>}</div>
         <p><LocalizedText>{plan.description}</LocalizedText></p>

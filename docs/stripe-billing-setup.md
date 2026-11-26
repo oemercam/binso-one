@@ -14,7 +14,7 @@ Geheimnisse ausschliesslich in den App-Service-Einstellungen oder über Key Vaul
 - `APP_URL`: kanonische HTTPS-Adresse der Anwendung.
 - Optional `STRIPE_AUTOMATIC_TAX=true`, erst nachdem Stripe Tax und die steuerliche Konfiguration eingerichtet wurden.
 
-Die sechs Prices müssen aktiv sein, CHF verwenden und jeweils monatlich oder jährlich mit Intervallzahl 1 wiederkehren. Angezeigte Preise und Vertragsbeträge kommen aus Stripe; produktive Beträge werden nicht erfunden. Bestehende alte Variablen ohne Monats-/Jahreszuordnung reichen nicht aus. Bestehende Vertrags-Price-IDs nicht ohne Migrationskonzept entfernen.
+Start und Business sind die beiden öffentlich angebotenen Abos. Pro bleibt als Bestandstarif und für historische Stripe-Ereignisse zugeordnet. Die sechs Prices müssen für den bestehenden Audit aktiv sein, CHF verwenden und jeweils monatlich oder jährlich mit Intervallzahl 1 wiederkehren. Angezeigte Preise und Vertragsbeträge kommen aus Stripe; produktive Beträge werden nicht erfunden. Bestehende alte Variablen ohne Monats-/Jahreszuordnung reichen nicht aus. Bestehende Vertrags-Price-IDs nicht ohne Migrationskonzept entfernen.
 
 ## Stripe Dashboard / Workbench
 
@@ -28,7 +28,7 @@ Ereignisse:
 - `customer.subscription.paused`, `customer.subscription.resumed`
 - `invoice.paid`, `invoice.payment_failed`, `invoice.payment_action_required`
 
-Customer Portal im selben Konto und Modus aktivieren. Rechnungsdownload, Zahlungsmittelverwaltung und Kündigung konfigurieren. Für Planwechsel nur die sechs zugeordneten Prices zulassen. Ein Stripe-Konto allein aktiviert weder diese Prices noch den Webhook noch das Portal. Für den produktiven Readiness-Check müssen Zahlungen und Auszahlungen im Konto freigeschaltet, die Kontodaten vollständig eingereicht, alle sechs Prices Live-Objekte, der HTTPS-Webhook aktiv und das Live-Customer-Portal als Standardkonfiguration mit Rechnungsverlauf, Zahlungsmittelverwaltung und Kündigung aktiviert sein.
+Customer Portal im selben Konto und Modus aktivieren. Rechnungsdownload, Zahlungsmittelverwaltung und Kündigung konfigurieren. Für neue Abschlüsse nur Start und Business anbieten. Bestehende Pro-Zuordnungen bleiben für die Vertragsverarbeitung erhalten. Ein Stripe-Konto allein aktiviert weder diese Prices noch den Webhook noch das Portal. Für den produktiven Readiness-Check müssen Zahlungen und Auszahlungen im Konto freigeschaltet, die Kontodaten vollständig eingereicht, alle sechs Prices Live-Objekte, der HTTPS-Webhook aktiv und das Live-Customer-Portal als Standardkonfiguration mit Rechnungsverlauf, Zahlungsmittelverwaltung und Kündigung aktiviert sein.
 
 ## Daten und Sicherheit
 
