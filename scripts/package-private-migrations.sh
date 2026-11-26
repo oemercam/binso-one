@@ -16,4 +16,4 @@ done
 (cd "$workdir" && node -e 'require("pg")')
 tar -czf deploy/private-migrations.tar.gz -C "$workdir" run.mjs scripts database node_modules
 cp scripts/private-migration-probe.mjs "$workdir/run.mjs"
-tar -czf deploy/private-migration-probe.tar.gz -C "$workdir" run.mjs node_modules
+tar -czf deploy/private-migration-probe.tar.gz -C "$workdir" run.mjs scripts/schema-contract.mjs database/schema-contract.json database/migrations node_modules

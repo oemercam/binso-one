@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       probe_migrations:
-        description: Verify the private database migration path without deploying
+        description: Verify the live schema and migration ledger over the private network without deploying
         type: boolean
         default: false
       pilot:
@@ -135,7 +135,7 @@ jobs:
           [[ -z "$prior_pilot" || "$prior_pilot" =~ ^[01]$ ]]
           echo "pilot=${prior_pilot:-0}" >> "$GITHUB_OUTPUT"
           echo "previous=$previous" >> "$GITHUB_OUTPUT"
-      - name: Probe the private PostgreSQL migration slot
+      - name: Verify the live PostgreSQL schema without writes
         if: inputs.probe_migrations == true
         run: |
           set -euo pipefail

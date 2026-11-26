@@ -24,3 +24,8 @@ produktiver Datenbankstruktur, echter Stripe-Zustellung oder Backups sind
 ein lesender Live-Schemaabgleich, ein Stripe-Sandbox-Test beziehungsweise
 ein isolierter Wiederherstellungstest nötig. Die GitHub-Zusammenfassung
 ersetzt diese Nachweise nicht.
+
+Der Live-Schemaabgleich läuft separat über **Azure production release** mit
+aktiviertem Eingang `probe_migrations`. Er prüft Migrationen, Prüfsummen und
+den PostgreSQL-Katalog innerhalb einer Nur-Lese-Transaktion. Er startet kein
+Anwendungsdeployment und greift auf keine Kundenzeilen zu.

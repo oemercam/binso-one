@@ -1,4 +1,6 @@
 import pg from 'pg';
+import {readFile} from 'node:fs/promises';
+import {verifyAppliedMigrationState} from './scripts/schema-contract.mjs';
 
 const client = new pg.Client({
   connectionString: process.env.DATABASE_URL,
@@ -12,7 +14,10 @@ try {
   if (scope.database !== 'binso_platform' || scope.role !== 'binso_one_migrations' || scope.login !== 'binso_one_migrations_live') {
     throw new Error('Unexpected database or migration identity');
   }
-  await client.query('select 1 from schema_migrations limit 1');
+  const contract = JSON.parse(await readFile('database/schema-contract.json', 'utf8'));
+  if (!await verifyAppliedMigrationState(client, contract)) {
+    throw new Error('Production schema is behind the tested release');
+  }
   await client.query('rollback');
 } finally {
   await client.end();
