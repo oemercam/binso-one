@@ -1,0 +1,46 @@
+name: Data and billing evidence
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: data-and-billing-evidence-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  evidence:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-node
+      - name: Verify schema, plan pricing and access
+        id: contracts
+        run: |
+          node scripts/schema-contract-test.mjs
+          node scripts/plan-catalog-test.mjs
+          node scripts/module-profile-test.mjs
+      - name: Verify registration and scoped identity
+        id: registration
+        run: node scripts/registration-test.mjs
+      - name: Verify migrations, tenant isolation, invoicing and Stripe lifecycle
+        id: integration
+        run: node scripts/migration-test.mjs
+      - name: Record scope and results for the exact revision
+        if: always()
+        env:
+          CONTRACTS: ${{ steps.contracts.outcome }}
+          REGISTRATION: ${{ steps.registration.outcome }}
+          INTEGRATION: ${{ steps.integration.outcome }}
+        run: |
+          {
+            printf '## Data and billing evidence\n\nCommit `%s`\n\n' "$GITHUB_SHA"
+            printf '| Check | Result |\n| --- | --- |\n'
+            printf '| Schema, plan pricing and access | %s |\n' "$CONTRACTS"
+            printf '| Registration and scoped identity | %s |\n' "$REGISTRATION"
+            printf '| Migrations, tenant isolation, invoicing and Stripe lifecycle | %s |\n' "$INTEGRATION"
+            printf '\nScope: isolated PGlite with synthetic data and Stripe HTTP fixtures. Production inspection, external Stripe deliveries and restore evidence require separate runs.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
