@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Preise",
-  description: "Preise und Abonnemente von Binso One für Schweizer KMU: Start, Business und Pro.",
+  description: "Preise und Abonnemente von Binso One für Schweizer KMU: Start und Business.",
   alternates: { canonical: "/preise" },
   openGraph: {
     type: "website",

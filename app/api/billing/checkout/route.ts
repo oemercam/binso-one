@@ -9,7 +9,7 @@ import {startBillingCheckout} from '@/lib/server/repositories/stripe-billing';
 import {ApiError,apiError,assertSameOrigin,json,readJson} from '@/lib/server/http';
 import {asObject,enumField,stringField} from '@/lib/server/validation';
 import {enforceRateLimit} from '@/lib/server/rate-limit';
-import {pilotEnabled,pilotPlan} from '@/config/plan-access';
+import {availablePlanIds} from '@/config/plan-access';
 import {legalConfig} from '@/config/legal';
 import {query} from '@/lib/server/db';
 export const runtime='nodejs';
@@ -17,8 +17,7 @@ export async function POST(request:NextRequest){try{
  assertSameOrigin(request);const s=await requireSession();authorize(s,'billing:write');await requireFreshAuthentication(s);
  if(!stripeConfigured())throw new ApiError(503,'billing_unavailable','Stripe ist noch nicht vollständig eingerichtet.');
  await enforceRateLimit(request,'checkout:'+s.organizationId,10,60_000);
- const body=asObject(await readJson(request,8000));const plan=enumField(body,'plan',['start','business','pro'] as const),billing=enumField(body,'billing',['monthly','yearly'] as const);
- if(pilotEnabled&&plan!==pilotPlan)throw new ApiError(400,'invalid_plan','Ungültiger Tarif.');
+ const body=asObject(await readJson(request,8000));const plan=enumField(body,'plan',availablePlanIds()),billing=enumField(body,'billing',['monthly','yearly'] as const);
  if(body.acceptedTerms!==true)throw new ApiError(400,'terms_required','Bitte bestätige die Vertragsbedingungen vor dem kostenpflichtigen Abschluss.');
  const termsVersion=stringField(body,'termsVersion',{min:1,max:40});const privacyVersion=stringField(body,'privacyVersion',{min:1,max:40});
  if(termsVersion!==legalConfig.termsVersion||privacyVersion!==legalConfig.privacyVersion)throw new ApiError(409,'legal_version_changed','Die Vertragsbedingungen wurden aktualisiert. Bitte prüfe und bestätige sie erneut.');

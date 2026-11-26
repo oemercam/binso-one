@@ -9,18 +9,18 @@ import {createAuthToken} from "./auth-tokens";
 import {issueEmailCode} from "./email-otp";
 import {mailLayout,sendMail} from "./email";
 import {registrationText,type MailLocale} from "./mail-i18n";
-import {billingCycles,domainConfig,planIds,type BillingCycle,type PlanId} from "@/config/domain";
+import {billingCycles,domainConfig,type BillingCycle,type PlanId} from "@/config/domain";
 import {type TenantRole} from "@/lib/permissions";
 import {legalConfig} from "@/config/legal";
-import {plans} from "@/lib/plans";
+import {offeredPlans} from "@/lib/plans";
 
-import {pilotEnabled,pilotPlan} from '@/config/plan-access';
+import {availablePlanIds} from '@/config/plan-access';
 
 export const registrationCookie="binso_registration";
 export function registrationContext(plan:unknown,billing:unknown){
- if(plan!=null&&(!planIds.includes(plan as PlanId)||(pilotEnabled&&plan!==pilotPlan)))throw new ApiError(400,"invalid_plan","Ungültiger Tarif.");
+ if(plan!=null&&(!availablePlanIds().some(id=>id===plan)))throw new ApiError(400,"invalid_plan","Ungültiger Tarif.");
  if(billing!=null&&!billingCycles.includes(billing as BillingCycle))throw new ApiError(400,"invalid_billing","Ungültiges Abrechnungsintervall.");
- const selected=plan==null?null:plans.find(item=>item.id===plan)!;
+ const selected=plan==null?null:offeredPlans.find(item=>item.id===plan)!;
  return {plan:selected?{id:selected.id,name:selected.name,monthly:selected.monthly,yearly:selected.yearly}:null,billingCycle:(billing??"monthly") as BillingCycle,trialDays:domainConfig.trialDays,termsVersion:legalConfig.termsVersion,privacyVersion:legalConfig.privacyVersion,dpaVersion:legalConfig.dpaVersion};
 }
 

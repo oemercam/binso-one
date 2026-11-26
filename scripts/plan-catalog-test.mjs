@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {moduleUrl,planCatalogModuleUrl,planAccessModuleUrl} from './data-test-modules.mjs';
 const {planCatalog,effectiveUserLimit,capacityReached,canonicalPlanId}=await import(planCatalogModuleUrl);
-const {planAllowsModule}=await import(planAccessModuleUrl);
+const {availablePlanIds,offeredPlanIds,planAllowsModule}=await import(planAccessModuleUrl);
+assert.deepEqual(offeredPlanIds,['start','business']);
+assert.deepEqual(availablePlanIds(),offeredPlanIds);
 const limits=await import(moduleUrl((await fs.readFile('lib/subscription-plans.ts','utf8')).replaceAll("'@/config/plans'",JSON.stringify(planCatalogModuleUrl)).replaceAll('"@/config/plans"',JSON.stringify(planCatalogModuleUrl))));
 for(const [plan,monthly,yearly,users] of [['start',29,290,3],['business',69,690,15],['pro',129,1290,null]]){
  assert.equal(planCatalog[plan].monthly,monthly);assert.equal(planCatalog[plan].yearly,yearly);
@@ -17,6 +19,7 @@ for(const plan of ['start','business','pro']){assert.equal(limits.subscriptionEn
 const pilotSource=(await fs.readFile('config/plan-access.ts','utf8')).replace("'./plans'",JSON.stringify(planCatalogModuleUrl)).replace("process.env.NEXT_PUBLIC_BINSO_PILOT==='1'",'true');
 const pilot=await import(moduleUrl(pilotSource));
 assert.equal(pilot.pilotPlan,'start');
+assert.deepEqual(pilot.availablePlanIds(),['start']);
 for(const plan of ['start','business','pro']){
  for(const path of ['/kunden','/angebote/neu','/projekte','/zeit','/rechnungen/123','/zahlungen','/einstellungen/team'])assert.equal(pilot.planAllowsPath(plan,path),true,path);
  for(const path of ['/spesen/neu','/berichte','/produkte','/mitarbeiter','/vertraege','/finanzen/analyse','/belege','/einstellungen/abwesenheiten'])assert.equal(pilot.planAllowsPath(plan,path),false,path);
