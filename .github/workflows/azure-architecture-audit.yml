@@ -105,9 +105,6 @@ jobs:
             jq -e '.status == "ready"'
           echo "::notice::Application readiness passed. SQL role and RLS checks require a private-network session; this hosted audit does not certify those privileges."
 
-          echo "=== Storage accounts in App resource group ==="
-          az storage account list -g "$APP_RG" --query "[].{name:name,httpsOnly:enableHttpsTrafficOnly,minTlsVersion:minimumTlsVersion,publicNetworkAccess:publicNetworkAccess,allowBlobPublicAccess:allowBlobPublicAccess,kind:kind,sku:sku.name}" -o json
-
           echo "=== Production Azure Monitor configuration ==="
           APP_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$APP_RG/providers/Microsoft.Web/sites/$APP_NAME"
           MONITOR_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$APP_RG/providers/Microsoft.Insights"
