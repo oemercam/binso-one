@@ -10,6 +10,7 @@ import { query,withPlatform,withTransaction } from "@/lib/server/db";
 import {verifyTotp,consumeRecoveryCode,consumePasskeyRecoveryCode} from '@/lib/server/totp';
 import {decryptSecret} from '@/lib/server/crypto';
 import {queueSecurityNotice,deliverSecurityNotice} from '@/lib/server/security-notice';
+import {companyContextHeader,matchesCompanyContext} from '@/lib/server/company-context';
 export async function PATCH(request:NextRequest){
  try{
   assertSameOrigin(request);const body=await readJson<{token?:unknown;password?:unknown;currentPassword?:unknown;recoveryCode?:unknown}>(request,8192);
@@ -18,6 +19,7 @@ export async function PATCH(request:NextRequest){
   if(!hasValidNewPassword(password))return json({error:"password_invalid",message:PASSWORD_REQUIREMENTS},400);
   if(!token){
     const session=await requireSession();
+    if(session.companyContext&&!matchesCompanyContext(session.companyContext,request.headers.get(companyContextHeader)))throw new ApiError(409,'company_context_changed','Die Sitzung wurde geändert. Bitte erneut versuchen.');
     if(session.isDemo)return json({error:'demo_action_unavailable',message:'Demo-Zugang benötigt kein Passwort.'},403);
     await requireFreshAuthentication(session);
     await enforceRateLimit(request,'password-change',5,15*60*1000);
@@ -36,8 +38,8 @@ export async function PATCH(request:NextRequest){
     const identity=(await client.query("select * from app_users where id=$1 and status='active' for update",[reset.user_id])).rows[0];
     if(!identity)throw new ApiError(400,'reset_invalid','Link ist ungültig oder abgelaufen.');
     await client.query("select set_config('app.user_id',$1,true)",[reset.user_id]);
-    const memberships=(await client.query("select organization_id from organization_memberships where user_id=$1 and status='active'",[reset.user_id])).rows;
-    if(memberships.length!==1)throw new ApiError(400,'reset_invalid','Link ist ungültig oder abgelaufen.');
+    const memberships=(await client.query("select organization_id,accepted_invitation_id from organization_memberships where user_id=$1 and status='active' order by created_at,organization_id",[reset.user_id])).rows;
+    if(!memberships.length||memberships.filter(m=>!m.accepted_invitation_id).length>1)throw new ApiError(400,'reset_invalid','Link ist ungültig oder abgelaufen.');
     await client.query("select set_config('app.organization_id',$1,true)",[memberships[0].organization_id]);
     // Passwords and recovery factors belong to the account. A passkey remains
     // a required recovery factor even if its original membership is inactive.

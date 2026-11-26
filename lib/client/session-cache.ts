@@ -1,12 +1,20 @@
 import {resetClientData,dataRevision,subscribeClientData} from "./data-events";
 import type {PlanId} from "@/config/plan-access";
 
-export type ClientSession={authenticated:boolean;user?:{id?:string};demo?:boolean;security?:{mfaEnabled:boolean;enrollmentRequired:boolean};tenant?:{id?:string;role?:string;moduleProfile?:import("@/lib/permissions").ModuleProfile;plan?:PlanId;readOnly?:boolean}};
+export type ClientSession={authenticated:boolean;companyContext?:string;user?:{id?:string};demo?:boolean;security?:{mfaEnabled:boolean;enrollmentRequired:boolean};tenant?:{id?:string;role?:string;moduleProfile?:import("@/lib/permissions").ModuleProfile;plan?:PlanId;readOnly?:boolean}};
 let cached:ClientSession|null=null;
 let validUntil=0;
 let pending:Promise<ClientSession>|null=null;
 let revision=0;
 let lastIdentity:string|null=null;
+let pinnedCompanyContext:string|null|undefined;
+let switchingWorkspace=false;
+export function companyRequestHeaders(input?:HeadersInit){
+ if(!pinnedCompanyContext)return input;
+ const requestHeaders=new Headers(input);
+ requestHeaders.set('X-Binso-Company-Context',pinnedCompanyContext);
+ return requestHeaders;
+}
 let observedSessionRevision="",listening=false;
 function observeSession(){if(listening||typeof window==="undefined")return;listening=true;observedSessionRevision=dataRevision(['/api/auth/session']);subscribeClientData(()=>{const next=dataRevision(['/api/auth/session']);if(next!==observedSessionRevision){observedSessionRevision=next;invalidateClientSession(false);}});}
 
@@ -25,6 +33,18 @@ export function readClientSession(force=false):Promise<ClientSession>{
     if(!response.ok)throw new Error(typeof payload.message==="string"?payload.message:"Zugang konnte nicht geprüft werden.");
     if(typeof payload.authenticated!=="boolean")throw new Error("Zugang konnte nicht geprüft werden.");
     if(startedRevision!==revision)throw new Error("Die Sitzung wurde geändert. Bitte erneut versuchen.");
+    if(payload.authenticated){
+     const context=typeof payload.companyContext==='string'?payload.companyContext:null;
+     if(pinnedCompanyContext!==undefined&&context!==pinnedCompanyContext&&(context||pinnedCompanyContext)){
+      if(!switchingWorkspace&&typeof window!=='undefined'){
+       switchingWorkspace=true;
+       resetClientData(false);
+       window.location.replace('/dashboard');
+      }
+      throw new Error('Die Sitzung wurde geändert. Bitte erneut versuchen.');
+     }
+     pinnedCompanyContext=context;
+    }
     const identity=JSON.stringify([payload.authenticated,payload.demo,payload.user?.id,payload.tenant?.id,payload.tenant?.role,payload.tenant?.moduleProfile,payload.tenant?.plan,payload.tenant?.readOnly,payload.security?.mfaEnabled,payload.security?.enrollmentRequired]);
     if(lastIdentity!==null&&lastIdentity!==identity)resetClientData(false);
     lastIdentity=identity;

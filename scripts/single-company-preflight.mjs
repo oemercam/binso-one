@@ -7,13 +7,27 @@ export class PreflightBlocked extends Error{constructor(counts){super('Read-only
 export async function singleCompanyPreflight(client){
  const sql=await fs.readFile(new URL('../database/operations/single-company-preflight.sql',import.meta.url),'utf8');
  let result;try{result=await client.query(sql);}finally{await client.query('rollback');}
- return preflightCounts(result);
+ return compatiblePreflightCounts(client,result);
 }
 async function privateSlotPreflight(client){
- await client.query('begin read only');
+ await client.query('begin isolation level repeatable read read only');
  try{
-  return preflightCounts(await client.query('select * from binso_release_control.preflight()'));
+  return await compatiblePreflightCounts(client,await client.query('select * from binso_release_control.preflight()'),true);
  }finally{await client.query('rollback');}
+}
+async function compatiblePreflightCounts(client,legacy,inTransaction=false){
+ const catalog=await client.query("select to_regprocedure('public.company_membership_preflight()') is not null as verified_memberships");
+ const schema=(Array.isArray(catalog)?catalog[0]:catalog).rows[0];
+ if(!schema?.verified_memberships)return preflightCounts(legacy);
+ if(!inTransaction)await client.query('begin read only');
+ try{
+  await client.query("select set_config('app.platform_operator','true',true)");
+  const result=await client.query('select * from public.company_membership_preflight()');
+  const {rows}=Array.isArray(result)?result[0]:result;
+  if(rows.length!==1||!keys.slice(0,2).every(key=>Object.hasOwn(rows[0],key)))throw Error('Incomplete company membership preflight metadata');
+  const original=(Array.isArray(legacy)?legacy:[legacy]).flatMap(item=>item.rows??[]);
+  return preflightCounts({rows:[...original.map(row=>Object.fromEntries(Object.entries(row).filter(([key])=>!keys.slice(0,2).includes(key)))),rows[0]]});
+ }finally{if(!inTransaction)await client.query('rollback');}
 }
 function preflightCounts(result){
  const rows=(Array.isArray(result)?result:[result]).flatMap(item=>item.rows??[]),counts={};

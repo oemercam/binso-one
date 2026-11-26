@@ -76,8 +76,9 @@ export async function completeRegistrationVerification(client:PoolClient,userId:
    join organization_memberships m on m.user_id=u.id and m.status='active'
    join organizations o on o.id=m.organization_id and o.status in ('trial','active','grace_period','read_only')
    where u.id=$1 and u.status='active' and lower(u.email)=lower($2) and ($3::uuid is null or m.organization_id=$3::uuid)
-   and (select count(*) from organization_memberships all_m where all_m.user_id=u.id and all_m.status='active')=1
-   order by m.created_at asc limit 1 for update of u`,[userId,email,organizationId??null]);
+   and not o.is_demo
+   and (select count(*) from organization_memberships all_m where all_m.user_id=u.id and all_m.status='active' and all_m.accepted_invitation_id is null)<=1
+   order by m.created_at,m.organization_id limit 1 for update of u`,[userId,email,organizationId??null]);
  const row=membership.rows[0];
  if(!row)return null;
  await client.query("select set_config('app.organization_id',$1,true)",[row.organization_id]);

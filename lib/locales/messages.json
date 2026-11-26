@@ -16445,6 +16445,10 @@
     "İadeler"
   ],
   "Zahlungsstreitfall": ["Payment dispute", "Litige de paiement", "Contestazione di pagamento", "Ödeme itirazı"],
+  "Firma wechseln": ["Switch company", "Changer d’entreprise", "Cambia azienda", "Şirket değiştir"],
+  "Bitte eine gültige Firma auswählen.": ["Select a valid company.", "Sélectionnez une entreprise valide.", "Seleziona un’azienda valida.", "Geçerli bir şirket seçin."],
+  "Speichere oder verwirf zuerst deine offenen Änderungen.": ["Save or discard your changes first.", "Enregistrez ou annulez d’abord vos modifications.", "Salva o annulla prima le modifiche.", "Önce değişikliklerinizi kaydedin veya iptal edin."],
+  "Der Firmenwechsel konnte nicht bestätigt werden.": ["The company switch could not be confirmed.", "Le changement d’entreprise n’a pas pu être confirmé.", "Impossibile confermare il cambio di azienda.", "Şirket değişikliği doğrulanamadı."],
   "Aktion erforderlich": ["Action required", "Action requise", "Azione richiesta", "İşlem gerekiyor"],
   "Antwort erforderlich": ["Response required", "Réponse requise", "Risposta richiesta", "Yanıt gerekiyor"],
   "Gewonnen": ["Won", "Gagné", "Vinta", "Kazanıldı"],

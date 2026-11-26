@@ -434,7 +434,7 @@ function AppShellFrame({
       {headerPanel&&<HeaderPanel key={sheet} kind={sheet} label={sheet==="search"?"Suche":sheet==="account"?"Konto":"Benachrichtigungen"} onClose={()=>setSheet(null)}>
         {sheet==="search"&&<SearchPanel query={query} onQuery={setQuery} items={filtered} loading={searchLoading} error={searchError} recent={recentSearches} onRemember={rememberSearch} onClearRecent={()=>{setClearedSearches(recentSearches);setRecentSearches([])}} onUndoRecent={clearedSearches?()=>{setRecentSearches(clearedSearches);setClearedSearches(null)}:undefined} onClose={()=>setSheet(null)}/>}
         {sheet==="notifications"&&<NotificationPanel items={notifications} loading={notificationsLoading} error={notificationsError} filter={notificationFilter} onFilter={setNotificationFilter} onRead={id=>void markNotificationRead(id)} onRetry={()=>void loadNotifications()} onClose={()=>setSheet(null)}/>}
-        {sheet==="account"&&<AccountPanel profile={profile} logoutBusy={logoutBusy} onLogout={()=>void logout()} onClose={()=>setSheet(null)}/>}
+        {sheet==="account"&&<AccountPanel profile={profile} logoutBusy={logoutBusy} hasDraft={dirty} onLogout={()=>void logout()} onClose={()=>setSheet(null)}/>}
       </HeaderPanel>}
       <ActionSheet label="Mehr" open={sheet==='more'} onClose={()=>setSheet(null)}>
         {moreNavigation.filter(group=>!pilotNavigation||group.title==="Verwaltung"||group.title==="Hilfe").map(group=>group.items.some(item=>canOpen(item.href))&&<SettingsGroup key={group.title} title={group.title}><div className="action-list">{group.items.filter(item=>canOpen(item.href)).map(item=><ActionRow key={item.href} href={item.href} icon={item.icon} title={item.label} navigation onClick={()=>setSheet(null)}/>)}</div></SettingsGroup>)}
