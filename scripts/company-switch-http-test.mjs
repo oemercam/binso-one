@@ -67,6 +67,7 @@ export async function verifyCompanySwitch({base,pool,cookies,organizations}){
   try{
    const browserContext=await browser.newContext();
    await browserContext.addInitScript(()=>{
+    localStorage.setItem('binso.privacy.preferences.v1',JSON.stringify({version:2,essential:true,performance:false}));
     Object.defineProperty(window,'BroadcastChannel',{value:undefined});
     window.addEventListener('storage',event=>event.stopImmediatePropagation(),true);
    });
