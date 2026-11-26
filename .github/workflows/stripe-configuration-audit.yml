@@ -34,8 +34,8 @@ jobs:
           chmod 600 "$SETTINGS_FILE"
           trap 'rm -f "$SETTINGS_FILE"' EXIT
           az webapp config appsettings list \
-            -g rg-binso-admin-prod \
-            -n binso-admin-prod \
+            -g rg-binso-one-prod \
+            -n app-binso-one-prod \
             --query "[?starts_with(name, 'STRIPE_') || name == 'APP_URL'].{name:name,value:value}" \
             -o json > "$SETTINGS_FILE"
           node scripts/stripe-configuration-audit.mjs "$SETTINGS_FILE"
