@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "profile": "critical",
+  "verificationWorkflow": ".github/workflows/pr-quality.yml",
+  "standard": "https://github.com/oemercam/binso-entwicklungsstandard/blob/main/docs/workflow-regeln.md"
+}
