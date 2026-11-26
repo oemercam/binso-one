@@ -9,7 +9,7 @@ const key=values.STRIPE_SECRET_KEY;
 const live=/^(sk|rk)_live_/.test(key??'');
 const appUrl=(values.APP_URL??'').replace(/\/$/,'');
 const webhookUrl=appUrl?appUrl+'/api/billing/webhook':'';
-const requiredEvents=['checkout.session.completed','checkout.session.async_payment_succeeded','checkout.session.async_payment_failed','customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','customer.subscription.paused','customer.subscription.resumed','invoice.paid','invoice.payment_failed','invoice.payment_action_required'];
+const requiredEvents=['checkout.session.completed','checkout.session.async_payment_succeeded','checkout.session.async_payment_failed','customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','customer.subscription.paused','customer.subscription.resumed','invoice.paid','invoice.payment_failed','invoice.payment_action_required','refund.created','refund.updated','refund.failed','charge.dispute.created','charge.dispute.updated','charge.dispute.closed'];
 const priceSettings=Object.entries(planCatalog).flatMap(([id,plan])=>['monthly','yearly'].map(billing=>({
  name:'STRIPE_PRICE_'+id.toUpperCase()+'_'+billing.toUpperCase(),billing,expected:plan[billing],publicOffer:id!=='pro',
 })));

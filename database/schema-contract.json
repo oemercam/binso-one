@@ -119,7 +119,8 @@
     "0115_resource_quotas.sql",
     "0116_timer_calendar_days.sql",
     "0117_operator_password_passkeys.sql",
-    "0118_document_operator_passkey_storage.sql"
+    "0118_document_operator_passkey_storage.sql",
+    "0119_platform_stripe_payment_adjustments.sql"
   ],
   "tables": [
     {
@@ -8192,6 +8193,58 @@
         }
       ],
       "policies": []
+    },
+    {
+      "name": "platform_stripe_payment_adjustments",
+      "rls": true,
+      "forced": true,
+      "columns": [
+        {
+          "name": "external_id",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "payment_id",
+          "type": "uuid",
+          "required": true
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "amount",
+          "type": "numeric(14,2)",
+          "required": true
+        },
+        {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "required": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "required": true
+        }
+      ],
+      "policies": [
+        {
+          "policyname": "platform_stripe_payment_adjustments_operator",
+          "cmd": "ALL",
+          "permissive": "PERMISSIVE",
+          "roles": "{public}",
+          "qual": "(current_setting('app.platform_operator'::text, true) = 'true'::text)",
+          "with_check": "(current_setting('app.platform_operator'::text, true) = 'true'::text)"
+        }
+      ]
     },
     {
       "name": "platform_tenants",

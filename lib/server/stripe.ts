@@ -22,6 +22,13 @@ async function stripeRequest<T>(path:string,body?:URLSearchParams,idempotencyKey
 }
 export const retrieveSubscription=(id:string)=>stripeRequest<StripeObject>('/subscriptions/'+encodeURIComponent(id));
 export const retrieveInvoice=(id:string)=>stripeRequest<StripeObject>('/invoices/'+encodeURIComponent(id));
+export const retrieveRefund=(id:string)=>stripeRequest<StripeObject>('/refunds/'+encodeURIComponent(id));
+export const retrieveDispute=(id:string)=>stripeRequest<StripeObject>('/disputes/'+encodeURIComponent(id));
+export const retrieveCharge=(id:string)=>stripeRequest<StripeObject>('/charges/'+encodeURIComponent(id));
+export function listPaidInvoicePayments(intentId:string){
+ const query=new URLSearchParams({'payment[type]':'payment_intent','payment[payment_intent]':intentId,status:'paid',limit:'100'});
+ return stripeRequest<{data:StripeObject[];has_more:boolean}>(`/invoice_payments?${query}`);
+}
 export const retrievePrice=(id:string)=>stripeRequest<StripeObject>('/prices/'+encodeURIComponent(id));
 export function priceSelection(priceId:string):{plan:PlanId;billing:BillingCycle}|null{
  for(const plan of ['start','business','pro'] as const)for(const billing of ['monthly','yearly'] as const)if(env.stripePrices[plan][billing]===priceId)return {plan,billing};

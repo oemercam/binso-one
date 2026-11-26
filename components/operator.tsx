@@ -423,6 +423,7 @@ function OperatorFinanceView(){
 
 function PaymentsView() {
  const {locale}=useLocale();
+ const translate=useTranslation();
 
 
   const resource=useApiQuery<{items:Array<Record<string,unknown>>}>("/api/operator/payments");
@@ -430,7 +431,19 @@ function PaymentsView() {
   const chips=['Alle','Verbucht','Ausstehend','Storniert'];
   const columns=[{label:'Datum',index:0},{label:'Kunde',index:1},{label:'Betrag',index:2,align:'right' as const},{label:'Status',index:3,status:true},{label:'Referenz',index:4}];
   const controller=useRecordsController({placeholder:'Zahlungen suchen...',chips,columns});
-  const rows=items.map(item=>{const tenant=item.tenant as {name?:string}|undefined,invoice=item.invoice as {number?:string}|undefined;return [new Date(String(item.paid_on)).toLocaleDateString(localeTags[locale]),tenant?.name??'Mandant',(item.currency?String(item.currency):'—')+' '+Number(item.amount??0).toLocaleString(localeTags[locale],{minimumFractionDigits:2,maximumFractionDigits:2}),item.status==='booked'?'Verbucht':item.status==='reversed'?'Storniert':'Ausstehend',[invoice?.number,item.method].filter(Boolean).join(' · ')||'—'];});
+  const paymentAmount=(currency:unknown,amount:unknown)=>String(currency??'—')+' '+Number(amount??0).toLocaleString(localeTags[locale],{minimumFractionDigits:2,maximumFractionDigits:2});
+  const adjustmentStatuses:Record<string,string>={
+   succeeded:translate('Abgeschlossen'),pending:translate('Ausstehend'),failed:translate('Fehler'),canceled:translate('Storniert'),
+   requires_action:translate('Aktion erforderlich'),needs_response:translate('Antwort erforderlich'),
+   warning_needs_response:translate('Antwort erforderlich'),under_review:translate('In Prüfung'),warning_under_review:translate('In Prüfung'),
+   warning_closed:translate('Abgeschlossen'),won:translate('Gewonnen'),lost:translate('Verloren'),prevented:translate('Verhindert')
+  };
+  const rows=items.map(item=>{
+   const tenant=item.tenant as {name?:string}|undefined,invoice=item.invoice as {number?:string}|undefined;
+   const adjustments=(item.adjustments??[]) as {kind:'refund'|'dispute';status:string;amount:number}[];
+   const notes=adjustments.map(a=>[a.kind==='refund'?translate('Rückerstattungen'):translate('Zahlungsstreitfall'),paymentAmount(item.currency,a.amount),adjustmentStatuses[a.status]??a.status].join(' · '));
+   return [new Date(String(item.paid_on)).toLocaleDateString(localeTags[locale]),tenant?.name??'Mandant',paymentAmount(item.currency,item.amount),item.status==='booked'?'Verbucht':item.status==='reversed'?'Storniert':'Ausstehend',[invoice?.number,item.method,...notes].filter(Boolean).join(' · ')||'—'];
+  });
   const loading=resource.loading,loadError=resource.error,refresh=resource.refresh;
 
 
