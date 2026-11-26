@@ -13,8 +13,8 @@ await client.connect();
 let alreadyApplied;
 try{
   await client.query('begin isolation level repeatable read read only');
-  const {rows:[scope]}=await client.query('select current_database() as database, current_user as role');
-  if(scope.database!=='binso_platform'||scope.role!=='binso_one_migrations')throw Error('Unexpected database or migration identity');
+  const {rows:[scope]}=await client.query('select current_database() as database, current_user as role, session_user as login');
+  if(scope.database!=='binso_platform'||scope.role!=='binso_one_migrations'||scope.login!=='binso_one_migrations_live')throw Error('Unexpected database or migration identity');
   const contract=JSON.parse(await readFile('database/schema-contract.json','utf8'));
   alreadyApplied=await verifyAppliedMigrationState(client,contract);
   await client.query('rollback');
