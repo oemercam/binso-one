@@ -26,5 +26,6 @@ export function pushWorkerConfiguration(){
  const requested=process.env.WEB_PUSH_WORKER_ENABLED==='true';
  const value=Number(process.env.WEB_PUSH_INTERVAL_SECONDS??'60');
  const intervalSeconds=Number.isInteger(value)&&value>=30&&value<=900?value:60;
- return {requested,intervalSeconds,enabled:requested&&!!env.databaseUrl&&pushConfiguration().enabled};
+ const reason=!requested?'disabled':!env.databaseUrl?'database_not_configured':pushConfiguration().reason;
+ return {requested,intervalSeconds,enabled:reason==='ready',reason};
 }

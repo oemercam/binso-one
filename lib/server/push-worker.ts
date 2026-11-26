@@ -1,31 +1,44 @@
 import 'server-only';
-import {pushWorkerConfiguration,pushConfiguration} from './push-config';
+import {pushWorkerConfiguration} from './push-config';
 import {dispatchPush} from './push';
 import {log} from './logger';
 
-type Worker={timer:ReturnType<typeof setTimeout>|null;running:boolean;stopped:boolean;failures:number;state:string;lastRunAt:string|null};
+type Worker={timer:ReturnType<typeof setTimeout>|null;running:boolean;stopped:boolean;failures:number;state:string;reason:string|null;lastRunAt:string|null};
 declare global {var __binsoPushWorker:Worker|undefined;}
 
 /** One non-overlapping loop per process. Durable delivery claims coordinate replicas. */
 export function startPushWorker(){
  if(globalThis.__binsoPushWorker&&!globalThis.__binsoPushWorker.stopped)return;
- const state:Worker={timer:null,running:false,stopped:false,failures:0,state:'',lastRunAt:null};
+ const state:Worker={timer:null,running:false,stopped:false,failures:0,state:'',reason:null,lastRunAt:null};
  globalThis.__binsoPushWorker=state;
- const record=(next:string)=>{if(state.state!==next){state.state=next;log(next==='running'||next==='starting'?'info':'warn','web_push_worker',{state:next});}};
+ const record=(next:string,reason:string|null=null)=>{
+  if(state.state===next&&state.reason===reason)return;
+  state.state=next;
+  state.reason=reason;
+  log(next==='running'||next==='starting'||next==='disabled'?'info':'warn','web_push_worker',{state:next,reason});
+ };
  const schedule=(delay:number)=>{if(!state.stopped){state.timer=setTimeout(()=>{void tick();},delay);state.timer.unref();}};
  const tick=async()=>{
   if(state.stopped||state.running)return;
   state.running=true;
-  let delay=pushWorkerConfiguration().intervalSeconds*1000;
+  const config=pushWorkerConfiguration();
+  let delay=config.intervalSeconds*1000;
   try{
-   const config=pushWorkerConfiguration();
-   if(!config.enabled){record(config.requested?'unavailable':'disabled');return;}
+   if(!config.enabled){record(config.requested?'unavailable':'disabled',config.reason);return;}
    const result=await dispatchPush(20);
    state.lastRunAt=new Date().toISOString();
    if(result.attempted)log('info','web_push_dispatch',{attempted:result.attempted,accepted:result.accepted,failed:result.failed,uncertain:result.uncertain,gone:result.gone});
-   if(result.errors||result.failed||result.uncertain){state.failures++;record('degraded');}
+   if(result.errors||result.failed||result.uncertain){
+    state.failures++;
+    record('degraded',result.errors?'delivery_processing_failed':'provider_delivery_failed_or_uncertain');
+   }
    else{state.failures=0;record('running');}
-  }catch{state.failures++;record('unavailable');}
+  }catch(error){
+   state.failures++;
+   const code=(error as {code?:unknown})?.code;
+   const connectionFailed=typeof code==='string'&&(/^[0-9A-Z]{5}$/.test(code)&&code.startsWith('08')||['ECONNREFUSED','ECONNRESET','ENETUNREACH','ETIMEDOUT'].includes(code));
+   record('unavailable',connectionFailed?'database_connection_failed':'dispatch_failed');
+  }
   finally{
    state.running=false;
    if(state.failures)delay=Math.min(15*60*1000,delay*2**Math.min(state.failures,4));
@@ -33,7 +46,8 @@ export function startPushWorker(){
   }
  };
  // No database work in register and no server startup dependency on provider availability.
- record(pushConfiguration().enabled?'starting':'unavailable');
+ const initial=pushWorkerConfiguration();
+ record(initial.enabled?'starting':initial.requested?'unavailable':'disabled',initial.enabled?null:initial.reason);
  schedule(5000+Math.floor(Math.random()*5000));
 }
 
