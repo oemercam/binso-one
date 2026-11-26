@@ -20,6 +20,9 @@ export async function checkSchema(client,contract){
   if(table.rls!==expected.rls||table.forced!==expected.forced)throw Error('RLS contract mismatch: '+expected.name);
   const columns=new Map(table.columns.map(c=>[c.name,c]));
   for(const column of expected.columns)if(JSON.stringify(columns.get(column.name))!==JSON.stringify(column))throw Error('Column contract mismatch: '+expected.name+'.'+column.name);
+  const expectedColumns=new Set(expected.columns.map(column=>column.name));
+  const unexpected=table.columns.filter(column=>!expectedColumns.has(column.name));
+  if(unexpected.length)throw Error('Unclassified columns: '+unexpected.map(column=>expected.name+'.'+column.name).join(', '));
   if(JSON.stringify(table.policies)!==JSON.stringify(expected.policies))throw Error('Policy contract mismatch: '+expected.name);
  }
  const unknown=[...actual.keys()].filter(name=>!contract.tables.some(t=>t.name===name));

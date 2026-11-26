@@ -27,3 +27,7 @@ jobs:
       - run: pnpm ux:contract
       - run: node scripts/foundation-integration-test.mjs
       - run: node scripts/workflow-safety-test.mjs
+      - name: Verify database schema and plan contracts
+        run: |
+          node scripts/schema-contract-test.mjs
+          node scripts/plan-catalog-test.mjs
