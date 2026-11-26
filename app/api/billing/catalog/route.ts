@@ -10,7 +10,7 @@ export async function GET(){try{
  const configured=stripeConfigured()&&!session.isDemo;
  const items=await Promise.all(offeredPlans.filter(plan=>!pilotEnabled||plan.id===pilotPlan).flatMap(plan=>(['monthly','yearly'] as const).map(async billing=>{
   const id=env.stripePrices[plan.id][billing];if(!configured||!id)return {plan:plan.id,name:plan.name,billing,available:false};
-  try{const price=await retrievePrice(id);return {plan:plan.id,name:plan.name,billing,available:true,amount:validatePrice(price,billing),currency:'CHF'};}catch{return {plan:plan.id,name:plan.name,billing,available:false};}
+  try{const price=await retrievePrice(id);return {plan:plan.id,name:plan.name,billing,available:true,amount:validatePrice(price,billing,true,plan[billing]),currency:'CHF'};}catch{return {plan:plan.id,name:plan.name,billing,available:false};}
  })));
  return json({configured,live:stripeLiveMode(),demo:session.isDemo===true,automaticTax:env.stripeAutomaticTax,items});
 }catch(error){return apiError(error)}}

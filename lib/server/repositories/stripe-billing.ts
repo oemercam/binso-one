@@ -1,6 +1,7 @@
 import 'server-only';
 import type {PoolClient} from 'pg';
 import type {BillingCycle,PlanId} from '@/config/domain';
+import {planCatalog} from '@/config/plans';
 import {subscriptionEntitlements} from '@/lib/subscription-plans';
 import {ApiError} from '../http';
 import {env} from '../env';
@@ -27,7 +28,7 @@ export async function startBillingCheckout(c:PoolClient,s:SessionUser,plan:PlanI
  }
  if(open&&(open.plan!==plan||open.billing_interval!==billing)){const expired=await expireCheckoutSession(open.stripe_session_id);if(expired.status!=='expired')throw new ApiError(409,'checkout_pending','Der vorherige Checkout muss zuerst abgeschlossen werden.');await c.query('update billing_checkout_sessions set expires_at=now() where id=$1',[open.id]);}
  const priceId=env.stripePrices[plan][billing];if(!priceId)throw new ApiError(503,'stripe_price_missing','Dieser Zahlungszeitraum ist noch nicht eingerichtet.');
- const price=await retrievePrice(priceId);validatePrice(price,billing);
+ const price=await retrievePrice(priceId);validatePrice(price,billing,true,planCatalog[plan][billing]);
  let customerId=str(row.billing_customer_id);
  if(!customerId){const customer=await createStripeCustomer({organizationId:s.organizationId,email:s.email,name:row.name});customerId=customer.id;if(!/^cus_/.test(customerId))throw new ApiError(502,'stripe_customer_invalid','Stripe-Kunde konnte nicht angelegt werden.');await c.query('update organization_subscriptions set billing_customer_id=$2,updated_at=now() where organization_id=$1',[s.organizationId,customerId]);}
  const returnUrl=`${env.appUrl.replace(/\/$/,'')}/einstellungen/abonnement`;

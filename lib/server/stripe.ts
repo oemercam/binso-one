@@ -27,9 +27,10 @@ export function priceSelection(priceId:string):{plan:PlanId;billing:BillingCycle
  for(const plan of ['start','business','pro'] as const)for(const billing of ['monthly','yearly'] as const)if(env.stripePrices[plan][billing]===priceId)return {plan,billing};
  return null;
 }
-export function validatePrice(price:StripeObject,billing:BillingCycle,requireActive=true){
+export function validatePrice(price:StripeObject,billing:BillingCycle,requireActive=true,expectedAmount?:number){
  const recurring=objectValue(price.recurring),amount=Number(price.unit_amount);
  if((requireActive&&price.active!==true)||price.livemode!==stripeLiveMode()||price.currency!=='chf'||recurring.interval!==(billing==='monthly'?'month':'year')||Number(recurring.interval_count)!==1||!Number.isSafeInteger(amount)||amount<=0)throw new ApiError(503,'stripe_price_invalid','Der Stripe-Preis ist nicht als gültiger CHF-Abopreis im konfigurierten Stripe-Modus eingerichtet.');
+ if(expectedAmount!==undefined&&amount!==expectedAmount*100)throw new ApiError(503,'stripe_price_mismatch','Der Stripe-Preis stimmt nicht mit dem veröffentlichten Tarif überein.');
  return amount/100;
 }
 export async function createStripeCustomer(input:{email:string;organizationId:string;name:string}){

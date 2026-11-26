@@ -419,6 +419,10 @@ try{
  assert.equal(checkoutCalls,0);
  assert.equal((await db.query('select billing_customer_id from organization_subscriptions where organization_id=$1',[billingTenant.organizationId])).rows[0].billing_customer_id,null,'Blocked checkout does not create a provider customer');
  await db.query("update organization_subscriptions set status='expired',trial_until=now()-interval '1 second' where organization_id=$1",[billingTenant.organizationId]);
+ prices.price_business_y.unit_amount=69001;
+ await assert.rejects(globalThis.__provisionTest(c=>startBillingCheckout(c,billingSession,'business','yearly',requestKey)),e=>e.code==='stripe_price_mismatch');
+ assert.equal(checkoutCalls,0,'A mismatched displayed price must never create a checkout');
+ prices.price_business_y.unit_amount=69000;
  const checkout=await globalThis.__provisionTest(c=>startBillingCheckout(c,billingSession,'business','yearly',requestKey));
  assert.ok(checkout.url.startsWith('https://checkout.stripe.com/'));
  const sameCheckout=await globalThis.__provisionTest(c=>startBillingCheckout(c,billingSession,'business','yearly','00000000-0000-4000-8000-000000000035'));
