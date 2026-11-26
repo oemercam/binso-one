@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {planCatalog} from '../config/plans.ts';
 const settings=JSON.parse(await fs.readFile(process.argv[2],'utf8'));
 const values=Object.fromEntries(settings.map(x=>[x.name,x.value]));
 for(const [name,value] of Object.entries(values))if(value&&/KEY|SECRET/.test(name))console.log(`::add-mask::${value}`);
@@ -9,7 +10,9 @@ const live=/^(sk|rk)_live_/.test(key??'');
 const appUrl=(values.APP_URL??'').replace(/\/$/,'');
 const webhookUrl=appUrl?appUrl+'/api/billing/webhook':'';
 const requiredEvents=['checkout.session.completed','checkout.session.async_payment_succeeded','checkout.session.async_payment_failed','customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','customer.subscription.paused','customer.subscription.resumed','invoice.paid','invoice.payment_failed','invoice.payment_action_required'];
-const names=['STRIPE_PRICE_START_MONTHLY','STRIPE_PRICE_START_YEARLY','STRIPE_PRICE_BUSINESS_MONTHLY','STRIPE_PRICE_BUSINESS_YEARLY','STRIPE_PRICE_PRO_MONTHLY','STRIPE_PRICE_PRO_YEARLY'];
+const priceSettings=Object.entries(planCatalog).flatMap(([id,plan])=>['monthly','yearly'].map(billing=>({
+ name:'STRIPE_PRICE_'+id.toUpperCase()+'_'+billing.toUpperCase(),billing,expected:plan[billing],publicOffer:id!=='pro',
+})));
 let ready=Boolean(key&&values.STRIPE_WEBHOOK_SECRET&&live&&/^https:\/\//.test(appUrl));
 console.log(JSON.stringify({apiVersion:version,keyConfigured:Boolean(key),webhookSecretConfigured:Boolean(values.STRIPE_WEBHOOK_SECRET),mode:live?'live':'not-live',appUrlConfigured:Boolean(appUrl),automaticTaxEnabled:/^(1|true|yes|on)$/i.test(values.STRIPE_AUTOMATIC_TAX??'')}));
 async function get(path){try{const r=await fetch('https://api.stripe.com/v1'+path,{headers:{authorization:`Bearer ${key}`,'Stripe-Version':version},signal:AbortSignal.timeout(10000)});return r.ok?await r.json():null;}catch{return null;}}
@@ -20,12 +23,12 @@ if(key){
  console.log(JSON.stringify({accountId:account?.id??null,chargesEnabled:account?.charges_enabled??false,payoutsEnabled:account?.payouts_enabled??false,detailsSubmitted:account?.details_submitted??false,accountReady}));
  if(!accountReady)ready=false;
 }
-for(const name of names){
+for(const {name,billing,expected,publicOffer} of priceSettings){
  const id=values[name];
  const p=key&&id?await get('/prices/'+encodeURIComponent(id)):null;
- const valid=Boolean(p?.active&&p?.livemode===true&&p.currency==='chf'&&p.recurring?.interval===(name.endsWith('YEARLY')?'year':'month')&&p.recurring?.interval_count===1&&Number.isSafeInteger(p.unit_amount)&&p.unit_amount>0);
+ const valid=Boolean(p?.active&&p?.livemode===true&&p.currency==='chf'&&p.recurring?.interval===(billing==='yearly'?'year':'month')&&p.recurring?.interval_count===1&&Number.isSafeInteger(p.unit_amount)&&p.unit_amount>0&&(!publicOffer||p.unit_amount===expected*100));
  if(!valid)ready=false;
- console.log(JSON.stringify({setting:name,configured:Boolean(id),valid,live:p?.livemode===true,amount:valid?p.unit_amount/100:null}));
+ console.log(JSON.stringify({setting:name,configured:Boolean(id),valid,live:p?.livemode===true,amount:Number.isSafeInteger(p?.unit_amount)?p.unit_amount/100:null,expectedAmount:publicOffer?expected:null}));
 }
 const webhookList=key?await get('/webhook_endpoints?limit=100'):null;
 const endpoint=Array.isArray(webhookList?.data)?webhookList.data.find(x=>x?.url===webhookUrl&&x?.livemode===true&&x?.status==='enabled'):null;
