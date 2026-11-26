@@ -18,7 +18,7 @@ on:
         type: string
         default: ''
   schedule:
-    - cron: '23 1 * * *'
+    - cron: '23 1 * * 1'
 concurrency:
   group: quality-${{ github.event.pull_request.number || github.ref }}-${{ inputs.release_profile || 'production' }}
   # PR updates supersede stale checks. Main/manual runs serialize per ref/profile,
@@ -237,7 +237,7 @@ jobs:
     if: needs.plan.outputs.browser == 'true'
     runs-on: ubuntu-24.04
     # Responsive shards and functional suites use separate runners; all gate quality.
-    # Full nightly WebKit route sweeps can exceed 30 minutes under shared runner load.
+    # Full scheduled WebKit route sweeps can exceed 30 minutes under shared runner load.
     # Coverage and blocking results remain unchanged; only the execution ceiling increases.
     timeout-minutes: 45
     strategy:
