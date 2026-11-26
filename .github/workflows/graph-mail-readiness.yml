@@ -43,7 +43,7 @@ jobs:
           umask 077
           SETTINGS_FILE="$(mktemp)"
           trap 'rm -f "$SETTINGS_FILE" /tmp/graph-send-response' EXIT
-          az webapp config appsettings list -g rg-binso-admin-prod -n binso-admin-prod \
+          az webapp config appsettings list -g rg-binso-one-prod -n app-binso-one-prod \
             --query "[?starts_with(name, 'GRAPH_')].{name:name,value:value}" -o json > "$SETTINGS_FILE"
           get_setting() {
             node -e 'const fs=require("fs");const rows=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));process.stdout.write(String(rows.find(r=>r.name===process.argv[2])?.value??""))' "$SETTINGS_FILE" "$1"
