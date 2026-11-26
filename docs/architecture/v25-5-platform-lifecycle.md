@@ -89,6 +89,27 @@ Invertierung bleibt real zu prüfen; keine pauschale Dark-Mode-Garantie.
 
 ## Migration, Preflight und Rollback
 
+### Vorbereitung des Firmenwechsels
+
+Ein Login soll mehrere Organisationen mit jeweils eigener Rolle und eigenem
+Modulprofil öffnen können. Jede Sitzung bleibt an genau eine Organisation
+gebunden. Eine bestätigte Einladung ist der Nachweis für eine zusätzliche
+Mitgliedschaft. Eine passende E-Mail-Adresse allein erteilt keinen Zugriff.
+
+Die Passwortwiederherstellung prüft bereits die Faktoren des gesamten Kontos
+und entfernt bei Erfolg alle Sitzungen und offenen Passkey-Challenges dieses
+Kontos. Die Firmenauswahl und der Wechsel benötigen einen eigenen Freigabestand.
+Der Wechsel muss eine neue Sitzung ausstellen, die alte Sitzung widerrufen und
+firmenbezogene Berechtigungen und Entwürfe neu laden. Eine Aktion aus einem
+älteren Tab muss bei abweichender Sitzungsbindung abgelehnt werden.
+
+Die private Migration verwendet `binso_release_control.preflight()` mit den
+Einzelfirmen-Prüfungen. Vor der Freischaltung muss deren Nachfolger nachweislich
+bestätigte Zusatzmitgliedschaften von Alt-Konflikten unterscheiden. Die
+Prüfungen auf Firmen ohne Inhaber und Checkout-Konflikte gelten weiter.
+Der Freigabetest braucht zwei Firmen mit unterschiedlichen Rollen, eine dritte
+fremde Firma, eine gesperrte Mitgliedschaft und zwei parallele Browser-Tabs.
+
 0060 schützt neue aktive Mitgliedschaften, ohne bestehende Mehrfachzuordnungen
 zu löschen. 0061 erhält alte genehmigte Zeiten, sperrt aber neue Draft-Freigaben.
 0062 ergänzt geschützte Passkey-/Challenge-Tabellen und Security-Outbox-Art.
