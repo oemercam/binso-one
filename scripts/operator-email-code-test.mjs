@@ -28,7 +28,7 @@ const session=await load('lib/server/operator/session.ts',{'next/headers':nextHe
 const mail=moduleUrl('export const sendMail=async message=>{globalThis.operatorMail=message; return {delivered:!globalThis.operatorMailFailure};};');
 const policy=await load('lib/password-policy.ts');
 const password=await load('lib/server/password.ts',{'@/lib/password-policy':policy});
-const login=await import(await load('lib/server/operator/email-login.ts',{'next/headers':nextHeaders,'@/lib/server/db':database,'@/lib/server/env':env,'@/lib/server/http':http,'@/lib/server/password':password,'@/lib/server/email':mail,'./audit':audit,'./session':session}));
+const login=await import(await load('lib/server/operator/email-login.ts',{'next/headers':nextHeaders,'@/lib/server/db':database,'@/lib/server/env':env,'@/lib/server/http':http,'@/lib/server/password':password,'@/lib/password-policy':policy,'@/lib/server/email':mail,'./audit':audit,'./session':session}));
 const {getOperatorSession}=await import(session);
 const jar=await (await import(nextHeaders)).cookies();
 const db=new PGlite({extensions:{pgcrypto}});
@@ -40,11 +40,14 @@ try{
  }
  const query=db.query.bind(db);
  globalThis.__binsoPool={query,connect:async()=>({query,release(){}})};
- const email='operator@example.invalid',secret='Local test password!7';
+ const email='operator@example.invalid',secret='Abcdef1!';
  const linkToken='B'.repeat(43);
  const setupHash=createHash('sha256').update(linkToken).digest('hex');
  await db.query("insert into platform_operator_assignments(user_id,email,role,auth_source,email_setup_hash,email_setup_expires_at) values('local-admin',$1,'platform_admin','entra',$2,now()+interval '30 minutes')",[email,setupHash]);
  assert.equal(await login.setInitialOperatorPassword('A'.repeat(43),secret),false);
+ for(const rejected of ['Abcde1!','abcdef1!','ABCDEF1!','Abcdefg!','Abcdefg1']){
+  await assert.rejects(login.setInitialOperatorPassword(linkToken,rejected),{code:'invalid_password'});
+ }
  assert.equal(await login.setInitialOperatorPassword(linkToken,secret),true);
  assert.equal(await login.setInitialOperatorPassword(linkToken,secret),false);
  await assert.rejects(login.beginOperatorEmailLogin(email,'wrong'),{code:'invalid_credentials'});

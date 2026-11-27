@@ -1,6 +1,6 @@
 "use client";
 
-import {hasValidNewPassword, MIN_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
+import {hasValidNewPassword, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
 import {AuthWorkspace} from "@/components/auth-workspace";
 
 import {clearClientSession} from "@/lib/client/backend";
@@ -53,8 +53,8 @@ export default function Page(){
     {!ready?<><LoadingState/></>:invalid?<><h1><LocalizedText>{"Link nicht gültig"}</LocalizedText></h1><p><LocalizedText>{"Der Link ist abgelaufen oder ungültig. Fordere einen neuen Link an."}</LocalizedText></p><Button href="/passwort-vergessen"><LocalizedText>{"Neuen Link anfordern"}</LocalizedText></Button></>:done?<><h1><LocalizedText>{"Passwort geändert"}</LocalizedText></h1><p className="auth-feedback" role="status"><LocalizedText>{"Du kannst dich jetzt mit deinem neuen Passwort anmelden."}</LocalizedText></p><Button href="/login"><LocalizedText>{"Zur Anmeldung"}</LocalizedText></Button></>:<>
       <h1><LocalizedText>{"Neues Passwort"}</LocalizedText></h1><p><LocalizedText>{"Lege ein neues Passwort für dein Binso One Konto fest."}</LocalizedText></p>
       <form method="post" onSubmit={submit}>
-        <Field label="Neues Passwort" hint={PASSWORD_REQUIREMENTS}><PasswordInput id="reset-password" name="new-password" required minLength={MIN_PASSWORD_LENGTH} maxLength={256} value={password} onChange={e=>setPassword(e.target.value)} autoComplete="new-password"/></Field>
-        <Field label="Passwort bestätigen"><PasswordInput id="reset-password-confirmation" name="confirm-password" required minLength={MIN_PASSWORD_LENGTH} maxLength={256} value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password"/></Field>
+        <Field label="Neues Passwort" hint={PASSWORD_REQUIREMENTS}><PasswordInput id="reset-password" name="new-password" required minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} value={password} onChange={e=>setPassword(e.target.value)} autoComplete="new-password"/></Field>
+        <Field label="Passwort bestätigen"><PasswordInput id="reset-password-confirmation" name="confirm-password" required minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password"/></Field>
         {factorRequired&&<Field label="Authenticator- oder Wiederherstellungscode"><Input required value={recoveryCode} onChange={e=>setRecoveryCode(e.target.value)} maxLength={80} autoComplete="one-time-code"/></Field>}
         {error&&<ErrorState className="auth-error"><LocalizedText>{error}</LocalizedText></ErrorState>}
         <Button type="submit" disabled={loading}><LocalizedText>{loading?"Wird gespeichert…":"Passwort speichern"}</LocalizedText></Button>

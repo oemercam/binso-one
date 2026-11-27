@@ -1,4 +1,4 @@
-import {hasValidNewPassword, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
+import {hasValidNewPassword, MAX_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
 import { NextRequest } from "next/server";
 import { ApiError, apiError, assertSameOrigin, json, readJson } from "@/lib/server/http";
 import { consumeAuthToken } from "@/lib/server/auth-tokens";
@@ -15,7 +15,7 @@ export async function PATCH(request:NextRequest){
  try{
   assertSameOrigin(request);const body=await readJson<{token?:unknown;password?:unknown;currentPassword?:unknown;recoveryCode?:unknown}>(request,8192);
   const token=typeof body.token==="string"?body.token:"";const password=typeof body.password==="string"?body.password:"";
-  if(password.length>256)return json({error:"password_too_long",message:"Das Passwort ist zu lang."},400);
+  if(password.length>MAX_PASSWORD_LENGTH)return json({error:"password_too_long",message:"Das Passwort ist zu lang."},400);
   if(!hasValidNewPassword(password))return json({error:"password_invalid",message:PASSWORD_REQUIREMENTS},400);
   if(!token){
     const session=await requireSession();

@@ -1,6 +1,7 @@
 import {createHash,randomBytes,scrypt as derive} from 'node:crypto';
 import {promisify} from 'node:util';
 import pg from 'pg';
+import {hasValidNewPassword,PASSWORD_REQUIREMENTS} from '../lib/password-policy.ts';
 
 const [email,...extra]=process.argv.slice(2);
 if(!email||extra.length||process.stdin.isTTY||!process.env.DATABASE_URL){
@@ -9,7 +10,7 @@ if(!email||extra.length||process.stdin.isTTY||!process.env.DATABASE_URL){
 const chunks=[];
 for await(const chunk of process.stdin)chunks.push(chunk);
 const password=Buffer.concat(chunks).toString('utf8').replace(/\r?\n$/,'');
-if(password.length<16||password.length>256)throw Error('Admin passwords must contain at least 16 characters.');
+if(!hasValidNewPassword(password))throw Error(PASSWORD_REQUIREMENTS);
 const salt=randomBytes(16).toString('hex');
 const passwordHash='scrypt$'+salt+'$'+(await promisify(derive)(password,salt,64)).toString('hex');
 const setup=randomBytes(32).toString('base64url');
