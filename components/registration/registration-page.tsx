@@ -63,8 +63,8 @@ export function RegistrationPage(){
   event.preventDefault();
   if(saving.current||!context)return;
   if(stage==="new"){const invalid=Array.from(form.current?.querySelectorAll<HTMLInputElement>("input")??[]).find(input=>!input.checkValidity());if(invalid){invalid.reportValidity();return;}}
-  if(stage==='new'&&step===1&&!hasValidNewPassword(password)){setError('passwordHelp');return;}
-  if(stage==='new'&&step<2){setError('');setStep(step+1);return;}
+  if(stage==='new'&&step===0&&!hasValidNewPassword(password)){setError('passwordHelp');return;}
+  if(stage==='new'&&step<1){setError('');setStep(step+1);return;}
   saving.current=true;setBusy(true);setError('');
   try{
    if(stage==='pending'){finish(await request('/api/auth/verify-email',{email,code}));return;}
@@ -82,11 +82,13 @@ export function RegistrationPage(){
  const planSummary=context&&<><p>{context.plan?.name??t('noPlan')}</p>{context.plan&&<p>{t('futurePrice',{amount:context.billingCycle==='yearly'?context.plan.yearly:context.plan.monthly,interval:t(context.billingCycle)})}</p>}<p>{t('trial',{days:context.trialDays})}</p><p>{t('conditions')}</p></>;
  return <AuthWorkspace variant="access" lang={locale}><section className="auth-card registration-page" aria-labelledby="registration-title">
   <h1 id="registration-title">{t('title')}</h1>
-  {!context?(error?<><ErrorState>{t('failure')}</ErrorState><Button onClick={()=>setRetry(retry+1)}>{t('open')}</Button></>:<LoadingState/>):stage==='new'?<form ref={form} onSubmit={submit} noValidate>
-   <p className="registration-progress" role="status">{t('stepProgress',{step:step+1,total:3})} · {t(step===0?'email':step===1?'password':'company')}</p>
-   {step===0&&<Field label={t('email')+' *'}><Input id="registration-username" name="username" required type="email" inputMode="email" autoComplete="username" autoCapitalize="none" spellCheck={false} enterKeyHint="next" maxLength={320} value={email} onChange={event=>setEmail(event.target.value)} placeholder="name@firma.ch"/></Field>}
-   {step===1&&<Field label={t('password')+' *'} hint={t('passwordHelp')}><PasswordInput id="registration-password" name="password" enterKeyHint="next" required minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} autoComplete="new-password" value={password} onChange={event=>setPassword(event.target.value)} showLabel={t('showPassword')} hideLabel={t('hidePassword')}/></Field>}
-   {step===2&&<>
+  {!context?(error?<><ErrorState>{t('failure')}</ErrorState><Button onClick={()=>setRetry(retry+1)}>{t('open')}</Button></>:<LoadingState/>):stage==='new'?<form method="post" ref={form} onSubmit={submit} noValidate>
+   <p className="registration-progress" role="status">{t('stepProgress',{step:step+1,total:3})} · {t(step===0?'access':'company')}</p>
+   {step===0&&<>
+   <Field label={t('email')+' *'}><Input id="registration-username" name="username" required type="email" inputMode="email" autoComplete="username" autoCapitalize="none" spellCheck={false} enterKeyHint="next" maxLength={320} value={email} onChange={event=>setEmail(event.target.value)} placeholder="name@firma.ch"/></Field>
+   <Field label={t('password')+' *'} hint={t('passwordHelp')}><PasswordInput id="registration-password" name="password" enterKeyHint="next" required minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH} autoComplete="new-password" value={password} onChange={event=>setPassword(event.target.value)} showLabel={t('showPassword')} hideLabel={t('hidePassword')}/></Field>
+   </>}
+   {step===1&&<>
    <Field label={t('companyName')+' *'}><Input name="company" required minLength={2} maxLength={180} autoComplete="organization" value={company} onChange={event=>setCompany(event.target.value)} placeholder={t('companyExample')}/></Field>
    <Field label={t('firstName')+' *'}><Input name="firstName" required maxLength={80} autoComplete="given-name" value={firstName} onChange={event=>setFirstName(event.target.value)}/></Field>
    <Field label={t('lastName')+' *'}><Input name="lastName" required maxLength={80} autoComplete="family-name" value={lastName} onChange={event=>setLastName(event.target.value)}/></Field>
@@ -95,8 +97,9 @@ export function RegistrationPage(){
    <Field label={t('accept')+' *'}><Input name="acceptedTerms" type="checkbox" required checked={accepted} onChange={event=>setAccepted(event.target.checked)}/></Field>
    </>}
    {error&&<ErrorState>{t(error as RegistrationTextKey)}{error==='conflict'&&<p><Link href="/passwort-vergessen" target="_blank" rel="noopener noreferrer">{t('resetPassword')}</Link></p>}</ErrorState>}
-   <Button type="submit" disabled={busy||step===2&&!accepted}>{busy?t('creating'):t(step===2?'create':'next')}</Button>{step>0&&<Button variant="secondary" disabled={busy} onClick={()=>setStep(step-1)}>{t('back')}</Button>}<Button variant="secondary" disabled={busy} onClick={requestCancel}>{t('cancel')}</Button>
-  </form>:stage==='pending'?<form id="registration-verification" ref={form} onSubmit={submit}>
+   <Button type="submit" disabled={busy||step===1&&!accepted}>{busy?t('creating'):t(step===1?'create':'next')}</Button>{step>0&&<Button variant="secondary" disabled={busy} onClick={()=>setStep(step-1)}>{t('back')}</Button>}<Button variant="secondary" disabled={busy} onClick={requestCancel}>{t('cancel')}</Button>
+  </form>:stage==='pending'?<form method="post" id="registration-verification" ref={form} onSubmit={submit}>
+   <p className="registration-progress" role="status">{t('stepProgress',{step:3,total:3})} · {t('verify')}</p>
    <h2>{t('verification')}</h2>{status&&<p className="auth-feedback" data-tone="info" role="status">{t(status)}</p>}<p>{email}</p><Field label={t('code')+' *'}><Input id="registration-code" name="code" type="text" enterKeyHint="done" required minLength={6} maxLength={6} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" value={code} onChange={event=>setCode(event.target.value.replace(/\D/g,'').slice(0,6))} placeholder="000000"/></Field>
    {error&&<ErrorState>{t(error as RegistrationTextKey)}</ErrorState>}<Button type="submit" disabled={busy||code.length!==6}>{busy?t('sending'):t('verify')}</Button><Button variant="secondary" disabled={busy} onClick={()=>void resend()}>{t('resend')}</Button>
   </form>:<><h2>{t('verified')}</h2><p className="auth-feedback" role="status">{t('alreadyVerified')}</p></>}
