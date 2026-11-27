@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {spawnSync} from 'node:child_process';
+import {execFileSync,spawnSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {PGlite} from '@electric-sql/pglite';
-import {verifyMonitoringContract} from './monitoring-contract-test.mjs';
+import {binsoOneMonitoringFixture,verifyMonitoringContract} from './monitoring-contract-test.mjs';
 const temp=await fs.mkdtemp(path.join(os.tmpdir(),'binso-readiness-'));
 const db=new PGlite();
 try {
@@ -38,7 +38,9 @@ import assert from 'node:assert/strict';
 import childProcess from 'node:child_process';
 import {syncBuiltinESMExports} from 'node:module';
 const r=JSON.parse(process.env.MONITOR_FIXTURE_RESOURCES);
+const current=JSON.parse(process.env.MONITOR_CURRENT_FIXTURE);
 const data={
+ ...current.one,
  [r.app]:{id:r.app,properties:{state:'Running'}},
  [r.insights]:{id:r.insights,tags:{['hidden-link:'+r.app]:'Resource'},properties:{WorkspaceResourceId:'fixture-workspace'}},
  [r.alert]:{id:r.alert,properties:{enabled:true,scopes:[r.app],criteria:{allOf:[{metricName:'Http5xx',metricNamespace:'Microsoft.Web/sites',operator:'GreaterThan',threshold:0,timeAggregation:'Total'}]},actions:[{actionGroupId:r.actionGroup}]}},
@@ -48,11 +50,16 @@ if(process.env.CASE==='missing')data[r.insights]=null;
 if(process.env.CASE==='wrong_scope')data[r.alert].properties.scopes=['foreign-app'];
 if(process.env.CASE==='missing_link')data[r.insights].tags={};
 if(process.env.CASE==='bad_criteria')data[r.alert].properties.criteria.allOf[0].metricName='Requests';
-if(process.env.CASE==='no_receivers')data[r.actionGroup].properties.armRoleReceivers=[];
+if(process.env.CASE==='no_receivers')data[current.groupId].properties.logicAppReceivers=[];
 childProcess.execFileSync=(command,args)=>{
  assert.equal(command,'az');
  if(process.env.DENIED==='yes')throw Error('fixture access denied');
  let id;
+ if(args[0]==='webapp'){
+  assert.deepEqual(args,['webapp','show','--resource-group','rg-binso-one-prod','--name','app-binso-one-prod','--query','id','--output','tsv']);
+  fs.appendFileSync(process.env.MONITOR_FIXTURE_CALLS,JSON.stringify({script:process.argv[1],id:current.app})+'\n');
+  return current.app+'\n';
+ }
  if(args[0]==='resource'&&args[1]==='show'){
   id=args[args.indexOf('--ids')+1];
   assert.equal(args[args.indexOf('--subscription')+1],id.split('/')[2]);
@@ -60,7 +67,7 @@ childProcess.execFileSync=(command,args)=>{
   assert.equal(args[0],'rest');assert.equal(args[args.indexOf('--method')+1],'get');
   const url=new URL(args[args.indexOf('--url')+1]);assert.equal(url.hostname,'management.azure.com');id=decodeURIComponent(url.pathname);
  }
- assert(Object.values(r).includes(id),'Only canonical resource GETs are permitted');
+ assert(Object.hasOwn(data,id),'Only canonical resource GETs are permitted');
  fs.appendFileSync(process.env.MONITOR_FIXTURE_CALLS,JSON.stringify({script:process.argv[1],id})+'\n');
  return process.env.CASE==='invalid_json'?'{broken':JSON.stringify(data[id]??null);
 };
@@ -68,21 +75,23 @@ syncBuiltinESMExports();
 `);
  const harness=path.join(temp,'monitor-fixture.sh');
  await fs.writeFile(harness,'#!/usr/bin/env bash\nset -euo pipefail\naz() { echo "Unexpected direct Azure command" >&2; return 9; }\nnode() { command node --import "$MONITOR_FIXTURE_IMPORT" "$@"; }\nsource "$1"\n');
- const bash=process.platform==='win32'?path.resolve(process.env.GIT_EXEC_PATH??'', '../../../bin/bash.exe'):'bash';
+ const bash=process.platform==='win32'?path.resolve(process.env.GIT_EXEC_PATH||execFileSync('git',['--exec-path'],{encoding:'utf8'}).trim(), '../../../bin/bash.exe'):'bash';
  if(process.platform==='win32')await fs.access(bash);
  const shellPath=file=>process.platform==='win32'?file.replace(/\\/g,'/').replace(/^([A-Za-z]):/,(_,drive)=>'/'+drive.toLowerCase()):file;
  const resourceFixture=JSON.parse(await fs.readFile('.github/model-a/readiness-resources.json','utf8'));
+ const root='/subscriptions/00000000-0000-4000-8000-000000000001/resourceGroups/rg-binso-one-prod/providers';
+ const {one,groupId}=binsoOneMonitoringFixture(root);
+ const currentFixture={one,groupId,app:root+'/Microsoft.Web/sites/app-binso-one-prod'};
  let monitorIndex=0;
  const monitor=extra=>{
   const calls=path.join(temp,'calls-'+(++monitorIndex)+'.jsonl');
-  return {...spawnSync(bash,[shellPath(harness),shellPath(path.resolve('scripts/production-monitoring-check.sh'))],{env:{...process.env,...extra,MONITOR_FIXTURE_IMPORT:pathToFileURL(peer).href,MONITOR_FIXTURE_RESOURCES:JSON.stringify(resourceFixture),MONITOR_FIXTURE_CALLS:calls},encoding:'utf8'}),calls};
+  return {...spawnSync(bash,[shellPath(harness),shellPath(path.resolve('scripts/production-monitoring-check.sh'))],{env:{...process.env,...extra,MONITOR_FIXTURE_IMPORT:pathToFileURL(peer).href,MONITOR_FIXTURE_RESOURCES:JSON.stringify(resourceFixture),MONITOR_CURRENT_FIXTURE:JSON.stringify(currentFixture),MONITOR_FIXTURE_CALLS:calls},encoding:'utf8'}),calls};
  };
  const valid=monitor({});assert.equal(valid.status,0,valid.error?.message??valid.stderr);
  const calls=(await fs.readFile(valid.calls,'utf8')).trim().split('\n').map(line=>JSON.parse(line));
- for(const script of ['azure-readiness-check.mjs','production-monitoring-check.mjs']){
-  const targets=calls.filter(call=>call.script.endsWith(script)).map(call=>call.id).sort();
-  assert.deepEqual(targets,[resourceFixture.app,resourceFixture.insights,resourceFixture.alert,resourceFixture.actionGroup].sort(),'Both independent monitoring contracts must execute across the exact subscription boundary');
- }
+ const targets=script=>calls.filter(call=>call.script.endsWith(script)).map(call=>call.id).sort();
+ assert.deepEqual(targets('azure-readiness-check.mjs'),[resourceFixture.app,resourceFixture.insights,resourceFixture.alert,resourceFixture.actionGroup].sort());
+ assert.deepEqual(targets('production-monitoring-check.mjs'),[currentFixture.app,...Object.keys(currentFixture.one)].sort());
  for(const extra of [{DENIED:'yes'},...['missing','wrong_scope','missing_link','bad_criteria','no_receivers','invalid_json'].map(CASE=>({CASE}))]){const result=monitor(extra);assert.equal(result.error,undefined);assert.notEqual(result.status,0,'Real monitoring CLI must reject '+JSON.stringify(extra));}
  console.log('Runtime role, inherited bypass/ownership, public-schema creation denial, pinned Azure issuer and real Bash monitoring failure gates passed.');
 } finally {await db.close();await fs.rm(temp,{recursive:true,force:true});}
