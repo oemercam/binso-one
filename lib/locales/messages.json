@@ -11770,6 +11770,12 @@
     "Misurazione facoltativa di tempi di caricamento e stabilità visiva.",
     "Yükleme süresi ve görsel kararlılığın isteğe bağlı ölçümü."
   ],
+  "Für die Ladezeit der Startseite wird zusätzlich gespeichert, ob der sichtbare Browserbereich schmal war. Genaue Abmessungen werden nicht gespeichert.": [
+    "For homepage load time, we also record whether the visible browser area was narrow. Exact dimensions are not stored.",
+    "Pour le temps de chargement de la page d’accueil, nous enregistrons aussi si la zone visible du navigateur était étroite. Les dimensions exactes ne sont pas conservées.",
+    "Per il tempo di caricamento della pagina iniziale registriamo anche se l’area visibile del browser era stretta. Le dimensioni esatte non vengono memorizzate.",
+    "Ana sayfanın yüklenme süresi için tarayıcının görünür alanının dar olup olmadığını da kaydederiz. Kesin ölçüler saklanmaz."
+  ],
   "Optionale Performance-Messungen erfassen technische Web-Vitals wie Ladezeit und Darstellungsstabilität sowie die aufgerufene Route in gekürzter Form. Sie werden erst aktiviert, wenn der Benutzer dies in den Cookie-/Datenschutz-Einstellungen erlaubt. Es werden dabei keine Werbe- oder Cross-Site-Tracking-Cookies eingesetzt. Die Auswahl kann jederzeit über den Link «Cookie-/Datenschutz-Einstellungen» im Footer geändert werden.": [
     "Optional performance measurement collects technical Web Vitals such as loading time, layout stability and a shortened page route. It is activated only with permission in cookie/privacy settings. No advertising or cross-site tracking cookies are used. You can change your choice at any time using the Cookie/privacy settings link in the footer.",
     "La mesure facultative des performances recueille des Web Vitals techniques comme le temps de chargement, la stabilité visuelle et le chemin abrégé de la page. Elle est activée uniquement avec l’autorisation dans les paramètres des cookies et de confidentialité. Aucun cookie publicitaire ni de suivi intersites n’est utilisé. Le choix peut être modifié à tout moment via le lien correspondant du pied de page.",

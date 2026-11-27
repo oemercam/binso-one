@@ -36,6 +36,9 @@ export async function monitoringSnapshot(role:OperatorRole):Promise<MonitoringSn
  metric('past_due','Überfällige Abonnemente','business',readings?.finance?Number(readings.finance.past_due):null,'count','organization_subscriptions · ohne Demo','Aktueller Bestand','Status past_due, kein Betrag offener Rechnungen.','healthy',billing,'/operator/abonnemente');
  metric('billing_failed','Fehlgeschlagene Billing-Webhooks','jobs',readings?.finance?Number(readings.finance.webhook_failed):null,'count','billing_webhook_events','24 Stunden','Protokollierte Verarbeitungsfehler, keine vollständige Zahlungsfehlerrate.',readings?.finance?.webhook_failed?'critical':'healthy',billing);
  metric('audit_events','Administrative Audit-Ereignisse','security',readings?.security?Number(readings.security.count):null,'count','platform_audit_events','24 Stunden','Alle protokollierten Aktionen, keine Authentifizierungsfehlerrate.','healthy',audit,'/operator/audit');
+ const narrowHomeLcp=readings?.narrowHomeLcp;
+ metric('vital_home_narrow_lcp','Startseite · schmaler Viewport · LCP p75','application',narrowHomeLcp?.p75!=null?Number(narrowHomeLcp.p75):null,'ms','Browser-Telemetrie nach Einwilligung','28 Tage','Nur Startseiten-LCP bei einer Viewport-Breite bis 767 CSS-Pixel.');
+ metric('vital_home_narrow_lcp_count','Startseite · LCP-Messwerte bei schmalem Viewport','application',narrowHomeLcp?.count??null,'count','Browser-Telemetrie nach Einwilligung','28 Tage','Anzahl Messwerte für das angezeigte Perzentil.');
  const series:MonitoringSnapshot['series']=[];
  for(const [name,unit] of [['LCP','ms'],['INP','ms'],['CLS','score']] as const){
   const rows=readings?.vitals.filter(row=>row.metric===name)??[];

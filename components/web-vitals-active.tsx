@@ -18,7 +18,11 @@ export default function ActiveWebVitalsReporter(){
   useEffect(()=>{const measurements=seen.current;active.current=true;return()=>{active.current=false;measurements.clear();}},[]);
   const report=useCallback((metric:Parameters<Parameters<typeof useReportWebVitals>[0]>[0])=>{
     if(!active.current||!readPerformanceConsent())return;
-    const record={name:metric.name,value:metric.value,rating:metric.rating,route:safeRoute(window.location.pathname)};
+    const route=safeRoute(window.location.pathname);
+    const navigation=window.performance.getEntriesByType('navigation')[0];
+    const homepageLcp=metric.name==='LCP'&&route==='/'&&navigation&&new URL(navigation.name).pathname==='/';
+    const record={name:metric.name,value:metric.value,rating:metric.rating,route,
+      ...(homepageLcp?{narrowViewport:window.matchMedia('(max-width: 767px)').matches}:{})};
     // Next's installed reporter also emits obsolete FID. Do not send a metric
     // outside the ingestion contract or an uninitialized negative measurement.
     if(!validWebVital(record))return;
