@@ -15,6 +15,16 @@ export async function verifyMonitoringContract(){
  }
  await assert.rejects(inspectMonitoring(resources,async()=>{throw Error('denied')}));
  const root='/subscriptions/synthetic/resourceGroups/rg-binso-one-prod/providers';
+ const {one,groupId,mailId,alerts}=binsoOneMonitoringFixture(root);
+ assert.equal((await inspectBinsoOneMonitoring(root,async id=>one[id])).enabledRules,5);
+ for(const [id,change] of [[groupId,p=>{p.logicAppReceivers=[];}],[mailId,p=>{p.state='Disabled';}],[root+alerts+'http5xx',p=>{p.scopes=[resources.app];}],[root+alerts+'warnmail-versandfehler',p=>{p.actions=[];}]]){
+  const state=structuredClone(one);change(state[id].properties);
+  await assert.rejects(inspectBinsoOneMonitoring(root,async key=>state[key]));
+ }
+ console.log('Monitoring validates exact cross-subscription target, enabled rules, action binding, receivers and denied reads; never claims delivery.');
+}
+
+export function binsoOneMonitoringFixture(root){
  const alerts='/Microsoft.Insights/metricAlerts/alrt-binso-one-prod-';
  const groups='/Microsoft.Insights/actionGroups/';
  const logic='/Microsoft.Logic/workflows/';
@@ -30,10 +40,5 @@ export async function verifyMonitoringContract(){
   [root+alerts+'retention-watch']:metric(root+logic+'logic-binso-one-retention-watch-prod','RunsFailed'),
   [root+alerts+'warnmail-versandfehler']:metric(mailId,'RunsFailed',root+groups+'binso-website-operations'),
  };
- assert.equal((await inspectBinsoOneMonitoring(root,async id=>one[id])).enabledRules,5);
- for(const [id,change] of [[groupId,p=>{p.logicAppReceivers=[];}],[mailId,p=>{p.state='Disabled';}],[root+alerts+'http5xx',p=>{p.scopes=[resources.app];}],[root+alerts+'warnmail-versandfehler',p=>{p.actions=[];}]]){
-  const state=structuredClone(one);change(state[id].properties);
-  await assert.rejects(inspectBinsoOneMonitoring(root,async key=>state[key]));
- }
- console.log('Monitoring validates exact cross-subscription target, enabled rules, action binding, receivers and denied reads; never claims delivery.');
+ return {one,groupId,mailId,alerts};
 }
