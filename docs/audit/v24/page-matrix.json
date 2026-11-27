@@ -9236,11 +9236,11 @@
         "components/ui.tsx#CurrencyInput",
         "components/ui.tsx#FormLabel",
         "components/ui.tsx#FormError",
+        "components/password-input.tsx#PasswordInput",
         "components/ui.tsx#Toast",
         "components/ui.tsx#subscribeToastHost",
         "components/ui.tsx#toastHost",
-        "components/ui.tsx#serverToastHost",
-        "components/password-input.tsx#PasswordInput"
+        "components/ui.tsx#serverToastHost"
       ],
       "layouts": [
         "app/layout.tsx"

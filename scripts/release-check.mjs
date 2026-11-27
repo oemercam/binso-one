@@ -26,7 +26,7 @@ assert.ok(registrationSheet.includes("search.get(\"plan\")")&&registrationSheet.
 // Latest owner decision: customer email verification then password-only login.
 assert.ok(loginRoute.includes('if(!user.email_verified_at)')&&loginRoute.includes('verifyPassword(password,identity.password_hash)')&&loginRoute.includes('completeRegistrationVerification'),'Customer login retains verified-email and password proof');
 assert.ok(!loginRoute.includes('if(user.mfa_enabled)')&&!loginRoute.includes('purpose:"login"')&&!loginRoute.includes('mfaMethod:'),'Customer login must not add TOTP or email MFA');
-const customerLoginUi=await readPageFile('app/login/page.tsx','utf8');
+const customerLoginUi=await readPageFile('app/login/customer-login.tsx','utf8');
 assert.ok(customerLoginUi.includes('autoComplete="username"')&&customerLoginUi.includes('autoComplete="current-password"')&&!customerLoginUi.includes('PasskeyLogin')&&!customerLoginUi.includes('"totp"'),'Customer login uses password-manager fields without additional ceremonies');
 const operatorEntra=await readPageFile('lib/server/operator/entra.ts','utf8');
 const operatorSessions=await readPageFile('lib/server/operator/session.ts','utf8');
