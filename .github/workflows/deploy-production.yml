@@ -51,6 +51,14 @@ jobs:
       - run: pnpm build
       - run: bash scripts/package-production.sh
       - run: node scripts/release-artifact.mjs create deploy "$GITHUB_SHA"
+      - name: Docker release start, readiness and smoke checks
+        if: inputs.probe_migrations != true
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/release-artifact.mjs verify deploy "$GITHUB_SHA"
+          digest="$(node -p "require('./deploy/release-artifact.json').sha256")"
+          node scripts/docker-release-smoke.mjs binso-one deploy/binso-one.zip "$GITHUB_SHA" "$digest"
       - run: bash scripts/package-private-migrations.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
