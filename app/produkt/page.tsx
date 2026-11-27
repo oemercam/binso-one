@@ -30,7 +30,7 @@ export default function Product(){
         <p><LocalizedText>{"Binso One verbindet die wichtigsten Abläufe deines Unternehmens – vom ersten Kundenkontakt bis zur Zahlung."}</LocalizedText></p>
         <div className="reference-actions"><Button href="/registrieren">{domainConfig.trialDays}<LocalizedText>{" Tage kostenlos testen"}</LocalizedText></Button><Button href="/preise" variant="secondary"><LocalizedText>{"Tarife vergleichen"}</LocalizedText></Button></div>
       </div>
-      <ProductPreview/>
+      <ProductPreview isHero/>
     </section>
 
     <section className="product-workflow-block">

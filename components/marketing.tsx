@@ -134,10 +134,10 @@ export function ReferenceFeatures(){
 }
 
 /** Actual application captures; the provenance manifest names their fixture/commit. */
-export function ProductPreview({compact=false,screen="dashboard"}:{compact?:boolean;screen?:ProductView}={}) {
+export function ProductPreview({compact=false,screen="dashboard",isHero=false}:{compact?:boolean;screen?:ProductView;isHero?:boolean}={}) {
  const translate=useTranslation(),group=captures.screens[screen],capture=compact?group.mobile:group.desktop;
  const label=productViews.find(([key])=>key===screen)![1];
  return <div className={compact?"product-capture product-capture-mobile":"product-capture product-capture-desktop"}>
-  <Image src={capture.src} width={capture.width} height={capture.height} sizes={compact?"(max-width: 760px) 85vw, 310px":"(max-width: 760px) 100vw, 640px"} alt={translate(label)+" · "+translate("Binso One mit Beispieldaten")} preload={!compact}/><small className="product-capture-caption"><LocalizedText>{"Produktansicht in Deutsch · Beispieldaten"}</LocalizedText></small>
+  <Image src={capture.src} width={capture.width} height={capture.height} sizes={compact?"(max-width: 760px) 85vw, 310px":"(max-width: 760px) 100vw, 640px"} alt={translate(label)+" · "+translate("Binso One mit Beispieldaten")} loading={isHero?"eager":"lazy"} fetchPriority={isHero?"high":undefined}/><small className="product-capture-caption"><LocalizedText>{"Produktansicht in Deutsch · Beispieldaten"}</LocalizedText></small>
  </div>;
 }

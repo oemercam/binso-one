@@ -54,7 +54,7 @@ export default function Home(){
  return <><script type="application/ld+json">{JSON.stringify(structuredData)}</script><MarketingHeader/><main className="reference-landing">
   <section className="reference-hero">
    <div><div className="eyebrow"><LocalizedText>{"DEIN SCHWEIZER GESCHÄFTSALLTAG"}</LocalizedText></div><h1><LocalizedText>{"Dein Geschäft."}</LocalizedText><br/><LocalizedText>{"Ein klarer"}</LocalizedText><br/><LocalizedText>{"Überblick."}</LocalizedText></h1><p><LocalizedText>{"Von der ersten Anfrage bis zur bezahlten Rechnung. Organisiere Kunden, Aufträge und Finanzen in einem Arbeitsbereich."}</LocalizedText></p><div className="reference-actions"><Button href="/registrieren"><LocalizedText>{"14 Tage kostenlos testen"}</LocalizedText></Button><Button href="/produkt" variant="secondary"><LocalizedText>{"Funktionen ansehen"}</LocalizedText></Button></div><small><LocalizedText>{"Web & PWA · Am Schreibtisch und unterwegs"}</LocalizedText></small></div>
-   <ProductPreview/>
+   <ProductPreview isHero/>
   </section>
   <ProductCapabilities/>
   <section className="reference-section" id="funktionen"><div className="eyebrow"><LocalizedText>{"EIN ZUSAMMENHÄNGENDER ARBEITSABLAUF"}</LocalizedText></div><h2><LocalizedText>{"Weniger wechseln."}</LocalizedText><br/><LocalizedText>{"Mehr erledigen."}</LocalizedText></h2><p className="reference-muted"><LocalizedText>{"Informationen bleiben dort verbunden, wo du sie brauchst."}</LocalizedText></p><ReferenceFeatures/></section>
