@@ -122,7 +122,8 @@
     "0118_document_operator_passkey_storage.sql",
     "0119_platform_stripe_payment_adjustments.sql",
     "0120_verified_company_memberships.sql",
-    "0121_homepage_lcp_viewport.sql"
+    "0121_homepage_lcp_viewport.sql",
+    "0122_operator_email_code.sql"
   ],
   "tables": [
     {
@@ -8088,6 +8089,41 @@
           "name": "passkey_setup_expires_at",
           "type": "timestamp with time zone",
           "required": false
+        },
+        {
+          "name": "email_password_hash",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "email_setup_hash",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "email_setup_expires_at",
+          "type": "timestamp with time zone",
+          "required": false
+        },
+        {
+          "name": "email_code_hash",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "email_challenge_hash",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "email_code_expires_at",
+          "type": "timestamp with time zone",
+          "required": false
+        },
+        {
+          "name": "email_code_attempts",
+          "type": "integer",
+          "required": true
         }
       ],
       "policies": []

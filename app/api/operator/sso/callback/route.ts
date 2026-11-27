@@ -3,13 +3,13 @@ import {redirect} from "next/navigation";
 import {getEntraOperatorIdentity} from "@/lib/server/operator/entra";
 import {createOperatorSession} from "@/lib/server/operator/session";
 import {withTransaction} from "@/lib/server/db";
-import {operatorPasskeyLoginEnabled} from "@/lib/server/operator/login-mode";
+import {operatorEmailLoginEnabled,operatorPasskeyLoginEnabled} from "@/lib/server/operator/login-mode";
 import {platformAudit} from "@/lib/server/operator/audit";
 
 export const runtime="nodejs";
 
 export async function GET(request:NextRequest){
-  if(operatorPasskeyLoginEnabled())redirect("/operator/login");
+  if(operatorEmailLoginEnabled()||operatorPasskeyLoginEnabled())redirect("/operator/login");
   const identity=await getEntraOperatorIdentity();
   // Relative redirects retain the public host behind App Service's reverse proxy.
   if(!identity)redirect("/operator/login?error=entra_access_denied");

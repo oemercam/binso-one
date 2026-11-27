@@ -655,7 +655,7 @@ function SecurityView() {
 
   const resource=useApiQuery<{items:Array<Record<string,unknown>>;source?:string}>("/api/operator/users");
   const items=resource.data?.items??[];
-  const local=resource.data?.source==="password_passkey";
+  const local=resource.data?.source==="password_passkey"||resource.data?.source==="password_email_code";
   const roleLabel:Record<string,string>={platform_owner:'Plattform Owner',platform_admin:'Administrator',platform_support:'Support',platform_billing:'Finanzen',platform_auditor:'Audit'};
   const chips=['Alle','Aktiv','Inaktiv'];
   const columns=[{label:'Benutzer',index:0},{label:'Rolle',index:1},{label:'Status',index:2,status:true},{label:local?'Letzte Anmeldung':'Synchronisiert',index:3}];
