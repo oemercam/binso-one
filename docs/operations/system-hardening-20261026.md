@@ -1,5 +1,12 @@
 # Systemaudit – Umsetzung vom 26. Oktober 2026
 
+> **Historischer Ablauf vom Oktober 2026.** Das Azure-Hardening-Skript unten
+> ist auf `binso-admin-prod` fest verdrahtet. Die aktuelle App für
+> `one.binso.ch` ist `app-binso-one-prod` in `rg-binso-one-prod`.
+> Für eine reine HTTP/2-Umstellung die aktuelle App im freigegebenen
+> Produktionsablauf gezielt konfigurieren und danach das tatsächlich
+> ausgehandelte Protokoll der öffentlichen Domain prüfen.
+
 Basis: `02a061a4db4c3f0f55b1f829900b2577bfc9c21f`.
 Die Nutzerfreigabe „ja implementier alles“ erlaubt die Auditkorrekturen.
 Der Arbeitsbranch ist `fix/system-audit-20261026`. Keine Produktionsabnahme wird
