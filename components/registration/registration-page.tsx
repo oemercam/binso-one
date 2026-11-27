@@ -21,12 +21,13 @@ type Context={plan:{id:string;name:string;monthly:number;yearly:number}|null;bil
 type Stage="new"|"pending"|"verified";
 
 /** One full-page registration owner. No modal, credential draft storage or second API. */
-export function RegistrationPage(){
+export function RegistrationPage({initialContext=null}:{initialContext?:Context|null}={}){
  const router=useRouter(),search=useSearchParams();
  const {locale}=useLocale();
  const t=(key:RegistrationTextKey,values:Record<string,string|number>={})=>registrationText(key,locale,values);
  const planParam=search.get("plan"),billingParam=search.get("billing");
- const [context,setContext]=useState<Context|null>(null),[discard,setDiscard]=useState(false),[backDiscard,setBackDiscard]=useState(false),[destination,setDestination]=useState<string|null>(null),[stage,setStage]=useState<Stage>("new");
+ const [loadedContext,setContext]=useState<Context|null>(null),[discard,setDiscard]=useState(false),[backDiscard,setBackDiscard]=useState(false),[destination,setDestination]=useState<string|null>(null),[stage,setStage]=useState<Stage>("new");
+ const context=initialContext??loadedContext;
  const [firstName,setFirstName]=useState(""),[lastName,setLastName]=useState(""),[step,setStep]=useState(0);
  const contactName=[firstName.trim(),lastName.trim()].filter(Boolean).join(" ");
  const [company,setCompany]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[accepted,setAccepted]=useState(false),[code,setCode]=useState("");
@@ -34,6 +35,7 @@ export function RegistrationPage(){
  const saving=useRef(false),form=useRef<HTMLFormElement>(null);
  const dirty=stage==='new'&&!!(company||contactName||email||password||accepted);
  useEffect(()=>{
+  if(initialContext)return;
   let active=true;
   const params=new URLSearchParams();if(planParam)params.set('plan',planParam);if(billingParam)params.set('billing',billingParam);
   authRequest('/api/auth/register?'+params,{cache:'no-store'}).then(async response=>{
@@ -43,7 +45,7 @@ export function RegistrationPage(){
    if(payload.pending){if(!search.get('lang')&&payload.pending.locale&&payload.pending.locale!=='de'){const restored=new URLSearchParams(search);restored.set('lang',payload.pending.locale);router.replace('/registrieren?'+restored,{scroll:false});}setCompany(payload.pending.company);setEmail(payload.pending.email);setStage(payload.state==='verified'?'verified':'pending');setStatus('deliveryUnconfirmed');}
   }).catch(()=>{if(active)setError('failure')});
   return()=>{active=false};
- },[planParam,billingParam,retry,router,search]);
+ },[initialContext,planParam,billingParam,retry,router,search]);
  const close=()=>{allowDraftNavigation();router.replace('/preise'+(locale==='de'?'':'?lang='+locale));};
  const leaveBack=useBrowserBackGuard(dirty||busy,()=>{if(!busy){setDestination(null);setBackDiscard(true);setDiscard(true)}},dirty||busy,url=>{if(!busy){setDestination(url);setBackDiscard(false);setDiscard(true)}});
  const requestCancel=()=>{if(busy)return;if(dirty){setDestination(null);setBackDiscard(false);setDiscard(true)}else close()};
