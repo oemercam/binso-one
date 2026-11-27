@@ -16,4 +16,4 @@ assert.equal((await run()).calls.filter(([url])=>url.endsWith('/api/demo/session
 const {default:config}=await import(moduleUrl(await fs.readFile('next.config.ts','utf8')));
 assert.deepEqual(await config.redirects(),[{source:'/demo',destination:'/registrieren',permanent:false}]);
 console.log('Actual Next configuration resolves the legacy demo before streamed page rendering.');
-assert.doesNotMatch(await fs.readFile('app/login/page.tsx','utf8'),/href=["']\/demo["']/,'Public login must not revive a demo conversion entry');
+assert.doesNotMatch(await fs.readFile('app/login/customer-login.tsx','utf8'),/href=["']\/demo["']/,'Public login must not revive a demo conversion entry');

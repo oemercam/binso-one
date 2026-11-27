@@ -7,9 +7,11 @@ import {hasValidNewPassword,MAX_PASSWORD_LENGTH,MIN_PASSWORD_LENGTH,PASSWORD_REQ
 import {PasswordInput} from '@/components/password-input';
 import {Button,ErrorState,Field,Input} from '@/components/ui';
 import {authRequest} from '@/lib/client/auth-request';
-import {LocalizedText} from '@/lib/client/locale';
+import {safeAppPath} from '@/lib/navigation';
+import {LocalizedText,useLocale} from '@/lib/client/locale';
 
 export default function OperatorEmailLogin({setup,emailLogin}:{setup:boolean;emailLogin:boolean}){
+ const {locale}=useLocale();
  const token=useRef(''),pending=useRef(false);
  const [step,setStep]=useState<'password'|'code'|'setup'|'ready'>(setup?'setup':'password');
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -42,7 +44,11 @@ export default function OperatorEmailLogin({setup,emailLogin}:{setup:boolean;ema
    form.reset();
    if(step==='setup'){token.current='';setStep('ready');}
    else if(step==='password')setStep('code');
-   else window.location.replace('/operator');
+   else{
+    const next=safeAppPath(new URLSearchParams(window.location.search).get('next'),'/operator');
+    const path=next.split(/[?#]/,1)[0];
+    window.location.replace(path==='/operator'||path.startsWith('/operator/')&&path!=='/operator/login'?next:'/operator');
+   }
   }catch(reason){setError(reason instanceof Error?reason.message:'Anmeldung nicht möglich.');}
   finally{pending.current=false;setBusy(false);}
  }
@@ -51,7 +57,7 @@ export default function OperatorEmailLogin({setup,emailLogin}:{setup:boolean;ema
   <h1 id="login-heading"><LocalizedText>Interner Binso-Admin-Zugang</LocalizedText></h1>
   {step==='ready'?<>
    <p role="status"><LocalizedText>Passwort gespeichert.</LocalizedText></p>
-   {emailLogin?<Button href="/operator/login"><LocalizedText>Zur Anmeldung</LocalizedText></Button>:<p><LocalizedText>Die Anmeldung per E-Mail-Code wird separat aktiviert.</LocalizedText></p>}
+   {emailLogin?<Button href={`/login?bereich=admin&lang=${locale}`}><LocalizedText>Zur Anmeldung</LocalizedText></Button>:<p><LocalizedText>Die Anmeldung per E-Mail-Code wird separat aktiviert.</LocalizedText></p>}
   </>:<form key={step} method="post" onSubmit={submit}>
    {step==='password'&&<Field label="E-Mail"><Input name="username" type="email" required autoComplete="username" maxLength={320}/></Field>}
    {step==='password'&&<Field label="Passwort"><PasswordInput name="password" required autoComplete="current-password" maxLength={MAX_PASSWORD_LENGTH}/></Field>}
@@ -67,6 +73,6 @@ export default function OperatorEmailLogin({setup,emailLogin}:{setup:boolean;ema
    <Button type="submit" disabled={busy}><LocalizedText>{buttonLabel}</LocalizedText></Button>
    {step==='code'&&<Button type="button" variant="secondary" disabled={busy} onClick={()=>{setError('');setStep('password');}}><LocalizedText>Zurück</LocalizedText></Button>}
   </form>}
-  <p className="auth-bottom"><Link href="/login"><LocalizedText>Zur Kundenanmeldung</LocalizedText></Link></p>
+  <p className="auth-bottom"><Link href={`/login?lang=${locale}`}><LocalizedText>Zur Kundenanmeldung</LocalizedText></Link></p>
  </section></AuthWorkspace>;
 }
