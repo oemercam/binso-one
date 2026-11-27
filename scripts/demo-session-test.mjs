@@ -20,6 +20,7 @@ for(const path of ['demo/session','demo/data','demo/dashboard','demo/finance','d
 let reads=0;
 const jar=new Map([['binso_demo',{value:'1'}],['binso_demo_write',{value:'old-token'}]]);
 const session=await load('lib/server/session.ts',{
+ './company-context':await load('lib/server/company-context.ts',{'node:crypto':await import('node:crypto')}),
  './audit':{audit:async()=>{throw Error('Legacy/demo validation must not create a login audit')}},
  './fresh-authentication':await load('lib/server/fresh-authentication.ts',{'server-only':{},'./db':{withTenant:()=>{throw Error('Legacy session must not request fresh proof')}},'./http':{ApiError:class extends Error{}}}),
  'server-only':{},'node:crypto':await import('node:crypto'),
@@ -51,6 +52,7 @@ try{
   './http':{ApiError:class extends Error{constructor(status,code,message){super(message);this.status=status;this.code=code;}}},
  });
  const proxyModule=await load('proxy.ts',{
+  './lib/server/company-context':await load('lib/server/company-context.ts',{'node:crypto':await import('node:crypto')}),
   './lib/server/api-budget':budget,'./lib/server/http':{apiError:error=>({kind:'error',status:error.status,code:error.code})},
   './lib/server/maintenance':{maintenanceState:async()=>({enabled:false})},
   './lib/locales/config':{asLocale:x=>x,localeCookie:'fixture_locale',locales:['de','fr','it','en']},
