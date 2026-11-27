@@ -14,5 +14,8 @@ try{
  await assert.rejects(authRequest('/api/auth/register'),/Keine Verbindung/);assert.equal(calls,3);
  globalThis.fetch=async()=>Response.json({error:'registration_unavailable'},{status:409});
  assert.equal((await authRequest('/api/auth/register')).status,409,'HTTP business conflicts remain available to the caller');
+ globalThis.fetch=async(path,options)=>{assert.equal(path,'/api/operator/email-login');assert.ok(options.signal instanceof AbortSignal);return Response.json({ok:true});};
+ assert.equal((await authRequest('/api/operator/email-login',{method:'POST'})).status,200);
+ await assert.rejects(authRequest('/api/operator/email-login/unexpected'),/Anmeldepfad/);
  console.log('Auth requests: bounded AbortSignal, no external target, timeout/offline distinction, no automatic mutation retry and preserved HTTP conflicts passed.');
 }finally{globalThis.fetch=original;}

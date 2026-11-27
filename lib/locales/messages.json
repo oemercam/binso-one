@@ -1,4 +1,76 @@
 {
+  "Gib den sechsstelligen Code aus deiner E-Mail ein.": [
+    "Enter the six-digit code from your email.",
+    "Saisissez le code à six chiffres reçu par e-mail.",
+    "Inserisci il codice di sei cifre ricevuto via e-mail.",
+    "E-postandaki altı haneli kodu gir."
+  ],
+  "Anmeldecode": [
+    "Sign-in code",
+    "Code de connexion",
+    "Codice di accesso",
+    "Giriş kodu"
+  ],
+  "Verwende ein Passwort mit 16 bis 256 Zeichen.": [
+    "Use a password of 16 to 256 characters.",
+    "Utilisez un mot de passe de 16 à 256 caractères.",
+    "Usa una password di 16-256 caratteri.",
+    "16 ile 256 karakter arasında bir parola kullan."
+  ],
+  "Der Einrichtungslink ist ungültig oder abgelaufen.": [
+    "The setup link is invalid or has expired.",
+    "Le lien de configuration est invalide ou a expiré.",
+    "Il link di configurazione non è valido o è scaduto.",
+    "Kurulum bağlantısı geçersiz veya süresi dolmuş."
+  ],
+  "Der Anmeldecode konnte nicht gesendet werden. Bitte versuche es später erneut.": [
+    "We could not send the sign-in code. Please try again later.",
+    "Impossible d’envoyer le code de connexion. Réessayez plus tard.",
+    "Non è stato possibile inviare il codice di accesso. Riprova più tardi.",
+    "Giriş kodu gönderilemedi. Daha sonra tekrar dene."
+  ],
+  "Bitte warte eine Minute, bevor du einen neuen Code anforderst.": [
+    "Wait one minute before requesting another code.",
+    "Attendez une minute avant de demander un autre code.",
+    "Attendi un minuto prima di richiedere un nuovo codice.",
+    "Yeni kod istemeden önce bir dakika bekle."
+  ],
+  "Passwort gespeichert.": [
+    "Password saved.",
+    "Mot de passe enregistré.",
+    "Password salvata.",
+    "Parola kaydedildi."
+  ],
+  "Die Anmeldung per E-Mail-Code wird separat aktiviert.": [
+    "Email-code sign-in will be enabled separately.",
+    "La connexion par code envoyé par e-mail sera activée séparément.",
+    "L’accesso tramite codice e-mail sarà attivato separatamente.",
+    "E-posta koduyla giriş ayrıca etkinleştirilecek."
+  ],
+  "Interner Binso-Admin-Zugang": [
+    "Internal Binso admin access",
+    "Accès interne à l’administration Binso",
+    "Accesso amministrativo interno Binso",
+    "Binso dahili yönetici erişimi"
+  ],
+  "Zur Kundenanmeldung": [
+    "Go to customer sign-in",
+    "Accéder à la connexion client",
+    "Vai all’accesso clienti",
+    "Müşteri girişine git"
+  ],
+  "Rechnungsangaben ergänzen": [
+    "Complete invoicing details",
+    "Compléter les informations de facturation",
+    "Completa i dati di fatturazione",
+    "Fatura bilgilerini tamamla"
+  ],
+  "Diese Angaben brauchst du, um deine erste Rechnung auszustellen.": [
+    "You need these details to issue your first invoice.",
+    "Ces informations sont nécessaires pour émettre votre première facture.",
+    "Questi dati sono necessari per emettere la prima fattura.",
+    "İlk faturanızı düzenlemek için bu bilgilere ihtiyacınız var."
+  ],
   "Deine Adminrolle erlaubt diesen Zugriff nicht. Wende dich für eine passende Rolle an die Administration.": ["Your admin role does not allow this access. Contact the administrators for the appropriate role.", "Ton rôle administrateur ne permet pas cet accès. Contacte l’administration pour obtenir le rôle approprié.", "Il tuo ruolo amministrativo non consente questo accesso. Contatta l’amministrazione per ottenere il ruolo appropriato.", "Yönetici rolün bu erişime izin vermiyor. Uygun rol için yönetime başvur."],
   "Einrichtungscode": ["Setup code", "Code de configuration", "Codice di configurazione", "Kurulum kodu"],
   "Passkey bestätigen": ["Confirm passkey", "Confirmer la clé d’accès", "Conferma passkey", "Geçiş anahtarını onayla"],

@@ -3,13 +3,14 @@ import type {AuthenticationResponseJSON,RegistrationResponseJSON} from '@simplew
 import {ApiError,apiError,assertSameOrigin,json,readJson} from '@/lib/server/http';
 import {enforceRateLimit} from '@/lib/server/rate-limit';
 import {asObject,emailField} from '@/lib/server/validation';
-import {operatorPasskeyLoginEnabled,operatorPasskeySetupEnabled} from '@/lib/server/operator/login-mode';
+import {operatorEmailLoginEnabled,operatorPasskeyLoginEnabled,operatorPasskeySetupEnabled} from '@/lib/server/operator/login-mode';
 import {beginOperatorPasskeyLogin,finishOperatorPasskeyLogin} from '@/lib/server/operator/passkey-login';
 
 export const runtime='nodejs';
 
 export async function POST(request:NextRequest){
  try{
+  if(operatorEmailLoginEnabled())throw new ApiError(404,'not_found','Nicht verfügbar.');
   const signIn=operatorPasskeyLoginEnabled();
   if(!signIn&&!operatorPasskeySetupEnabled())throw new ApiError(404,'not_found','Nicht verfügbar.');
   assertSameOrigin(request);

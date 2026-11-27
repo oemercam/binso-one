@@ -78,11 +78,11 @@ export default function OperatorPasskeyLogin({preparation=false}:{preparation?:b
  const passkeyAction=options?.mode==="register"?"Passkey einrichten":"Mit Passkey bestätigen";
 
  return <AuthWorkspace variant="login"><section className="auth-card operator-login-card" aria-labelledby="login-heading">
-  <h1 id="login-heading"><LocalizedText>{options?'Passkey bestätigen':preparation?'Passkey vorbereiten':'Admin Portal'}</LocalizedText></h1>
+  <h1 id="login-heading"><LocalizedText>{options?'Passkey bestätigen':preparation?'Passkey vorbereiten':'Interner Binso-Admin-Zugang'}</LocalizedText></h1>
   {verified?<p role="status"><LocalizedText>Passkey erfolgreich geprüft.</LocalizedText></p>:options?<div className="auth-passkey">
    <Button onClick={()=>void confirm()} disabled={busy}><LocalizedText>{passkeyAction}</LocalizedText></Button>
    <button type="button" className="auth-inline-action" disabled={busy} onClick={()=>{setOptions(null);setError('')}}><LocalizedText>Zurück</LocalizedText></button>
-  </div>:<form onSubmit={begin}>
+  </div>:<form method="post" onSubmit={begin}>
    <Field label="E-Mail"><Input name="username" autoComplete="username" type="email" required value={email} onChange={event=>setEmail(event.target.value)}/></Field>
    <Field label="Passwort"><PasswordInput name="password" autoComplete="current-password" required value={password} onChange={event=>setPassword(event.target.value)}/></Field>
    {setup&&<Field label="Einrichtungscode"><Input name="setup-code" required autoComplete="off" spellCheck={false} value={code} onChange={event=>setCode(event.target.value)}/></Field>}
@@ -90,6 +90,6 @@ export default function OperatorPasskeyLogin({preparation=false}:{preparation?:b
    <Button type="submit" disabled={busy}><LocalizedText>{busy?'Wird geprüft…':'Weiter'}</LocalizedText></Button>
   </form>}
   {!verified&&!options&&<button type="button" className="auth-inline-action" disabled={busy} onClick={()=>{setSetup(!setup);setError('');setCode('')}}><LocalizedText>{setup?'Zurück':'Passkey einrichten'}</LocalizedText></button>}
-  <p className="auth-bottom"><Link href="/"><LocalizedText>Zurück zu Binso One</LocalizedText></Link></p>
+  <p className="auth-bottom"><Link href="/login"><LocalizedText>Zur Kundenanmeldung</LocalizedText></Link></p>
  </section></AuthWorkspace>;
 }

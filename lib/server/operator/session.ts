@@ -5,14 +5,14 @@ import {query} from "@/lib/server/db";
 import {env} from "@/lib/server/env";
 import type {OperatorRole} from "@/lib/permissions";
 import type {PoolClient} from "pg";
-import {operatorPasskeyLoginEnabled} from "./login-mode";
+import {operatorEmailLoginEnabled,operatorPasskeyLoginEnabled} from "./login-mode";
 import {getEntraOperatorIdentity} from "@/lib/server/operator/entra";
 
 export type OperatorSession={sessionId:string;userId:string;email:string;name:string;role:OperatorRole;entraObjectId:string|null;entraTenantId:string|null;authSource:string};
 const tokenHash=(token:string)=>createHash("sha256").update(token).digest("hex");
 const ipHash=(value:string)=>createHash("sha256").update(value).digest("hex");
 
-export async function prepareOperatorSession(userId:string,authSource:"entra"|"password_passkey",client?:PoolClient){
+export async function prepareOperatorSession(userId:string,authSource:"entra"|"password_passkey"|"password_email_code",client?:PoolClient){
  const token=randomBytes(32).toString("base64url");
  const expiresAt=new Date(Date.now()+env.sessionTtlHours*60*60*1000);
  const h=await headers();
@@ -35,11 +35,11 @@ export async function createOperatorSession(input:{userId:string;email:string;na
  return session.id;
 }
 export async function getOperatorSession():Promise<OperatorSession|null>{
- const local=operatorPasskeyLoginEnabled();
+ const emailCode=operatorEmailLoginEnabled(),local=emailCode||operatorPasskeyLoginEnabled();
  const identity=!local&&env.appMode==='production'?await getEntraOperatorIdentity():null;
  if(!local&&env.appMode==='production'&&!identity)return null;
  const jar=await cookies();const token=jar.get(env.operatorSessionCookieName)?.value;if(!token)return null;
- const result=await query<OperatorSession>(`select s.id as "sessionId",u.user_id as "userId",u.email,coalesce(u.display_name,u.email) as name,u.role,u.entra_object_id as "entraObjectId",u.entra_tenant_id as "entraTenantId",case when s.auth_source = 'password_passkey' then s.auth_source else u.auth_source end as "authSource" from platform_auth_sessions s join platform_operator_assignments u on u.user_id=s.user_id where s.token_hash=$1 and s.expires_at>now() and u.status='active'${local?" and s.auth_source='password_passkey' and u.auth_source='entra' and u.passkey_password_hash is not null":" and s.auth_source='entra'"}`,[tokenHash(token)]);
+ const result=await query<OperatorSession>(`select s.id as "sessionId",u.user_id as "userId",u.email,coalesce(u.display_name,u.email) as name,u.role,u.entra_object_id as "entraObjectId",u.entra_tenant_id as "entraTenantId",s.auth_source as "authSource" from platform_auth_sessions s join platform_operator_assignments u on u.user_id=s.user_id where s.token_hash=$1 and s.expires_at>now() and u.status='active'${emailCode?" and s.auth_source='password_email_code' and u.auth_source='entra' and u.email_password_hash is not null":local?" and s.auth_source='password_passkey' and u.auth_source='entra' and u.passkey_password_hash is not null":" and s.auth_source='entra'"}`,[tokenHash(token)]);
  const session=result.rows[0]||null;
  if(session&&!local&&env.appMode==='production'&&(!identity||session.authSource!=='entra'||identity.tenantId!==session.entraTenantId||identity.objectId!==session.entraObjectId||identity.role!==session.role))return null;
  if(session)void query(`update platform_auth_sessions set last_seen_at=now() where id=$1 and last_seen_at<now()-interval '5 minutes'`,[session.sessionId]).catch(()=>{});
@@ -48,7 +48,7 @@ export async function getOperatorSession():Promise<OperatorSession|null>{
 export async function requireOperatorSession(){
  const session=await getOperatorSession();
  if(!session){const {ApiError}=await import("@/lib/server/http");throw new ApiError(401,"unauthorized","Anmeldung erforderlich.");}
- if(env.appMode==="production"&&!operatorPasskeyLoginEnabled()){
+ if(env.appMode==="production"&&!operatorEmailLoginEnabled()&&!operatorPasskeyLoginEnabled()){
   const identity=await getEntraOperatorIdentity();
   if(!identity||session.authSource!=="entra"||identity.tenantId!==session.entraTenantId||identity.objectId!==session.entraObjectId||identity.role!==session.role){
    await destroyOperatorSession();
