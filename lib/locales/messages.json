@@ -1,4 +1,28 @@
 {
+  "Interner Binso-Admin-Zugang": [
+    "Internal Binso admin access",
+    "Accès interne à l’administration Binso",
+    "Accesso amministrativo interno Binso",
+    "Binso dahili yönetici erişimi"
+  ],
+  "Zur Kundenanmeldung": [
+    "Go to customer sign-in",
+    "Accéder à la connexion client",
+    "Vai all’accesso clienti",
+    "Müşteri girişine git"
+  ],
+  "Rechnungsangaben ergänzen": [
+    "Complete invoicing details",
+    "Compléter les informations de facturation",
+    "Completa i dati di fatturazione",
+    "Fatura bilgilerini tamamla"
+  ],
+  "Diese Angaben brauchst du, um deine erste Rechnung auszustellen.": [
+    "You need these details to issue your first invoice.",
+    "Ces informations sont nécessaires pour émettre votre première facture.",
+    "Questi dati sono necessari per emettere la prima fattura.",
+    "İlk faturanızı düzenlemek için bu bilgilere ihtiyacınız var."
+  ],
   "Deine Adminrolle erlaubt diesen Zugriff nicht. Wende dich für eine passende Rolle an die Administration.": ["Your admin role does not allow this access. Contact the administrators for the appropriate role.", "Ton rôle administrateur ne permet pas cet accès. Contacte l’administration pour obtenir le rôle approprié.", "Il tuo ruolo amministrativo non consente questo accesso. Contatta l’amministrazione per ottenere il ruolo appropriato.", "Yönetici rolün bu erişime izin vermiyor. Uygun rol için yönetime başvur."],
   "Einrichtungscode": ["Setup code", "Code de configuration", "Codice di configurazione", "Kurulum kodu"],
   "Passkey bestätigen": ["Confirm passkey", "Confirmer la clé d’accès", "Conferma passkey", "Geçiş anahtarını onayla"],
