@@ -1,3 +1,4 @@
+import {MAX_PASSWORD_LENGTH,PASSWORD_REQUIREMENTS} from '@/lib/password-policy';
 import type {NextRequest} from 'next/server';
 import {ApiError,apiError,assertSameOrigin,json,readJson} from '@/lib/server/http';
 import {enforceRateLimit} from '@/lib/server/rate-limit';
@@ -15,12 +16,12 @@ export async function POST(request:NextRequest){
   await enforceRateLimit(request,'operator-email-login',15,15*60_000);
   const body=asObject(await readJson(request,4096));
   if(body.action==='setup'&&(enabled||operatorEmailSetupEnabled())){
-   if(typeof body.password!=='string'||body.password.length<16||body.password.length>256)throw new ApiError(400,'invalid_password','Verwende ein Passwort mit 16 bis 256 Zeichen.');
+   if(typeof body.password!=='string')throw new ApiError(400,'invalid_password',PASSWORD_REQUIREMENTS);
    if(typeof body.token!=='string'||!await setInitialOperatorPassword(body.token,body.password))throw new ApiError(400,'setup_invalid','Der Einrichtungslink ist ungültig oder abgelaufen.');
    return json({ok:true});
   }
   if(!enabled)throw new ApiError(404,'not_found','Nicht verfügbar.');
-  if(body.action==='begin'&&typeof body.password==='string'&&body.password.length>0&&body.password.length<=256){
+  if(body.action==='begin'&&typeof body.password==='string'&&body.password.length>0&&body.password.length<=MAX_PASSWORD_LENGTH){
    await beginOperatorEmailLogin(emailField(body),body.password);
    return json({requiresEmailCode:true},202);
   }

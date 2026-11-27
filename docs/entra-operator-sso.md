@@ -11,7 +11,7 @@ bestehenden Ablauf.
    sein. Den Microsoft-Login für den Rollback betriebsbereit halten.
 2. Auf dem privaten Datenbankrunner für die aktiven Entra-Administratoren
    `scripts/provision-operator-passkey.mjs` ausführen. Passwort auf stdin
-   eingeben und den einmaligen Einrichtungscode über einen geschützten Kanal
+   nach der [gemeinsamen Passwortrichtlinie](password-policy.md) eingeben und den einmaligen Einrichtungscode über einen geschützten Kanal
    übergeben. Der Code gilt 30 Minuten.
 3. `BINSO_OPERATOR_PASSKEY_SETUP=true` setzen. Unter
    `/operator/login?passkey=einrichten` Passkey einrichten und anschliessend

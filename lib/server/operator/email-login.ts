@@ -5,6 +5,7 @@ import {query,withTransaction} from '@/lib/server/db';
 import {sendMail} from '@/lib/server/email';
 import {env} from '@/lib/server/env';
 import {ApiError} from '@/lib/server/http';
+import {hasValidNewPassword,PASSWORD_REQUIREMENTS} from '@/lib/password-policy';
 import {hashPassword,verifyPassword} from '@/lib/server/password';
 import {platformAudit} from './audit';
 import {prepareOperatorSession,setOperatorSessionCookie} from './session';
@@ -21,6 +22,7 @@ function digest(userId:string,challenge:string,code:string){
 }
 
 export async function setInitialOperatorPassword(token:string,password:string){
+ if(!hasValidNewPassword(password))throw new ApiError(400,'invalid_password',PASSWORD_REQUIREMENTS);
  if(!opaque.test(token))return false;
  const setupHash=sha(token);
  if(!(await query("select 1 from platform_operator_assignments where email_setup_hash=$1 and email_setup_expires_at>now() and status='active' and auth_source='entra'",[setupHash])).rowCount)return false;

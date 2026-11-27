@@ -3,6 +3,7 @@
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import Link from 'next/link';
 import {AuthWorkspace} from '@/components/auth-workspace';
+import {hasValidNewPassword,MAX_PASSWORD_LENGTH,MIN_PASSWORD_LENGTH,PASSWORD_REQUIREMENTS} from '@/lib/password-policy';
 import {PasswordInput} from '@/components/password-input';
 import {Button,ErrorState,Field,Input} from '@/components/ui';
 import {authRequest} from '@/lib/client/auth-request';
@@ -29,6 +30,7 @@ export default function OperatorEmailLogin({setup,emailLogin}:{setup:boolean;ema
   if(step==='setup'&&password!==fields.get('confirmation')){
    setError('Die Passwörter stimmen nicht überein.');return;
   }
+  if(step==='setup'&&!hasValidNewPassword(password)){setError(PASSWORD_REQUIREMENTS);return;}
   const body=step==='setup'?{action:'setup',token:token.current,password}
     :step==='password'?{action:'begin',email:fields.get('username'),password}
     :{action:'verify',code:fields.get('code')};
@@ -52,10 +54,10 @@ export default function OperatorEmailLogin({setup,emailLogin}:{setup:boolean;ema
    {emailLogin?<Button href="/operator/login"><LocalizedText>Zur Anmeldung</LocalizedText></Button>:<p><LocalizedText>Die Anmeldung per E-Mail-Code wird separat aktiviert.</LocalizedText></p>}
   </>:<form key={step} method="post" onSubmit={submit}>
    {step==='password'&&<Field label="E-Mail"><Input name="username" type="email" required autoComplete="username" maxLength={320}/></Field>}
-   {step==='password'&&<Field label="Passwort"><PasswordInput name="password" required autoComplete="current-password" maxLength={256}/></Field>}
+   {step==='password'&&<Field label="Passwort"><PasswordInput name="password" required autoComplete="current-password" maxLength={MAX_PASSWORD_LENGTH}/></Field>}
    {step==='setup'&&<>
-    <Field label="Neues Passwort" hint="Verwende ein Passwort mit 16 bis 256 Zeichen."><PasswordInput name="password" required autoComplete="new-password" minLength={16} maxLength={256}/></Field>
-    <Field label="Passwort bestätigen"><PasswordInput name="confirmation" required autoComplete="new-password" minLength={16} maxLength={256}/></Field>
+    <Field label="Neues Passwort" hint={PASSWORD_REQUIREMENTS}><PasswordInput name="password" required autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH}/></Field>
+    <Field label="Passwort bestätigen"><PasswordInput name="confirmation" required autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH}/></Field>
    </>}
    {step==='code'&&<>
     <p><LocalizedText>Gib den sechsstelligen Code aus deiner E-Mail ein.</LocalizedText></p>

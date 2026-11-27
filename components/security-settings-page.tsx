@@ -1,6 +1,6 @@
 "use client";
 
-import {hasValidNewPassword, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
+import {hasValidNewPassword, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, PASSWORD_REQUIREMENTS} from "@/lib/password-policy";
 import {LocalizedText,useLocale} from "@/lib/client/locale";
 import {useCallback,useEffect,useRef,useState} from "react";
 import {useRouter,useSearchParams} from "next/navigation";
@@ -124,8 +124,8 @@ export function SecuritySettingsPage(){
     <FormSheet open={panel==="password"} label="Passwort ändern" onClose={()=>setPanel(null)} busy={busy} dirty={!!(currentPassword||newPassword||confirmPassword)}><section className="settings-form">
       <div className="form-grid">
         <Field label="Aktuelles Passwort"><Input value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} type="password" autoComplete="current-password"/></Field>
-        <Field label="Neues Passwort" hint={PASSWORD_REQUIREMENTS}><Input value={newPassword} onChange={e=>setNewPassword(e.target.value)} type="password" autoComplete="new-password"/></Field>
-        <Field label="Neues Passwort bestätigen"><Input value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} type="password" autoComplete="new-password"/></Field>
+        <Field label="Neues Passwort" hint={PASSWORD_REQUIREMENTS}><Input value={newPassword} onChange={e=>setNewPassword(e.target.value)} type="password" autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH}/></Field>
+        <Field label="Neues Passwort bestätigen"><Input value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} type="password" autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} maxLength={MAX_PASSWORD_LENGTH}/></Field>
       </div>
       <Button variant="secondary" disabled={busy} onClick={()=>void changePassword()}><LocalizedText>{"Passwort speichern"}</LocalizedText></Button>
     </section></FormSheet>
