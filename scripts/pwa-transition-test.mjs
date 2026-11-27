@@ -54,7 +54,7 @@ try{
  // The write guard covers fetch, JSON parsing, validation, failures and uploads.
  let releaseBody;
  globalThis.fetch=async()=>({ok:true,status:200,json:()=>new Promise(resolve=>releaseBody=resolve)});
- const backend=load('lib/client/backend.ts',{'./data-events':{dataRevision:()=> 'session-a',publishMutation(){}},'./session-cache':{}});
+ const backend=load('lib/client/backend.ts',{'./data-events':{dataRevision:()=> 'session-a',publishMutation(){}},'./session-cache':{companyRequestHeaders:headers=>new Headers(headers)}});
  for(const [method,args] of [['apiPost',['/api/settings/company',{}]],['apiPatch',['/api/settings/company',{}]],['apiDelete',['/api/settings/company']],['apiUpload',['/api/files',new FormData()]]]){
   const pending=backend[method](...args);await new Promise(resolve=>setImmediate(resolve));assert.equal(backend.hasPendingClientMutation(),true,'Response bodies remain protected for '+method);releaseBody({ok:true,item:{id:'fixture'}});await pending;assert.equal(backend.hasPendingClientMutation(),false);
  }
