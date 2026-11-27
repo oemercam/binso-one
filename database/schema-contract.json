@@ -121,7 +121,8 @@
     "0117_operator_password_passkeys.sql",
     "0118_document_operator_passkey_storage.sql",
     "0119_platform_stripe_payment_adjustments.sql",
-    "0120_verified_company_memberships.sql"
+    "0120_verified_company_memberships.sql",
+    "0121_homepage_lcp_viewport.sql"
   ],
   "tables": [
     {
@@ -11173,6 +11174,11 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "required": true
+        },
+        {
+          "name": "narrow_viewport",
+          "type": "boolean",
+          "required": false
         }
       ],
       "policies": []

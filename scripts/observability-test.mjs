@@ -37,11 +37,15 @@ try{
  await db.query("insert into platform_billing_payments(organization_id,provider,external_id,payment_date,amount,currency) values($1,'manual','obs-payment',current_date,12.34,'CHF'),($1,'manual','obs-usd',current_date,9999,'EUR'),($2,'demo','obs-demo',current_date,9999,'CHF')",[org,demo]);
  await db.query("insert into web_vitals(metric,value,rating,route,created_at) values('LCP',1200,'good','/dashboard',now()),('LCP',1800,'good','/dashboard',now()),('INP',100,'good','/operator',now())");
  globalThis.observabilityDatabase=fn=>fn({query:(...args)=>db.query(...args)});
+ await db.query("insert into web_vitals(metric,value,rating,route,narrow_viewport,created_at) values('LCP',900,'good','/',true,now()-interval '2 days'),('LCP',1500,'good','/',true,now()-interval '3 days'),('LCP',9000,'poor','/',false,now()-interval '2 days'),('LCP',8000,'poor','/',null,now()-interval '2 days'),('LCP',7000,'poor','/',true,now()-interval '29 days')");
+ await assert.rejects(()=>db.query("insert into web_vitals(metric,value,rating,route,narrow_viewport) values('LCP',1200,'good','/produkt',true)"),/check constraint/);
  const owner=await monitoringSnapshot('platform_owner');
  const find=(snapshot,id)=>snapshot.metrics.find(m=>m.id===id);
  assert.equal(find(owner,'mail_failed').value,1,'Demo queues excluded');
  assert.equal(find(owner,'payments').value,12.34,'CHF-only actual platform payments');
  assert.equal(find(owner,'vital_LCP').value,1800,'Nearest-rank p75 of two measured values');
+ assert.equal(find(owner,'vital_home_narrow_lcp').value,1500);
+ assert.equal(find(owner,'vital_home_narrow_lcp_count').value,2);
  assert.ok(owner.series.find(s=>s.id==='LCP').points.length>0,'Real history');
  assert.equal(find(owner,'azure_cpu').dataState,'unavailable');
  assert.equal(owner.services.find(s=>s.key==='storage').state,'unknown','Configured is not healthy');
